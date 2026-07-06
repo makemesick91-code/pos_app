@@ -81,9 +81,31 @@ cd backend && php artisan test
 
 Sprint 1 changes the backend only; the Android app is untouched in this sprint.
 
+## Sprint 2 — Product Foundation
+
+Sprint 2 establishes the tenant-isolated product catalog foundation:
+
+- product categories
+- products
+- store-specific product price overrides
+- Android product/category sync endpoints
+- product tenant-isolation tests
+- application rules lock for foundation + Sprint 0 + Sprint 1 + Sprint 2
+
+Details and evidence: `docs/sprints/sprint-2-product-foundation.md`.
+
+Validation:
+
+```bash
+bash scripts/sprint2_smoke.sh
+cd backend && php artisan test
+```
+
+Sprint 2 changes the backend only; the Android app is untouched in this sprint.
+
 ## Status
 
-Fase saat ini: **Sprint 1 — SaaS Tenant Foundation selesai**. Backend kini memiliki
-fondasi tenant/store, autentikasi API Sanctum, tenant context middleware, dan bukti
-isolasi tenant. Fitur bisnis POS (produk, penjualan, QRIS) dibangun bertahap mengikuti
-Sprint Roadmap pada dokumen foundation.
+Fase saat ini: **Sprint 2 — Product Foundation selesai**. Backend kini memiliki
+fondasi katalog produk (kategori, produk, override harga per toko) yang tenant-isolated,
+serta endpoint sync produk/kategori untuk Android. Fitur penjualan/QRIS dibangun bertahap
+mengikuti Sprint Roadmap pada dokumen foundation.

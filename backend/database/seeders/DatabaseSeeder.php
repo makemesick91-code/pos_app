@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             Sprint1TenantSeeder::class,
+            Sprint2ProductSeeder::class,
         ]);
     }
 }

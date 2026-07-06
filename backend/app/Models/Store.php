@@ -37,6 +37,21 @@ class Store extends Model
         return $this->hasMany(User::class);
     }
 
+    public function productCategories(): HasMany
+    {
+        return $this->hasMany(ProductCategory::class);
+    }
+
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
+    }
+
+    public function productStorePrices(): HasMany
+    {
+        return $this->hasMany(ProductStorePrice::class);
+    }
+
     public function isActive(): bool
     {
         return (bool) $this->is_active;
