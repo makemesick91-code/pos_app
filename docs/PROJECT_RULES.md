@@ -18,3 +18,13 @@ Mandatory rules:
 8. Subscription and device limit must be part of the SaaS foundation.
 9. Every sprint must reference this foundation document.
 10. Docs-only output is not accepted for implementation sprints unless explicitly requested.
+
+## Sprint Execution Rule
+
+Every sprint must:
+
+1. Reference `docs/foundation/POS_ANDROID_SAAS_FOUNDATION.md`.
+2. Produce validation evidence in `docs/sprints/`.
+3. Include clear GO / NO-GO criteria.
+4. Avoid implementation that contradicts the foundation.
+5. Avoid docs-only output for implementation sprints unless explicitly requested.

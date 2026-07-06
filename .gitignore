@@ -31,3 +31,24 @@ app/build/
 local.properties
 *.apk
 *.aab
+
+# Monorepo — backend (Laravel)
+backend/vendor/
+backend/node_modules/
+backend/public/build/
+backend/storage/logs/
+backend/storage/framework/cache/
+backend/storage/framework/sessions/
+backend/storage/framework/views/
+backend/bootstrap/cache/*.php
+backend/.env
+backend/database/*.sqlite
+backend/database/*.sqlite-journal
+
+# Monorepo — android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/*.apk
+android/*.aab

@@ -41,7 +41,26 @@ pos_app/
 └── android/    (Kotlin native)        [dibangun sesuai sprint]
 ```
 
+## Project Structure
+
+- `backend/` — Laravel API backend for POS SaaS
+- `android/` — Native Android Kotlin POS app
+- `docs/` — Foundation, sprint evidence, architecture, and project rules
+- `scripts/` — Local validation and smoke scripts
+
+## Sprint 0 — Project Setup
+
+Sprint 0 establishes the initial backend, Android, CI, and validation structure.
+Details and evidence: `docs/sprints/sprint-0-project-setup.md`.
+
+Validation:
+
+```bash
+bash scripts/sprint0_smoke.sh
+```
+
 ## Status
 
-Fase saat ini: **Foundation / Dokumentasi**. Implementasi fitur belum dimulai dan dibangun
+Fase saat ini: **Sprint 0 — Project Setup selesai**. Struktur awal backend, Android, CI,
+dan validasi telah disiapkan. Implementasi fitur bisnis belum dimulai dan dibangun
 bertahap mengikuti Sprint Roadmap pada dokumen foundation.
