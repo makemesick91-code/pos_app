@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Aish POS Lite</string>
+    <string name="sprint0_placeholder">Aish POS Lite — Sprint 0 skeleton. POS features arrive in later sprints.</string>
+</resources>
