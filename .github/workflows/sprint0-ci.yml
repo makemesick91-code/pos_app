@@ -32,7 +32,8 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.3"
+          # composer.lock resolves to packages requiring php >= 8.4.1.
+          php-version: "8.4"
 
       - name: Composer validate
         working-directory: backend
