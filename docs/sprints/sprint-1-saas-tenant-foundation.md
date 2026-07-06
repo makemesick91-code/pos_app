@@ -119,6 +119,11 @@ No password, `remember_token`, or token hash is exposed in responses.
   context, context never returns tenant B ids, guessing another store id → 403,
   `belongsToTenant` helper isolates tenants.
 - `tests/Feature/HealthTest.php` — remains passing.
+- `tests/Unit/UserRoleTest.php` — DB-free coverage of User role/tenant helpers.
+- Removed the default Laravel scaffolding `ExampleTest` (Feature + Unit): it
+  rendered the welcome Blade view and failed on fresh checkouts with "Please
+  provide a valid cache path" — the root cause of the pre-existing red Sprint 0
+  CI. It covered none of our code.
 
 ## Validation Commands
 
@@ -136,7 +141,7 @@ php artisan test
 - `composer validate --strict`: PASS
 - `route:list` (auth + tenant-context): PASS
 - Backend tests: **23 passed** (AuthApiTest, TenantContextTest,
-  TenantIsolationTest, HealthTest, example tests)
+  TenantIsolationTest, HealthTest, UserRoleTest)
 - Forbidden files check: PASS (no `.env`, `vendor/`, `node_modules/`, sqlite/db
   tracked)
 
