@@ -1,0 +1,57 @@
+name: Sprint 1 CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  foundation-validation:
+    name: Foundation & Sprint 1 smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Foundation document exists
+        run: test -f docs/foundation/POS_ANDROID_SAAS_FOUNDATION.md
+
+      - name: README references foundation
+        run: grep -q "POS_ANDROID_SAAS_FOUNDATION" README.md
+
+      - name: Sprint 1 evidence doc exists
+        run: test -f docs/sprints/sprint-1-saas-tenant-foundation.md
+
+      - name: Sprint 1 smoke script
+        run: bash scripts/sprint1_smoke.sh
+
+  backend-tests:
+    name: Backend (Sanctum auth + tenant isolation)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring
+          coverage: none
+
+      - name: Composer validate
+        working-directory: backend
+        run: composer validate --strict
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      # Tests run against an in-memory SQLite database (see phpunit.xml),
+      # so no PostgreSQL service is required.
+      - name: Run tests
+        working-directory: backend
+        run: php artisan test

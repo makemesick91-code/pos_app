@@ -59,8 +59,31 @@ Validation:
 bash scripts/sprint0_smoke.sh
 ```
 
+## Sprint 1 — SaaS Tenant Foundation
+
+Sprint 1 establishes the backend SaaS tenant foundation:
+
+- tenants
+- stores
+- tenant-aware users (tenant/store/role/is_active)
+- Sanctum API authentication
+- tenant context middleware
+- tenant isolation tests
+
+Details and evidence: `docs/sprints/sprint-1-saas-tenant-foundation.md`.
+
+Validation:
+
+```bash
+bash scripts/sprint1_smoke.sh
+cd backend && php artisan test
+```
+
+Sprint 1 changes the backend only; the Android app is untouched in this sprint.
+
 ## Status
 
-Fase saat ini: **Sprint 0 — Project Setup selesai**. Struktur awal backend, Android, CI,
-dan validasi telah disiapkan. Implementasi fitur bisnis belum dimulai dan dibangun
-bertahap mengikuti Sprint Roadmap pada dokumen foundation.
+Fase saat ini: **Sprint 1 — SaaS Tenant Foundation selesai**. Backend kini memiliki
+fondasi tenant/store, autentikasi API Sanctum, tenant context middleware, dan bukti
+isolasi tenant. Fitur bisnis POS (produk, penjualan, QRIS) dibangun bertahap mengikuti
+Sprint Roadmap pada dokumen foundation.
