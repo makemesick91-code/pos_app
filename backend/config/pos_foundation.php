@@ -16,10 +16,13 @@ return [
         'qris_online_only' => true,
         'tenant_isolation_required' => true,
         'product_sync_required' => true,
+        'android_cashier_foundation_required' => true,
+        'android_local_catalog_required' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
         'sprint_1' => 'SaaS Tenant Foundation',
         'sprint_2' => 'Product Foundation',
+        'sprint_3' => 'Android Cashier Foundation',
     ],
 ];

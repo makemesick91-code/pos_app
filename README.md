@@ -103,9 +103,35 @@ cd backend && php artisan test
 
 Sprint 2 changes the backend only; the Android app is untouched in this sprint.
 
+## Sprint 3 — Android Cashier Foundation
+
+Sprint 3 establishes the Android cashier foundation:
+
+- native Kotlin Android cashier app structure
+- login foundation using backend auth API
+- token/session storage
+- Retrofit/OkHttp API client
+- Room SQLite local product/category catalog
+- product/category sync from backend
+- local product search
+- cash-first local cart foundation
+- Android runtime rules lock
+
+Details and evidence: `docs/sprints/sprint-3-android-cashier-foundation.md`.
+
+Validation:
+
+```bash
+bash scripts/sprint3_smoke.sh
+cd backend && php artisan test
+```
+
+Android build/test may require Android SDK and Gradle wrapper availability.
+
 ## Status
 
-Fase saat ini: **Sprint 2 — Product Foundation selesai**. Backend kini memiliki
-fondasi katalog produk (kategori, produk, override harga per toko) yang tenant-isolated,
-serta endpoint sync produk/kategori untuk Android. Fitur penjualan/QRIS dibangun bertahap
-mengikuti Sprint Roadmap pada dokumen foundation.
+Fase saat ini: **Sprint 3 — Android Cashier Foundation selesai**. Android kini memiliki
+fondasi kasir native (login, API client Retrofit/OkHttp, penyimpanan token, katalog lokal
+Room, sync produk/kategori, pencarian lokal, dan keranjang cash-first). Backend tetap
+kompatibel (auth + sync utuh). Fitur penjualan/QRIS/printer dibangun bertahap mengikuti
+Sprint Roadmap pada dokumen foundation.

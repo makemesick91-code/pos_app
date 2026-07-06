@@ -1,0 +1,44 @@
+package com.aishtech.poslite.core.network
+
+import com.aishtech.poslite.BuildConfig
+import com.aishtech.poslite.core.config.AppConfig
+import com.aishtech.poslite.core.session.TokenStore
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
+
+/**
+ * Builds the Retrofit [PosApiService]. The [AuthInterceptor] adds the bearer
+ * token; the logging interceptor is only attached in debug builds and never
+ * logs the Authorization header body content beyond what OkHttp redacts.
+ */
+object ApiClient {
+
+    fun create(
+        tokenStore: TokenStore,
+        baseUrl: String = AppConfig.DEFAULT_API_BASE_URL,
+    ): PosApiService {
+        val builder = OkHttpClient.Builder()
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(20, TimeUnit.SECONDS)
+            .addInterceptor(AuthInterceptor(tokenStore))
+
+        if (BuildConfig.DEBUG) {
+            val logging = HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BASIC
+            }
+            // Never log the bearer token in any build.
+            logging.redactHeader("Authorization")
+            builder.addInterceptor(logging)
+        }
+
+        return Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .client(builder.build())
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(PosApiService::class.java)
+    }
+}

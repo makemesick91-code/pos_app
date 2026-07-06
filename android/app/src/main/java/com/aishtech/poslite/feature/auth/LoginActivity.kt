@@ -1,0 +1,75 @@
+package com.aishtech.poslite.feature.auth
+
+import android.content.Intent
+import android.os.Bundle
+import android.view.View
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.aishtech.poslite.core.ServiceLocator
+import com.aishtech.poslite.databinding.ActivityLoginBinding
+import com.aishtech.poslite.feature.cashier.CashierActivity
+
+/**
+ * Login screen consuming POST /api/v1/auth/login. On success the token is
+ * stored (never the password) and the cashier screen opens.
+ */
+class LoginActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityLoginBinding
+    private lateinit var viewModel: LoginViewModel
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityLoginBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        val repository = ServiceLocator.authRepository(applicationContext)
+        if (repository.isLoggedIn()) {
+            openCashier()
+            return
+        }
+
+        viewModel = ViewModelProvider(
+            this,
+            object : ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                    LoginViewModel(repository) as T
+            },
+        )[LoginViewModel::class.java]
+
+        viewModel.state.observe(this) { state -> render(state) }
+
+        binding.buttonLogin.setOnClickListener {
+            binding.textError.visibility = View.GONE
+            viewModel.login(
+                binding.inputEmail.text?.toString().orEmpty(),
+                binding.inputPassword.text?.toString().orEmpty(),
+            )
+        }
+    }
+
+    private fun render(state: LoginViewModel.UiState) {
+        when (state) {
+            LoginViewModel.UiState.Idle -> setLoading(false)
+            LoginViewModel.UiState.Loading -> setLoading(true)
+            LoginViewModel.UiState.Success -> openCashier()
+            is LoginViewModel.UiState.Error -> {
+                setLoading(false)
+                binding.textError.text = state.message
+                binding.textError.visibility = View.VISIBLE
+            }
+        }
+    }
+
+    private fun setLoading(loading: Boolean) {
+        binding.progress.visibility = if (loading) View.VISIBLE else View.GONE
+        binding.buttonLogin.isEnabled = !loading
+    }
+
+    private fun openCashier() {
+        startActivity(Intent(this, CashierActivity::class.java))
+        finish()
+    }
+}
