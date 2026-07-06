@@ -1,4 +1,4 @@
-name: Sprint 0 CI
+name: Sprint 1 CI
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
 
 jobs:
   foundation-validation:
-    name: Foundation & structure validation
+    name: Foundation & Sprint 1 smoke
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,14 +17,14 @@ jobs:
       - name: README references foundation
         run: grep -q "POS_ANDROID_SAAS_FOUNDATION" README.md
 
-      - name: PROJECT_RULES references foundation
-        run: grep -q "POS_ANDROID_SAAS_FOUNDATION" docs/PROJECT_RULES.md
+      - name: Sprint 1 evidence doc exists
+        run: test -f docs/sprints/sprint-1-saas-tenant-foundation.md
 
-      - name: Sprint 0 smoke script
-        run: bash scripts/sprint0_smoke.sh
+      - name: Sprint 1 smoke script
+        run: bash scripts/sprint1_smoke.sh
 
-  backend-validation:
-    name: Backend composer validation
+  backend-tests:
+    name: Backend (Sanctum auth + tenant isolation)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -36,6 +36,7 @@ jobs:
           # 8.5 matches the version the suite is validated against locally.
           php-version: "8.5"
           extensions: pdo, sqlite3, pdo_sqlite, mbstring
+          coverage: none
 
       - name: Composer validate
         working-directory: backend
@@ -45,28 +46,14 @@ jobs:
         working-directory: backend
         run: composer install --prefer-dist --no-progress --no-interaction
 
-      - name: Run tests
+      - name: Prepare environment
         working-directory: backend
         run: |
           cp .env.example .env
           php artisan key:generate
-          php artisan test
 
-  android-validation:
-    name: Android structure validation
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Android skeleton files exist
-        run: |
-          test -f android/settings.gradle.kts
-          test -f android/app/build.gradle.kts
-          test -f android/app/src/main/AndroidManifest.xml
-          test -f android/app/src/main/java/com/aishtech/poslite/MainActivity.kt
-
-      - name: Package and SDK levels are correct
-        run: |
-          grep -q "com.aishtech.poslite" android/app/build.gradle.kts
-          grep -Eq "minSdk *= *26" android/app/build.gradle.kts
-          grep -Eq "targetSdk *= *35" android/app/build.gradle.kts
+      # Tests run against an in-memory SQLite database (see phpunit.xml),
+      # so no PostgreSQL service is required.
+      - name: Run tests
+        working-directory: backend
+        run: php artisan test

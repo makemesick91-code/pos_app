@@ -28,3 +28,15 @@ Every sprint must:
 3. Include clear GO / NO-GO criteria.
 4. Avoid implementation that contradicts the foundation.
 5. Avoid docs-only output for implementation sprints unless explicitly requested.
+
+## Multi-Tenant Runtime Rule
+
+Starting Sprint 1, backend runtime implementation must enforce tenant isolation.
+
+Mandatory:
+
+1. Tenant-owned data must include `tenant_id`.
+2. Store-owned data must include both `tenant_id` and `store_id` where applicable.
+3. Tenant context must come from authenticated user/session context, not arbitrary client input.
+4. Any client-provided store selector must be validated against the authenticated user tenant.
+5. Tests must prove that tenant A cannot access tenant B data.
