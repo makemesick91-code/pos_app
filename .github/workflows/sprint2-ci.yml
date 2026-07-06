@@ -1,0 +1,66 @@
+name: Sprint 2 CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  foundation-validation:
+    name: Foundation & Sprint 2 smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Foundation document exists
+        run: test -f docs/foundation/POS_ANDROID_SAAS_FOUNDATION.md
+
+      - name: README references foundation
+        run: grep -q "POS_ANDROID_SAAS_FOUNDATION" README.md
+
+      - name: Sprint 2 evidence doc exists
+        run: test -f docs/sprints/sprint-2-product-foundation.md
+
+      - name: Project rules lock (Sprint 0/1/2)
+        run: |
+          grep -q "Foundation Lock Index" docs/PROJECT_RULES.md
+          grep -q "Sprint 0 Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 1 Multi-Tenant Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 2 Product Foundation Runtime Rule" docs/PROJECT_RULES.md
+
+      - name: Sprint 2 smoke script
+        run: bash scripts/sprint2_smoke.sh
+
+  backend-tests:
+    name: Backend (product foundation + tenant isolation)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          # composer.lock resolves to packages requiring php >= 8.4.1;
+          # 8.5 matches the version the suite is validated against locally.
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring
+          coverage: none
+
+      - name: Composer validate
+        working-directory: backend
+        run: composer validate --strict
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      # Tests run against an in-memory SQLite database (see phpunit.xml),
+      # so no PostgreSQL service is required.
+      - name: Run tests
+        working-directory: backend
+        run: php artisan test
