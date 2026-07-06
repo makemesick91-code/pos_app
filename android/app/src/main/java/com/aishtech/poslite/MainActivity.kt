@@ -1,25 +1,27 @@
 package com.aishtech.poslite
 
+import android.content.Intent
 import android.os.Bundle
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.aishtech.poslite.core.ServiceLocator
+import com.aishtech.poslite.feature.auth.LoginActivity
+import com.aishtech.poslite.feature.cashier.CashierActivity
 
 /**
- * Sprint 0 placeholder entry point.
- *
- * Only confirms the Android skeleton launches. Business POS features
- * (cashier, products, QRIS, offline sync) are introduced in later sprints
- * per ../../docs/foundation/POS_ANDROID_SAAS_FOUNDATION.md.
+ * Launcher/router. Routes to the cashier screen when a session token exists,
+ * otherwise to login. No UI of its own — the cashier foundation lives in the
+ * feature packages per ../../docs/foundation/POS_ANDROID_SAAS_FOUNDATION.md.
  */
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val message = TextView(this).apply {
-            text = getString(R.string.sprint0_placeholder)
-            textSize = 18f
-            setPadding(48, 48, 48, 48)
+        val target = if (ServiceLocator.session(applicationContext).isLoggedIn()) {
+            CashierActivity::class.java
+        } else {
+            LoginActivity::class.java
         }
-        setContentView(message)
+        startActivity(Intent(this, target))
+        finish()
     }
 }

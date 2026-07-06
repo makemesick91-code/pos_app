@@ -1,0 +1,107 @@
+name: Sprint 3 CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  foundation-validation:
+    name: Foundation & Sprint 3 smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Foundation document exists
+        run: test -f docs/foundation/POS_ANDROID_SAAS_FOUNDATION.md
+
+      - name: README references foundation
+        run: grep -q "POS_ANDROID_SAAS_FOUNDATION" README.md
+
+      - name: Sprint 3 evidence doc exists
+        run: test -f docs/sprints/sprint-3-android-cashier-foundation.md
+
+      - name: Project rules lock (Sprint 0/1/2/3)
+        run: |
+          grep -q "Foundation Lock Index" docs/PROJECT_RULES.md
+          grep -q "Sprint 0 Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 1 Multi-Tenant Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 2 Product Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 3 Android Cashier Foundation Runtime Rule" docs/PROJECT_RULES.md
+
+      - name: Sprint 3 smoke script
+        run: bash scripts/sprint3_smoke.sh
+
+  android-static:
+    name: Android static validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Sprint 3 ships the Android cashier foundation source. A Gradle wrapper
+      # is not committed yet, so CI validates the module structure statically.
+      # Full assembleDebug/testDebugUnitTest wiring lands once the wrapper is
+      # generated in a follow-up (see docs/sprints/sprint-3-...).
+      - name: Package and SDK levels intact
+        run: |
+          grep -q "com.aishtech.poslite" android/app/build.gradle.kts
+          grep -q "minSdk = 26" android/app/build.gradle.kts
+          grep -q "targetSdk = 35" android/app/build.gradle.kts
+
+      - name: Cashier foundation sources present
+        run: |
+          APP=android/app/src/main/java/com/aishtech/poslite
+          test -f "$APP/feature/auth/LoginActivity.kt"
+          test -f "$APP/feature/cashier/CashierActivity.kt"
+          test -f "$APP/core/network/ApiClient.kt"
+          test -f "$APP/core/network/PosApiService.kt"
+          test -f "$APP/core/session/TokenStore.kt"
+          test -f "$APP/core/database/PosDatabase.kt"
+          test -f "$APP/data/local/dao/ProductDao.kt"
+          test -f "$APP/data/local/dao/ProductCategoryDao.kt"
+          test -f "$APP/feature/sync/CatalogSyncManager.kt"
+          test -f "$APP/data/repository/CartRepository.kt"
+
+      - name: Sync endpoints consumed
+        run: |
+          APP=android/app/src/main/java/com/aishtech/poslite
+          grep -Rq "sync/products" "$APP"
+          grep -Rq "sync/categories" "$APP"
+          grep -Rq "updated_since" "$APP"
+
+      - name: Unit test sources present
+        run: |
+          test -f android/app/src/test/java/com/aishtech/poslite/CartRepositoryTest.kt
+          test -f android/app/src/test/java/com/aishtech/poslite/CatalogMappingTest.kt
+
+  backend-tests:
+    name: Backend compatibility (auth + sync intact)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          # composer.lock resolves to packages requiring php >= 8.4.1;
+          # 8.5 matches the version the suite is validated against locally.
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring
+          coverage: none
+
+      - name: Composer validate
+        working-directory: backend
+        run: composer validate --strict
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run tests
+        working-directory: backend
+        run: php artisan test

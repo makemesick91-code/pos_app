@@ -2,4 +2,22 @@
 <resources>
     <string name="app_name">Aish POS Lite</string>
     <string name="sprint0_placeholder">Aish POS Lite — Sprint 0 skeleton. POS features arrive in later sprints.</string>
+
+    <!-- Sprint 3 — Login -->
+    <string name="login_subtitle">Masuk ke kasir</string>
+    <string name="login_email_hint">Email</string>
+    <string name="login_password_hint">Kata sandi</string>
+    <string name="login_button">Masuk</string>
+
+    <!-- Sprint 3 — Cashier -->
+    <string name="cashier_title">Kasir</string>
+    <string name="cashier_sync">Sync</string>
+    <string name="cashier_sync_idle">Belum disinkronkan</string>
+    <string name="cashier_search_hint">Cari nama / SKU / barcode</string>
+    <string name="cashier_empty">Belum ada produk. Tekan Sync untuk memuat katalog.</string>
+    <string name="cashier_cart_empty">Keranjang: 0 item</string>
+    <string name="cashier_total_zero">Total: Rp 0</string>
+    <string name="cashier_clear_cart">Kosongkan</string>
+    <string name="cashier_checkout_disabled">Checkout (Sprint 4)</string>
+    <string name="cashier_add">Tambah</string>
 </resources>

@@ -37,6 +37,7 @@ This project is governed by:
 2. `docs/sprints/sprint-0-project-setup.md`
 3. `docs/sprints/sprint-1-saas-tenant-foundation.md`
 4. `docs/sprints/sprint-2-product-foundation.md`
+5. `docs/sprints/sprint-3-android-cashier-foundation.md`
 
 No sprint may contradict these documents unless the canonical foundation is explicitly updated first.
 
@@ -80,3 +81,25 @@ Mandatory:
 8. Product sync endpoints must support incremental sync using `updated_since`.
 9. Product sync output must be lightweight for older Android devices.
 10. Product foundation must not implement sales, payment, QRIS, printer, or inventory movement runtime yet.
+
+## Sprint 3 Android Cashier Foundation Runtime Rule
+
+Starting Sprint 3, Android cashier implementation must remain lightweight, native, and sync-ready.
+
+Mandatory:
+
+1. Android implementation must use native Kotlin and native Android Views/XML for cashier foundation.
+2. Android must keep `minSdk = 26` and `targetSdk = 35`.
+3. Android package must remain `com.aishtech.poslite`.
+4. Android must never store payment gateway credentials.
+5. Android must not call payment gateway APIs directly.
+6. Android login must consume backend `/api/v1/auth/login`.
+7. Android session/token handling must not store user password.
+8. Product and category catalog must be cached locally using Room SQLite.
+9. Product search must run locally against cached catalog data.
+10. Product sync must consume `/api/v1/sync/products` and `/api/v1/sync/categories`.
+11. Product sync must support incremental `updated_since`.
+12. Cart foundation may remain local-only in Sprint 3.
+13. Sprint 3 must not implement sales submission, QRIS, webhook, printer, or inventory movement runtime.
+14. Android UI must remain lightweight for older HP Android devices.
+15. Android implementation must include validation evidence and smoke checks.
