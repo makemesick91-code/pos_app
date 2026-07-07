@@ -49,6 +49,7 @@ This project is governed by:
 14. `docs/sprints/sprint-12-tenant-onboarding-demo-data-foundation.md`
 15. `docs/sprints/sprint-13-production-readiness-release-hardening-foundation.md`
 16. `docs/sprints/sprint-14-pilot-release-candidate-operator-uat-foundation.md`
+17. `docs/sprints/sprint-15-pilot-deployment-field-trial-evidence-foundation.md`
 
 No sprint may contradict these documents unless the canonical foundation is explicitly updated first.
 
@@ -394,3 +395,32 @@ Mandatory:
 16. Sprint 14 must not commit signing keys, APK/AAB, `.env`, database dumps, or secrets.
 17. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, closing, and release hardening behavior from previous sprints must remain intact.
 18. Android CI remains the authoritative build gate if local Android build cannot run.
+
+## Sprint 15 Pilot Deployment & Field Trial Evidence Foundation Runtime Rule
+
+Starting Sprint 15, pilot deployment and field trial readiness must be
+evidence-backed, non-destructive, secret-safe, and gated before a GO tag is
+created.
+
+Mandatory:
+
+1. Pilot deployment must not be declared GO without backend tests passing.
+2. Pilot deployment must not be declared GO without Android CI assembleDebug passing.
+3. Pilot deployment must not be declared GO without Android CI testDebugUnitTest passing.
+4. Pilot deployment must not be declared GO without Sprint 13 release readiness commands running successfully.
+5. Pilot deployment must not be declared GO without Sprint 14 RC/UAT commands running successfully.
+6. Pilot deployment evidence must include a backend deployment dry-run checklist.
+7. Pilot deployment evidence must include an Android RC artifact handling checklist.
+8. Pilot deployment evidence must include an operator device readiness checklist.
+9. Field trial evidence must include a post-deploy smoke checklist.
+10. Field trial evidence must include a rollback checklist.
+11. Field trial evidence must include a daily monitoring checklist.
+12. Field issue register must classify severity and blocking status.
+13. BLOCKER/CRITICAL open field issues must force NO-GO unless explicitly accepted as outside scope with documented risk.
+14. Field trial GO/WATCH/NO-GO report must be evidence-backed.
+15. Pilot artifacts must not contain real passwords, real payment gateway secrets, production customer data, or private credentials.
+16. Android APK/AAB/signing key/keystore must not be committed.
+17. Sprint 15 must not implement new business features.
+18. Sprint 15 must not perform automatic production deployment unless explicitly configured, approved, and evidenced.
+19. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, closing, release hardening, and UAT behavior from previous sprints must remain intact.
+20. Android CI remains the authoritative build gate if local Android build cannot run.

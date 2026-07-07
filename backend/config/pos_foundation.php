@@ -66,6 +66,11 @@ return [
         'pilot_issue_register_required' => true,
         'rc_go_watch_no_go_required' => true,
         'no_auto_production_deploy_sprint_14' => true,
+        'pilot_deployment_gate_required' => true,
+        'field_trial_evidence_required' => true,
+        'pilot_rollback_checklist_required' => true,
+        'field_issue_register_required' => true,
+        'no_auto_production_deploy_sprint_15' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
@@ -83,5 +88,6 @@ return [
         'sprint_12' => 'Tenant Onboarding & Demo Data Foundation',
         'sprint_13' => 'Production Readiness & Release Hardening Foundation',
         'sprint_14' => 'Pilot Release Candidate & Operator UAT Foundation',
+        'sprint_15' => 'Pilot Deployment & Field Trial Evidence Foundation',
     ],
 ];
