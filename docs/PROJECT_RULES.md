@@ -42,6 +42,7 @@ This project is governed by:
 7. `docs/sprints/sprint-5-qris-payment-gateway-foundation.md`
 8. `docs/sprints/sprint-6-printer-receipt-foundation.md`
 9. `docs/sprints/sprint-7-offline-cash-sync-foundation.md`
+10. `docs/sprints/sprint-8-inventory-simple-foundation.md`
 
 No sprint may contradict these documents unless the canonical foundation is explicitly updated first.
 
@@ -206,3 +207,28 @@ Mandatory:
 18. Android Gradle wrapper must remain committed.
 19. Android CI must continue running assembleDebug and testDebugUnitTest.
 20. Sprint 7 must not implement offline QRIS, inventory movement runtime, advanced reports, or owner dashboard.
+
+## Sprint 8 Inventory Simple Foundation Runtime Rule
+
+Starting Sprint 8, inventory implementation must be ledger-based, tenant-isolated, store-scoped, and idempotency-safe.
+
+Mandatory:
+
+1. Stock must be calculated from `inventory_movements`.
+2. Mutable product stock columns must not be used as source of truth.
+3. Inventory movements must be tenant-owned.
+4. Inventory movements must be store-owned.
+5. Inventory movements must be product-owned.
+6. Client input may not assign arbitrary `tenant_id`.
+7. Any `store_id` input must be validated against authenticated tenant context.
+8. Any `product_id` input must belong to authenticated tenant.
+9. SALE_OUT movement must be generated from successful sales for stock-tracked products.
+10. SALE_OUT movement must use sale item snapshots and backend sale data, not Android totals.
+11. Idempotent offline sale replay must not create duplicate SALE_OUT movements.
+12. Adjustment movements must be explicit and auditable.
+13. Current stock endpoint must calculate stock from movement sums.
+14. Tenant A must never read or write inventory movement/stock data for tenant B.
+15. QRIS, cash, receipt, printer, and offline sync behavior from previous sprints must remain intact.
+16. Sprint 8 must not implement procurement, stock transfer, stock opname, batch/lot, valuation, or advanced inventory reports.
+17. Android stock visibility must remain lightweight and must not load heavy reports.
+18. Android CI must continue running assembleDebug and testDebugUnitTest.

@@ -45,6 +45,8 @@ class SalesRepositoryTest {
         ): Response<com.aishtech.poslite.data.remote.dto.QrisPaymentResponse> = error("unused")
         override suspend fun getPaymentStatus(paymentId: Long): Response<com.aishtech.poslite.data.remote.dto.QrisPaymentResponse> = error("unused")
         override suspend fun getReceipt(saleId: Long): Response<com.aishtech.poslite.data.remote.dto.ReceiptResponseDto> = error("unused")
+        override suspend fun getCurrentStock(storeId: Long?, query: String?, limit: Int?): Response<com.aishtech.poslite.data.remote.dto.CurrentStockResponseDto> = error("unused")
+        override suspend fun getProductStock(productId: Long): Response<com.aishtech.poslite.data.remote.dto.ProductStockResponseDto> = error("unused")
 
         override suspend fun createSale(request: CreateSaleRequestDto): Response<SaleResponse> {
             captured = request

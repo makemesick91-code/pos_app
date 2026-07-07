@@ -3,9 +3,11 @@ package com.aishtech.poslite.core.network
 import com.aishtech.poslite.data.remote.dto.CategorySyncResponse
 import com.aishtech.poslite.data.remote.dto.CreateQrisPaymentRequestDto
 import com.aishtech.poslite.data.remote.dto.CreateSaleRequestDto
+import com.aishtech.poslite.data.remote.dto.CurrentStockResponseDto
 import com.aishtech.poslite.data.remote.dto.LoginRequest
 import com.aishtech.poslite.data.remote.dto.LoginResponse
 import com.aishtech.poslite.data.remote.dto.MeResponse
+import com.aishtech.poslite.data.remote.dto.ProductStockResponseDto
 import com.aishtech.poslite.data.remote.dto.ProductSyncResponse
 import com.aishtech.poslite.data.remote.dto.QrisPaymentResponse
 import com.aishtech.poslite.data.remote.dto.ReceiptResponseDto
@@ -71,4 +73,16 @@ interface PosApiService {
     // and print eligibility; the app only formats an approved payload for ESC/POS.
     @GET("api/v1/sales/{id}/receipt")
     suspend fun getReceipt(@Path("id") saleId: Long): Response<ReceiptResponseDto>
+
+    // Sprint 8 — read-only inventory stock. The backend derives stock from the
+    // ledger; the app only reads it for lightweight display and never mutates it.
+    @GET("api/v1/inventory/current-stock")
+    suspend fun getCurrentStock(
+        @Query("store_id") storeId: Long? = null,
+        @Query("q") query: String? = null,
+        @Query("limit") limit: Int? = null,
+    ): Response<CurrentStockResponseDto>
+
+    @GET("api/v1/inventory/products/{product}/stock")
+    suspend fun getProductStock(@Path("product") productId: Long): Response<ProductStockResponseDto>
 }

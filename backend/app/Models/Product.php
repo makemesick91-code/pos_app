@@ -61,6 +61,11 @@ class Product extends Model
         return $this->hasMany(ProductStorePrice::class);
     }
 
+    public function inventoryMovements(): HasMany
+    {
+        return $this->hasMany(InventoryMovement::class);
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);

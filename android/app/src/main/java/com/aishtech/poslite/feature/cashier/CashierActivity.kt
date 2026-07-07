@@ -45,6 +45,7 @@ class CashierActivity : AppCompatActivity() {
                         sales = ServiceLocator.salesRepository(context),
                         cart = CartRepository(),
                         offline = ServiceLocator.offlineSaleRepository(context),
+                        stock = ServiceLocator.stockRepository(context),
                     ) as T
             },
         )[CashierViewModel::class.java]
@@ -78,6 +79,7 @@ class CashierActivity : AppCompatActivity() {
         })
 
         viewModel.search("")
+        viewModel.refreshStock()
     }
 
     private fun setupList() {
@@ -90,6 +92,11 @@ class CashierActivity : AppCompatActivity() {
         viewModel.products.observe(this) { products ->
             adapter.submitList(products)
             binding.textEmpty.visibility = if (products.isEmpty()) View.VISIBLE else View.GONE
+        }
+        // Sprint 8 — informational stock labels; the adapter re-renders when the
+        // backend stock fetch resolves. Never blocks the product list or a sale.
+        viewModel.stockLabels.observe(this) { labels ->
+            adapter.setStockLabels(labels)
         }
         viewModel.subtotal.observe(this) { subtotal ->
             binding.textCartTotal.text = "Total: ${formatPrice(subtotal)}"

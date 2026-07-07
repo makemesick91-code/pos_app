@@ -67,6 +67,11 @@ class Store extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function inventoryMovements(): HasMany
+    {
+        return $this->hasMany(InventoryMovement::class);
+    }
+
     public function isActive(): bool
     {
         return (bool) $this->is_active;

@@ -221,9 +221,46 @@ cd backend && php artisan test
 cd android && ./gradlew :app:assembleDebug && ./gradlew :app:testDebugUnitTest
 ```
 
+## Sprint 8 — Inventory Simple Foundation
+
+Sprint 8 establishes the simple ledger-based inventory foundation:
+
+- inventory movements
+- stock calculation from signed movement ledger
+- opening stock and manual adjustment
+- SALE_OUT movement from successful sales
+- idempotency-safe offline sale replay
+- current stock API
+- product stock API
+- Android lightweight stock visibility
+- Sprint 8 runtime rules lock
+
+Validation:
+
+```bash
+bash scripts/sprint8_smoke.sh
+cd backend && php artisan test
+cd android && ./gradlew :app:assembleDebug && ./gradlew :app:testDebugUnitTest
+```
+
 ## Status
 
-Fase saat ini: **Sprint 7 — Offline Cash & Sync Foundation selesai**. Transaksi
+Fase saat ini: **Sprint 8 — Inventory Simple Foundation selesai**. Stok kini
+dihitung dari ledger `inventory_movements` (sum `signed_qty`) — tidak ada kolom
+stok mutable sebagai sumber kebenaran. Penjualan CASH yang berhasil (online dan
+sync offline) otomatis membuat gerakan `SALE_OUT` per item untuk produk
+stock-tracked, mereferensikan `sale_item` sehingga replay offline yang idempotent
+tidak pernah menggandakan pengurangan stok. Endpoint adjustment mendukung
+`OPENING`/`ADJUSTMENT_IN`/`ADJUSTMENT_OUT` dengan `signed_qty` dihitung backend;
+`SALE_OUT` tidak dapat dibuat manual. Semua endpoint inventory tenant/store
+isolated. Android menampilkan label stok ringan ("Stok: -" bila belum diketahui,
+peringatan bila ≤ 0) tanpa laporan berat, dan backend tetap otoritatif. Cash
+(Sprint 4), QRIS (Sprint 5), struk/printer (Sprint 6), dan offline sync (Sprint 7)
+tetap utuh. Android build CI menjalankan assembleDebug + testDebugUnitTest.
+
+### Riwayat: Sprint 7 — Offline Cash & Sync Foundation
+
+Sprint 7 — **Offline Cash & Sync Foundation selesai**. Transaksi
 CASH kini dapat dibuat offline: Android menyimpan penjualan ke antrean lokal (Room)
 dengan `client_reference` UUID, lalu WorkManager (network-aware, exponential backoff)
 menyinkronkannya ke backend saat online. Backend bersifat idempotent — submit offline

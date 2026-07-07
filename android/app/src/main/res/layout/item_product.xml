@@ -37,6 +37,16 @@
             android:layout_marginTop="2dp"
             android:textSize="14sp" />
 
+        <!-- Sprint 8 — lightweight, informational stock label. Defaults to
+             "Stok: -" until the backend stock fetch resolves. -->
+        <TextView
+            android:id="@+id/textStock"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textSize="12sp"
+            android:text="@string/cashier_stock_unknown" />
+
     </LinearLayout>
 
     <Button
