@@ -58,9 +58,13 @@ class SaleController extends Controller
     {
         $sale = $this->sales->createCashSale($this->context, $request->validated());
 
+        // Idempotent replay of an already-stored offline sale is a 200 (nothing
+        // new was created); a genuinely new sale is a 201.
+        $status = $sale->idempotentReplay ? 200 : 201;
+
         return SaleResource::make($sale)
             ->response()
-            ->setStatusCode(201);
+            ->setStatusCode($status);
     }
 
     public function show(Sale $sale): SaleResource

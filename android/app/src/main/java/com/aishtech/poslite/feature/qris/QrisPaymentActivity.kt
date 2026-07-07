@@ -36,7 +36,10 @@ class QrisPaymentActivity : AppCompatActivity() {
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    QrisPaymentViewModel(ServiceLocator.qrisRepository(applicationContext)) as T
+                    QrisPaymentViewModel(
+                        ServiceLocator.qrisRepository(applicationContext),
+                        ServiceLocator.networkMonitor(applicationContext),
+                    ) as T
             },
         )[QrisPaymentViewModel::class.java]
 

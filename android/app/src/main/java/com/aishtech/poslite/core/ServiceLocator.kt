@@ -2,12 +2,15 @@ package com.aishtech.poslite.core
 
 import android.content.Context
 import com.aishtech.poslite.core.database.PosDatabase
+import com.aishtech.poslite.core.network.AndroidNetworkMonitor
 import com.aishtech.poslite.core.network.ApiClient
+import com.aishtech.poslite.core.network.NetworkMonitor
 import com.aishtech.poslite.core.network.PosApiService
 import com.aishtech.poslite.core.session.SessionManager
 import com.aishtech.poslite.core.session.SharedPrefsTokenStore
 import com.aishtech.poslite.data.repository.AuthRepository
 import com.aishtech.poslite.data.repository.CatalogRepository
+import com.aishtech.poslite.data.repository.OfflineSaleRepository
 import com.aishtech.poslite.data.repository.QrisRepository
 import com.aishtech.poslite.data.repository.ReceiptRepository
 import com.aishtech.poslite.data.repository.SalesRepository
@@ -43,6 +46,19 @@ object ServiceLocator {
 
     fun salesRepository(context: Context): SalesRepository =
         SalesRepository(api(context))
+
+    // Sprint 7 — offline CASH sale queue + sync.
+    fun offlineSaleRepository(context: Context): OfflineSaleRepository {
+        val db = PosDatabase.getInstance(context)
+        return OfflineSaleRepository(
+            offlineSaleDao = db.offlineSaleDao(),
+            offlineSaleItemDao = db.offlineSaleItemDao(),
+            api = api(context),
+        )
+    }
+
+    fun networkMonitor(context: Context): NetworkMonitor =
+        AndroidNetworkMonitor(context.applicationContext)
 
     fun qrisRepository(context: Context): QrisRepository =
         QrisRepository(api(context))

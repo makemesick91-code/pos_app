@@ -1,0 +1,188 @@
+package com.aishtech.poslite.data.repository
+
+import com.aishtech.poslite.core.network.PosApiService
+import com.aishtech.poslite.data.local.OfflineSyncStatus
+import com.aishtech.poslite.data.local.dao.OfflineSaleDao
+import com.aishtech.poslite.data.local.dao.OfflineSaleItemDao
+import com.aishtech.poslite.data.local.entity.LocalOfflineSaleEntity
+import com.aishtech.poslite.data.local.entity.LocalOfflineSaleItemEntity
+import com.aishtech.poslite.data.remote.dto.CashPaymentRequestDto
+import com.aishtech.poslite.data.remote.dto.CreateSaleItemRequestDto
+import com.aishtech.poslite.data.remote.dto.CreateSaleRequestDto
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
+import java.util.UUID
+
+/**
+ * Owns offline CASH sales end to end (Sprint 7):
+ *
+ *  1. [createOfflineCashSale] snapshots the cart into the local queue with a
+ *     device-generated client reference. The cart is NEVER cleared here — that
+ *     is a UI decision made only after this returns [SaveResult.Saved].
+ *  2. [syncPending] replays queued sales to the backend as ANDROID_OFFLINE CASH
+ *     submits. A success/idempotent-replay marks the row SYNCED; a transient
+ *     error keeps it FAILED (retryable); a validation/conflict marks CONFLICT.
+ *
+ * QRIS is intentionally impossible here — offline is CASH-only.
+ */
+class OfflineSaleRepository(
+    private val offlineSaleDao: OfflineSaleDao,
+    private val offlineSaleItemDao: OfflineSaleItemDao,
+    private val api: PosApiService,
+    private val referenceProvider: () -> String = { UUID.randomUUID().toString() },
+    private val clock: () -> Long = { System.currentTimeMillis() },
+) {
+
+    sealed class SaveResult {
+        data class Saved(val localId: Long, val clientReference: String) : SaveResult()
+        data class Error(val message: String) : SaveResult()
+    }
+
+    /** Outcome of syncing one queued sale. */
+    enum class SyncOutcome { SYNCED, FAILED, CONFLICT }
+
+    data class SyncSummary(val synced: Int, val failed: Int, val conflicts: Int) {
+        val attempted: Int get() = synced + failed + conflicts
+    }
+
+    /**
+     * Snapshot the cart into the local offline queue. Returns [SaveResult.Saved]
+     * only when the sale AND its items are persisted; on any failure returns
+     * [SaveResult.Error] and stores nothing (so the caller keeps the cart).
+     */
+    suspend fun createOfflineCashSale(
+        items: List<com.aishtech.poslite.feature.cashier.CartItem>,
+        paidAmount: Double,
+        storeId: Long? = null,
+    ): SaveResult {
+        if (items.isEmpty()) {
+            return SaveResult.Error("Keranjang kosong.")
+        }
+
+        val subtotal = items.sumOf { it.lineTotal }
+        if (paidAmount < subtotal) {
+            return SaveResult.Error("Uang dibayar kurang dari total.")
+        }
+
+        val clientReference = referenceProvider()
+        val ts = clock()
+        val sale = LocalOfflineSaleEntity(
+            clientReference = clientReference,
+            storeId = storeId,
+            saleDate = isoUtc(ts),
+            subtotal = subtotal,
+            discountTotal = 0.0,
+            taxTotal = 0.0,
+            grandTotal = subtotal,
+            paidAmount = paidAmount,
+            changeAmount = paidAmount - subtotal,
+            syncStatus = OfflineSyncStatus.PENDING,
+            syncAttemptCount = 0,
+            createdAt = ts,
+            updatedAt = ts,
+        )
+
+        val itemEntities = items.map {
+            LocalOfflineSaleItemEntity(
+                offlineSaleLocalId = 0,
+                productId = it.productId,
+                productName = it.name,
+                qty = it.quantity,
+                unitPrice = it.unitPrice,
+                discount = 0.0,
+                subtotal = it.lineTotal,
+            )
+        }
+
+        return try {
+            val localId = offlineSaleDao.insertOfflineSaleWithItems(sale, itemEntities)
+            SaveResult.Saved(localId, clientReference)
+        } catch (e: Exception) {
+            SaveResult.Error(e.message ?: "Gagal menyimpan transaksi offline.")
+        }
+    }
+
+    /** Replay up to [limit] pending/failed offline sales to the backend. */
+    suspend fun syncPending(limit: Int = 10): SyncSummary {
+        val queue = offlineSaleDao.getPendingOrFailed(limit)
+        var synced = 0
+        var failed = 0
+        var conflicts = 0
+
+        for (sale in queue) {
+            when (syncOne(sale)) {
+                SyncOutcome.SYNCED -> synced++
+                SyncOutcome.FAILED -> failed++
+                SyncOutcome.CONFLICT -> conflicts++
+            }
+        }
+
+        return SyncSummary(synced = synced, failed = failed, conflicts = conflicts)
+    }
+
+    private suspend fun syncOne(sale: LocalOfflineSaleEntity): SyncOutcome {
+        offlineSaleDao.markSyncing(sale.localId, clock())
+
+        val items = offlineSaleItemDao.getItemsForSale(sale.localId)
+        val request = CreateSaleRequestDto(
+            items = items.map {
+                CreateSaleItemRequestDto(
+                    productId = it.productId,
+                    qty = it.qty,
+                    discount = amount(it.discount),
+                )
+            },
+            payment = CashPaymentRequestDto(paidAmount = amount(sale.paidAmount)),
+            source = SOURCE_ANDROID_OFFLINE,
+            clientReference = sale.clientReference,
+            clientCreatedAt = sale.saleDate,
+        )
+
+        return try {
+            val response = api.createSale(request)
+            val body = response.body()
+            when {
+                response.isSuccessful && body != null -> {
+                    // Covers both a fresh create and an idempotent replay (200):
+                    // either way the server holds the authoritative sale now.
+                    offlineSaleDao.markSynced(
+                        localId = sale.localId,
+                        serverSaleId = body.data.id,
+                        invoiceNumber = body.data.invoiceNumber,
+                        syncedAt = clock(),
+                    )
+                    SyncOutcome.SYNCED
+                }
+                response.code() == 422 || response.code() == 409 -> {
+                    offlineSaleDao.markConflict(sale.localId, "HTTP ${response.code()}", clock())
+                    SyncOutcome.CONFLICT
+                }
+                else -> {
+                    offlineSaleDao.markFailed(sale.localId, "HTTP ${response.code()}", clock())
+                    SyncOutcome.FAILED
+                }
+            }
+        } catch (e: Exception) {
+            offlineSaleDao.markFailed(sale.localId, e.message ?: "network error", clock())
+            SyncOutcome.FAILED
+        }
+    }
+
+    suspend fun pendingCount(): Int = offlineSaleDao.countPending()
+
+    suspend fun failedCount(): Int = offlineSaleDao.countFailed()
+
+    private fun amount(value: Double): String = String.format(Locale.US, "%.2f", value)
+
+    private fun isoUtc(epochMillis: Long): String {
+        val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
+        format.timeZone = TimeZone.getTimeZone("UTC")
+        return format.format(Date(epochMillis))
+    }
+
+    companion object {
+        const val SOURCE_ANDROID_OFFLINE = "ANDROID_OFFLINE"
+    }
+}

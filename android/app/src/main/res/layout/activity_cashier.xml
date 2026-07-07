@@ -36,6 +36,31 @@
 
     </LinearLayout>
 
+    <!-- Sprint 7 — offline sync queue summary + manual sync trigger. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <Button
+            android:id="@+id/buttonSyncNow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/cashier_sync_now" />
+
+        <TextView
+            android:id="@+id/textSyncCounts"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="12dp"
+            android:text="@string/cashier_sync_summary"
+            android:textSize="13sp" />
+
+    </LinearLayout>
+
     <EditText
         android:id="@+id/inputSearch"
         android:layout_width="match_parent"
@@ -124,6 +149,15 @@
             android:text="@string/cashier_checkout_cash" />
 
     </LinearLayout>
+
+    <!-- Sprint 7 — offline CASH checkout (stores locally, syncs later). -->
+    <Button
+        android:id="@+id/buttonCheckoutOffline"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:enabled="false"
+        android:text="@string/cashier_checkout_cash_offline" />
 
     <TextView
         android:id="@+id/textCheckoutResult"

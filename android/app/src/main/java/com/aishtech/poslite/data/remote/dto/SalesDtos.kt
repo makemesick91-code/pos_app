@@ -12,6 +12,11 @@ data class CreateSaleRequestDto(
     @SerializedName("items") val items: List<CreateSaleItemRequestDto>,
     @SerializedName("payment") val payment: CashPaymentRequestDto,
     @SerializedName("notes") val notes: String? = null,
+    // Sprint 7 — offline sync. Present only for a replayed offline CASH sale; the
+    // backend uses client_reference to dedupe retries. Absent for online sales.
+    @SerializedName("source") val source: String? = null,
+    @SerializedName("client_reference") val clientReference: String? = null,
+    @SerializedName("client_created_at") val clientCreatedAt: String? = null,
 )
 
 data class CreateSaleItemRequestDto(
@@ -46,6 +51,8 @@ data class SaleDto(
     @SerializedName("payment_status") val paymentStatus: String?,
     @SerializedName("sync_status") val syncStatus: String?,
     @SerializedName("source") val source: String?,
+    @SerializedName("client_reference") val clientReference: String? = null,
+    @SerializedName("synced_at") val syncedAt: String? = null,
     @SerializedName("items") val items: List<SaleItemDto> = emptyList(),
     @SerializedName("payments") val payments: List<PaymentDto> = emptyList(),
 )

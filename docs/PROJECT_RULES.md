@@ -41,6 +41,7 @@ This project is governed by:
 6. `docs/sprints/sprint-4-sales-backend-integration.md`
 7. `docs/sprints/sprint-5-qris-payment-gateway-foundation.md`
 8. `docs/sprints/sprint-6-printer-receipt-foundation.md`
+9. `docs/sprints/sprint-7-offline-cash-sync-foundation.md`
 
 No sprint may contradict these documents unless the canonical foundation is explicitly updated first.
 
@@ -178,3 +179,30 @@ Mandatory:
 15. Gradle wrapper must exist in the repository from Sprint 6 onward.
 16. Android build CI must run assembleDebug and unit tests from Sprint 6 onward.
 17. GO tag is forbidden if Android build CI is not active and green.
+
+## Sprint 7 Offline Cash & Sync Foundation Runtime Rule
+
+Starting Sprint 7, offline operation must be cash-only, idempotent, lightweight, and sync-safe.
+
+Mandatory:
+
+1. Offline transaction support is limited to CASH sales only.
+2. QRIS must remain online-only.
+3. Android must not create QRIS payment while offline.
+4. Android must store offline CASH sales locally before clearing the cart.
+5. Android must keep the cart if local offline save fails.
+6. Offline sales must have a client-generated reference/idempotency key.
+7. Backend sales API must handle duplicate offline submit idempotently.
+8. Backend must not create duplicate sales for the same tenant/store/client reference.
+9. Backend must continue recalculating totals and must not trust Android totals.
+10. Backend must continue snapshotting sale item product name and price.
+11. Sync must use authenticated tenant context.
+12. Tenant A must never sync or resolve offline sale references for tenant B.
+13. Android sync queue must preserve failed/pending offline sales until synced or explicitly resolved.
+14. WorkManager sync must use retry/backoff and must not crash the app.
+15. Offline receipt must be clearly marked as draft/offline until server sync succeeds.
+16. Final receipt rules from Sprint 6 must remain payment-aware.
+17. Cash, QRIS, receipt, and printer behavior from previous sprints must remain intact.
+18. Android Gradle wrapper must remain committed.
+19. Android CI must continue running assembleDebug and testDebugUnitTest.
+20. Sprint 7 must not implement offline QRIS, inventory movement runtime, advanced reports, or owner dashboard.

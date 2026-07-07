@@ -31,6 +31,9 @@ class SaleResource extends JsonResource
             'payment_status' => $this->payment_status,
             'sync_status' => $this->sync_status,
             'source' => $this->source,
+            'client_reference' => $this->client_reference,
+            'client_created_at' => $this->client_created_at,
+            'synced_at' => $this->synced_at,
             'notes' => $this->notes,
             'cancelled_at' => $this->cancelled_at,
             'items' => SaleItemResource::collection($this->whenLoaded('items')),
@@ -44,10 +47,16 @@ class SaleResource extends JsonResource
      */
     public function with(Request $request): array
     {
-        return [
-            'meta' => [
-                'foundation' => 'POS_ANDROID_SAAS_FOUNDATION',
-            ],
+        $meta = [
+            'foundation' => 'POS_ANDROID_SAAS_FOUNDATION',
         ];
+
+        // Sprint 7: a single-sale response advertises whether it was an idempotent
+        // replay of an already-stored offline submit. Collections omit this.
+        if ($this->resource instanceof Sale) {
+            $meta['idempotent_replay'] = (bool) $this->resource->idempotentReplay;
+        }
+
+        return ['meta' => $meta];
     }
 }

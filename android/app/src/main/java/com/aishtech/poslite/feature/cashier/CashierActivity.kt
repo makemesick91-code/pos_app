@@ -14,6 +14,7 @@ import com.aishtech.poslite.core.ServiceLocator
 import com.aishtech.poslite.data.repository.CartRepository
 import com.aishtech.poslite.databinding.ActivityCashierBinding
 import com.aishtech.poslite.feature.receipt.ReceiptActivity
+import com.aishtech.poslite.feature.sync.OfflineSalesSyncScheduler
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -43,6 +44,7 @@ class CashierActivity : AppCompatActivity() {
                         syncManager = ServiceLocator.catalogSyncManager(context),
                         sales = ServiceLocator.salesRepository(context),
                         cart = CartRepository(),
+                        offline = ServiceLocator.offlineSaleRepository(context),
                     ) as T
             },
         )[CashierViewModel::class.java]
@@ -55,6 +57,17 @@ class CashierActivity : AppCompatActivity() {
         binding.buttonCheckout.setOnClickListener {
             val paid = binding.inputPaidAmount.text?.toString()?.toDoubleOrNull() ?: 0.0
             viewModel.checkoutCash(paid)
+        }
+        // Sprint 7 — offline CASH checkout: store locally, then kick a background
+        // sync. The worker is network-constrained so it waits for connectivity.
+        binding.buttonCheckoutOffline.setOnClickListener {
+            val paid = binding.inputPaidAmount.text?.toString()?.toDoubleOrNull() ?: 0.0
+            viewModel.checkoutCashOffline(paid)
+            OfflineSalesSyncScheduler.enqueue(context)
+        }
+        binding.buttonSyncNow.setOnClickListener {
+            viewModel.syncNow()
+            OfflineSalesSyncScheduler.enqueue(context)
         }
         binding.inputSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) = Unit
@@ -84,14 +97,25 @@ class CashierActivity : AppCompatActivity() {
         viewModel.cartItems.observe(this) { items ->
             val count = items.sumOf { it.quantity }
             binding.textCartCount.text = "Keranjang: $count item"
-            // Checkout is only possible with a non-empty cart.
+            // Checkout (online + offline) is only possible with a non-empty cart.
             binding.buttonCheckout.isEnabled = items.isNotEmpty()
+            binding.buttonCheckoutOffline.isEnabled = items.isNotEmpty()
         }
         viewModel.syncStatus.observe(this) { binding.textSyncStatus.text = it }
         viewModel.syncing.observe(this) { syncing ->
             binding.buttonSync.isEnabled = !syncing
         }
+        viewModel.syncCounts.observe(this) { counts ->
+            binding.textSyncCounts.text =
+                getString(R.string.cashier_sync_summary, counts.pending, counts.failed)
+        }
+        viewModel.offlineSyncing.observe(this) { syncing ->
+            binding.buttonSyncNow.isEnabled = !syncing
+            if (syncing) binding.textSyncStatus.text = getString(R.string.cashier_syncing)
+        }
         viewModel.checkout.observe(this) { state -> renderCheckout(state) }
+
+        viewModel.refreshSyncCounts()
     }
 
     private fun renderCheckout(state: CashierViewModel.CheckoutState) {
@@ -100,13 +124,30 @@ class CashierActivity : AppCompatActivity() {
             is CashierViewModel.CheckoutState.Idle -> {
                 result.visibility = View.GONE
                 result.setOnClickListener(null)
-                binding.buttonCheckout.isEnabled = viewModel.cartItems.value?.isNotEmpty() ?: false
+                val hasItems = viewModel.cartItems.value?.isNotEmpty() ?: false
+                binding.buttonCheckout.isEnabled = hasItems
+                binding.buttonCheckoutOffline.isEnabled = hasItems
             }
             is CashierViewModel.CheckoutState.Submitting -> {
                 result.visibility = View.VISIBLE
                 result.setOnClickListener(null)
                 result.text = getString(R.string.cashier_checkout_submitting)
                 binding.buttonCheckout.isEnabled = false
+                binding.buttonCheckoutOffline.isEnabled = false
+            }
+            is CashierViewModel.CheckoutState.OfflineSaved -> {
+                // Offline draft receipt — clearly NOT a final server receipt.
+                result.visibility = View.VISIBLE
+                result.setOnClickListener(null)
+                result.text = getString(R.string.cashier_offline_saved) +
+                    "\n" + getString(R.string.cashier_offline_draft_label) +
+                    "\nRef: ${state.clientReference}" +
+                    "\nTotal: ${formatPrice(state.grandTotal)}" +
+                    "\nKembalian: ${formatPrice(state.change)}"
+                binding.inputPaidAmount.text?.clear()
+                val hasItems = viewModel.cartItems.value?.isNotEmpty() ?: false
+                binding.buttonCheckout.isEnabled = hasItems
+                binding.buttonCheckoutOffline.isEnabled = hasItems
             }
             is CashierViewModel.CheckoutState.Success -> {
                 val sale = state.sale
@@ -119,12 +160,17 @@ class CashierActivity : AppCompatActivity() {
                 // Sprint 6 — tap the result to open the receipt for this sale.
                 result.setOnClickListener { openReceipt(sale.id) }
                 binding.inputPaidAmount.text?.clear()
+                val hasItems = viewModel.cartItems.value?.isNotEmpty() ?: false
+                binding.buttonCheckout.isEnabled = hasItems
+                binding.buttonCheckoutOffline.isEnabled = hasItems
             }
             is CashierViewModel.CheckoutState.Error -> {
                 result.visibility = View.VISIBLE
                 result.setOnClickListener(null)
                 result.text = state.message
-                binding.buttonCheckout.isEnabled = viewModel.cartItems.value?.isNotEmpty() ?: false
+                val hasItems = viewModel.cartItems.value?.isNotEmpty() ?: false
+                binding.buttonCheckout.isEnabled = hasItems
+                binding.buttonCheckoutOffline.isEnabled = hasItems
             }
         }
     }

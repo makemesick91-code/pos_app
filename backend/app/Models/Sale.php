@@ -29,8 +29,16 @@ class Sale extends Model
     public const SYNC_STATUS_FAILED = 'FAILED_SYNC';
 
     public const SOURCE_ANDROID_ONLINE = 'ANDROID_ONLINE';
+    public const SOURCE_ANDROID_OFFLINE = 'ANDROID_OFFLINE';
     public const SOURCE_WEB_ADMIN = 'WEB_ADMIN';
     public const SOURCE_API = 'API';
+
+    /**
+     * Transient (non-persisted) flag set by SaleService when an offline submit is
+     * an idempotent replay of an already-stored sale. Surfaced as
+     * meta.idempotent_replay and never written to the database.
+     */
+    public bool $idempotentReplay = false;
 
     protected $fillable = [
         'tenant_id',
@@ -48,6 +56,9 @@ class Sale extends Model
         'payment_status',
         'sync_status',
         'source',
+        'client_reference',
+        'client_created_at',
+        'synced_at',
         'notes',
         'cancelled_at',
         'cancelled_by',
@@ -63,6 +74,8 @@ class Sale extends Model
             'grand_total' => 'decimal:2',
             'paid_total' => 'decimal:2',
             'change_total' => 'decimal:2',
+            'client_created_at' => 'datetime',
+            'synced_at' => 'datetime',
             'cancelled_at' => 'datetime',
         ];
     }
