@@ -361,6 +361,36 @@ penagihan langganan nyata. Cash (Sprint 4), QRIS (Sprint 5), struk/printer
 (Sprint 9) tetap utuh. Android build CI menjalankan assembleDebug +
 testDebugUnitTest.
 
+## Sprint 14 — Pilot Release Candidate & Operator UAT Foundation
+
+Sprint 14 establishes the pilot RC and operator UAT foundation:
+
+- pilot RC checklist
+- operator UAT checklist
+- smoke scenario pack
+- issue register foundation
+- UAT result template
+- RC GO/WATCH/NO-GO evidence
+- pilot:rc-check command
+- pilot:uat-summary command
+- CI pilot RC/UAT gate
+- no new business feature expansion
+- no automatic production deploy
+- Sprint 14 runtime rules lock
+
+Validation:
+
+```bash
+bash scripts/sprint14_smoke.sh
+bash scripts/android_release_readiness.sh
+cd backend && php artisan production:readiness-check --json
+cd backend && php artisan release:go-no-go --json
+cd backend && php artisan pilot:rc-check --json
+cd backend && php artisan pilot:uat-summary --json
+cd backend && php artisan test
+cd android && ./gradlew :app:assembleDebug && ./gradlew :app:testDebugUnitTest
+```
+
 ## Sprint 13 — Production Readiness & Release Hardening Foundation
 
 Sprint 13 establishes the release hardening foundation:

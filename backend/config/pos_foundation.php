@@ -61,6 +61,11 @@ return [
         'backup_restore_runbook_required' => true,
         'android_release_readiness_required' => true,
         'automatic_production_deploy_not_in_sprint_13' => true,
+        'pilot_rc_gate_required' => true,
+        'operator_uat_checklist_required' => true,
+        'pilot_issue_register_required' => true,
+        'rc_go_watch_no_go_required' => true,
+        'no_auto_production_deploy_sprint_14' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
@@ -77,5 +82,6 @@ return [
         'sprint_11' => 'Admin SaaS Control Panel Foundation',
         'sprint_12' => 'Tenant Onboarding & Demo Data Foundation',
         'sprint_13' => 'Production Readiness & Release Hardening Foundation',
+        'sprint_14' => 'Pilot Release Candidate & Operator UAT Foundation',
     ],
 ];
