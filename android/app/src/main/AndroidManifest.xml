@@ -44,6 +44,10 @@
             android:name=".feature.receipt.ReceiptActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".feature.reports.ReportsActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

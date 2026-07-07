@@ -43,6 +43,7 @@ This project is governed by:
 8. `docs/sprints/sprint-6-printer-receipt-foundation.md`
 9. `docs/sprints/sprint-7-offline-cash-sync-foundation.md`
 10. `docs/sprints/sprint-8-inventory-simple-foundation.md`
+11. `docs/sprints/sprint-9-reports-closing-foundation.md`
 
 No sprint may contradict these documents unless the canonical foundation is explicitly updated first.
 
@@ -232,3 +233,29 @@ Mandatory:
 16. Sprint 8 must not implement procurement, stock transfer, stock opname, batch/lot, valuation, or advanced inventory reports.
 17. Android stock visibility must remain lightweight and must not load heavy reports.
 18. Android CI must continue running assembleDebug and testDebugUnitTest.
+
+## Sprint 9 Reports & Closing Foundation Runtime Rule
+
+Starting Sprint 9, reporting and closing implementation must be tenant-isolated, store-scoped, payment-aware, and lightweight.
+
+Mandatory:
+
+1. Reports must be generated from backend authoritative data.
+2. Android must not calculate authoritative report totals.
+3. Sales revenue reports must count PAID sales only.
+4. Pending QRIS payments must not be counted as paid revenue.
+5. Cancelled sales must not be counted as paid revenue, but may be counted separately.
+6. Offline cash sales count only after synced to backend.
+7. Inventory summary must be generated from `inventory_movements`, not mutable product stock.
+8. Closing snapshot must be tenant-owned.
+9. Closing snapshot must be store-owned.
+10. Closing business date must be explicit.
+11. Only one closing snapshot may exist per tenant/store/business_date.
+12. Duplicate closing request must not create duplicate closing snapshots.
+13. Closing totals must come from backend report services, not client-provided totals.
+14. Tenant A must never view, export, create, or close reports for tenant B.
+15. CSV export must be tenant-isolated and must not expose secrets/raw gateway payloads.
+16. Android report UI must remain lightweight and summary-focused.
+17. Sprint 9 must not implement advanced BI dashboard, accounting journal, PDF/Excel export, tax reporting complex, stock valuation, or procurement reports.
+18. Cash, QRIS, receipt, printer, offline sync, and inventory behavior from previous sprints must remain intact.
+19. Android CI must continue running assembleDebug and testDebugUnitTest.

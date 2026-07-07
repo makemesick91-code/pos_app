@@ -243,9 +243,48 @@ cd backend && php artisan test
 cd android && ./gradlew :app:assembleDebug && ./gradlew :app:testDebugUnitTest
 ```
 
+## Sprint 9 — Reports & Closing Foundation
+
+Sprint 9 establishes the simple reports and closing foundation:
+
+- daily sales summary
+- payment method summary
+- inventory movement summary
+- daily closing snapshot
+- duplicate closing protection
+- tenant-isolated CSV export
+- Android lightweight reports screen
+- Android closing action/status
+- Sprint 9 runtime rules lock
+
+Validation:
+
+```bash
+bash scripts/sprint9_smoke.sh
+cd backend && php artisan test
+cd android && ./gradlew :app:assembleDebug && ./gradlew :app:testDebugUnitTest
+```
+
 ## Status
 
-Fase saat ini: **Sprint 8 — Inventory Simple Foundation selesai**. Stok kini
+Fase saat ini: **Sprint 9 — Reports & Closing Foundation selesai**. Laporan kini
+dihasilkan backend secara otoritatif: ringkasan penjualan harian (hanya sale
+`PAID` dihitung sebagai revenue; QRIS pending/cancelled tidak), ringkasan
+pembayaran per metode/status, dan ringkasan gerakan inventory dari
+`inventory_movements`. Snapshot closing harian dikunci satu per
+tenant/store/business_date — permintaan closing duplikat me-replay baris yang ada
+(`meta.duplicate_replay=true`) tanpa membuat baris ganda, dan seluruh total
+dihitung backend (total dari client diabaikan). Export CSV ringkas bersifat
+tenant-isolated dan tidak pernah membocorkan payload gateway/secret. Android
+menampilkan layar "Ringkasan Harian" ringan (tanpa chart/PDF/Excel) yang hanya
+menampilkan nilai backend dan tombol "Tutup Hari Ini". Cash (Sprint 4), QRIS
+(Sprint 5), struk/printer (Sprint 6), offline sync (Sprint 7), dan inventory
+(Sprint 8) tetap utuh. Android build CI menjalankan assembleDebug +
+testDebugUnitTest.
+
+### Riwayat: Sprint 8 — Inventory Simple Foundation
+
+Sprint 8 — **Inventory Simple Foundation selesai**. Stok
 dihitung dari ledger `inventory_movements` (sum `signed_qty`) — tidak ada kolom
 stok mutable sebagai sumber kebenaran. Penjualan CASH yang berhasil (online dan
 sync offline) otomatis membuat gerakan `SALE_OUT` per item untuk produk

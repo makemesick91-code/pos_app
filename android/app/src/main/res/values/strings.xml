@@ -59,4 +59,18 @@
     <string name="receipt_invoice_label">No: %1$s</string>
     <string name="receipt_status_label">Status struk: %1$s</string>
     <string name="receipt_not_printable">Struk final belum dapat dicetak.</string>
+
+    <!-- Sprint 9 — Reports & closing -->
+    <string name="cashier_reports">Ringkasan</string>
+    <string name="reports_title">Ringkasan Harian</string>
+    <string name="reports_date">Tanggal: %1$s</string>
+    <string name="reports_refresh">Muat Ulang</string>
+    <string name="reports_sales_count">Jumlah transaksi (paid): %1$s</string>
+    <string name="reports_cancelled_count">Transaksi dibatalkan: %1$s</string>
+    <string name="reports_cash_total">Total tunai: %1$s</string>
+    <string name="reports_qris_total">Total QRIS: %1$s</string>
+    <string name="reports_grand_total">Total keseluruhan: %1$s</string>
+    <string name="reports_sale_out_qty">Barang keluar (SALE_OUT): %1$s</string>
+    <string name="reports_closing_hint">Tutup hari untuk menyimpan snapshot closing.</string>
+    <string name="reports_close_today">Tutup Hari Ini</string>
 </resources>
