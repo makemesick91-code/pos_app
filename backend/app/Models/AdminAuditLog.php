@@ -29,12 +29,20 @@ class AdminAuditLog extends Model
     public const ACTION_TENANT_ONBOARDING_REPLAYED = 'TENANT_ONBOARDING_REPLAYED';
     public const ACTION_DEMO_DATA_SEEDED = 'DEMO_DATA_SEEDED';
     public const ACTION_DEMO_DATA_RESET = 'DEMO_DATA_RESET';
+    public const ACTION_DEFECT_CREATED = 'DEFECT_CREATED';
+    public const ACTION_DEFECT_UPDATED = 'DEFECT_UPDATED';
+    public const ACTION_DEFECT_ASSIGNED = 'DEFECT_ASSIGNED';
+    public const ACTION_DEFECT_STATUS_CHANGED = 'DEFECT_STATUS_CHANGED';
+    public const ACTION_DEFECT_ACCEPTED_RISK = 'DEFECT_ACCEPTED_RISK';
+    public const ACTION_DEFECT_FIXED = 'DEFECT_FIXED';
+    public const ACTION_DEFECT_VERIFIED = 'DEFECT_VERIFIED';
 
     public const TARGET_TENANT = 'tenant';
     public const TARGET_SUBSCRIPTION = 'tenant_subscription';
     public const TARGET_DEVICE = 'registered_device';
     public const TARGET_PLAN = 'subscription_plan';
     public const TARGET_ONBOARDING_RUN = 'tenant_onboarding_run';
+    public const TARGET_PILOT_DEFECT = 'pilot_defect';
 
     protected $fillable = [
         'actor_user_id',

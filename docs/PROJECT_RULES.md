@@ -51,6 +51,7 @@ This project is governed by:
 16. `docs/sprints/sprint-14-pilot-release-candidate-operator-uat-foundation.md`
 17. `docs/sprints/sprint-15-pilot-deployment-field-trial-evidence-foundation.md`
 18. `docs/sprints/sprint-16-pilot-monitoring-hypercare-foundation.md`
+19. `docs/sprints/sprint-17-pilot-stabilization-defect-burndown-foundation.md`
 
 No sprint may contradict these documents unless the canonical foundation is explicitly updated first.
 
@@ -453,3 +454,35 @@ Mandatory:
 18. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, closing, release hardening, RC/UAT, and field trial behavior from previous sprints must remain intact.
 19. Android CI remains the authoritative build gate if local Android build cannot run.
 20. Hypercare GO/WATCH/NO-GO report must be evidence-backed.
+
+## Sprint 17 Pilot Stabilization & Defect Burn-down Foundation Runtime Rule
+
+Starting Sprint 17, pilot stabilization must be defect-driven, SLA-aware, audit-safe, tenant-aware, and evidence-backed before a GO tag is created.
+
+Mandatory:
+
+1. Stabilization must not be declared GO without backend tests passing.
+2. Stabilization must not be declared GO without Android CI assembleDebug passing.
+3. Stabilization must not be declared GO without Android CI testDebugUnitTest passing.
+4. Stabilization must not be declared GO without Sprint 13 release readiness commands running successfully.
+5. Stabilization must not be declared GO without Sprint 14 RC/UAT commands running successfully.
+6. Stabilization must not be declared GO without Sprint 15 deployment/field-trial commands running successfully.
+7. Stabilization must not be declared GO without Sprint 16 monitoring/hypercare commands running successfully.
+8. Pilot defects must be persisted with severity, status, blocking flag, owner, area, tenant/store context when available, SLA due timestamp, and evidence reference.
+9. Defect lifecycle changes must append immutable event records.
+10. Defect status changes must not delete history.
+11. BLOCKER/CRITICAL open defects must force NO-GO unless explicitly accepted as outside scope with documented risk.
+12. MAJOR open defects must force WATCH unless accepted with mitigation.
+13. SLA breach detection must flag overdue BLOCKER/CRITICAL/MAJOR defects.
+14. Accepted-risk defects must record approver, reason, expiry/review date, and must not hide the original severity.
+15. Retest verification must record retest result, verifier, timestamp, and evidence reference.
+16. Burn-down summary must count defects by severity, status, area, SLA breach, accepted risk, and fix verification state.
+17. Stabilization commands must not print secret values.
+18. Stabilization commands must not mutate production data unless explicitly intended as admin defect register mutation and audit/event-tracked.
+19. Sprint 17 must not implement new business features.
+20. Sprint 17 must not perform automatic production deployment.
+21. Sprint 17 must not send real Slack/WhatsApp/email alerts.
+22. Sprint 17 must not commit APK/AAB, signing key, keystore, `.env`, DB dump, server credential, or payment gateway secret.
+23. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, closing, release hardening, RC/UAT, deployment, field trial, monitoring, and hypercare behavior from previous sprints must remain intact.
+24. Android CI remains the authoritative build gate if local Android build cannot run.
+25. Stabilization GO/WATCH/NO-GO report must be evidence-backed.
