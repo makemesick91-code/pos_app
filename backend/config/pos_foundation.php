@@ -43,6 +43,11 @@ return [
         'device_limit_required' => true,
         'device_registration_backend_enforced' => true,
         'subscription_billing_not_in_sprint_10' => true,
+        'platform_admin_required' => true,
+        'admin_audit_log_required' => true,
+        'admin_no_tenant_impersonation_sprint_11' => true,
+        'admin_no_real_billing_collection_sprint_11' => true,
+        'admin_no_tenant_hard_delete_sprint_11' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
@@ -56,5 +61,6 @@ return [
         'sprint_8' => 'Inventory Simple Foundation',
         'sprint_9' => 'Reports & Closing Foundation',
         'sprint_10' => 'Subscription & Device Limit Foundation',
+        'sprint_11' => 'Admin SaaS Control Panel Foundation',
     ],
 ];

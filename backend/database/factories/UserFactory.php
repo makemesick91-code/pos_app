@@ -85,4 +85,20 @@ class UserFactory extends Factory
             'is_active' => false,
         ]);
     }
+
+    /**
+     * Sprint 11 — a platform administrator. Carries the backend platform-admin
+     * flag and no tenant/store binding. Being a platform admin never grants
+     * tenant business API access; tests must opt in explicitly.
+     */
+    public function platformAdmin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_platform_admin' => true,
+            'platform_admin_granted_at' => now(),
+            'platform_admin_revoked_at' => null,
+            'tenant_id' => null,
+            'store_id' => null,
+        ]);
+    }
 }

@@ -90,6 +90,11 @@ class Tenant extends Model
         return $this->hasMany(RegisteredDevice::class);
     }
 
+    public function adminAuditLogs(): HasMany
+    {
+        return $this->hasMany(AdminAuditLog::class);
+    }
+
     /**
      * The tenant's most recent subscription row. The authoritative allowed/
      * blocked decision is computed by SubscriptionStatusService — this is only

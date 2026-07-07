@@ -1,5 +1,10 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Admin\AdminAuditLogController;
+use App\Http\Controllers\Api\V1\Admin\AdminSubscriptionPlanController;
+use App\Http\Controllers\Api\V1\Admin\AdminTenantController;
+use App\Http\Controllers\Api\V1\Admin\AdminTenantDeviceController;
+use App\Http\Controllers\Api\V1\Admin\AdminTenantSubscriptionController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\DeviceHeartbeatController;
 use App\Http\Controllers\Api\V1\RegisteredDeviceController;
@@ -128,6 +133,32 @@ Route::prefix('v1')->group(function () {
                 Route::get('/closings/daily', [DailyClosingController::class, 'index']);
                 Route::get('/closings/daily/{dailyClosing}', [DailyClosingController::class, 'show']);
             });
+        });
+
+        // Sprint 11 — Admin SaaS Control Panel. Platform-admin-only, cross-tenant
+        // administration. These routes are deliberately NOT wrapped by
+        // tenant.active / tenant.context / subscription.active / device.registered:
+        // the platform admin carries no tenant context and reads cross-tenant data
+        // only through admin services. Tenant business users are blocked by
+        // platform.admin. No impersonation, no real billing, no tenant hard-delete.
+        Route::prefix('admin')->middleware('platform.admin')->group(function () {
+            Route::get('/tenants', [AdminTenantController::class, 'index']);
+            Route::get('/tenants/{tenant}', [AdminTenantController::class, 'show']);
+
+            Route::get('/tenants/{tenant}/subscriptions', [AdminTenantSubscriptionController::class, 'index']);
+            Route::post('/tenants/{tenant}/subscriptions', [AdminTenantSubscriptionController::class, 'store']);
+            Route::patch('/tenants/{tenant}/subscriptions/{subscription}', [AdminTenantSubscriptionController::class, 'update']);
+
+            Route::get('/tenants/{tenant}/devices', [AdminTenantDeviceController::class, 'index']);
+            Route::post('/tenants/{tenant}/devices/{device}/revoke', [AdminTenantDeviceController::class, 'revoke']);
+
+            Route::get('/subscription-plans', [AdminSubscriptionPlanController::class, 'index']);
+            Route::post('/subscription-plans', [AdminSubscriptionPlanController::class, 'store']);
+            Route::patch('/subscription-plans/{plan}', [AdminSubscriptionPlanController::class, 'update']);
+            Route::post('/subscription-plans/{plan}/deactivate', [AdminSubscriptionPlanController::class, 'deactivate']);
+
+            Route::get('/audit-logs', [AdminAuditLogController::class, 'index']);
+            Route::get('/audit-logs/{auditLog}', [AdminAuditLogController::class, 'show']);
         });
     });
 

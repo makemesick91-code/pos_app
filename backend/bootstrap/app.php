@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureDeviceIsRegistered;
+use App\Http\Middleware\EnsurePlatformAdmin;
 use App\Http\Middleware\EnsureTenantIsActive;
 use App\Http\Middleware\EnsureTenantSubscriptionIsActive;
 use App\Http\Middleware\SetTenantContext;
@@ -22,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.context' => SetTenantContext::class,
             'subscription.active' => EnsureTenantSubscriptionIsActive::class,
             'device.registered' => EnsureDeviceIsRegistered::class,
+            'platform.admin' => EnsurePlatformAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
