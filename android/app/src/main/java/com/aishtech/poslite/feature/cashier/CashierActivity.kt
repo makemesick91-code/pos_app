@@ -14,6 +14,7 @@ import com.aishtech.poslite.core.ServiceLocator
 import com.aishtech.poslite.data.repository.CartRepository
 import com.aishtech.poslite.databinding.ActivityCashierBinding
 import com.aishtech.poslite.feature.receipt.ReceiptActivity
+import com.aishtech.poslite.feature.reports.ReportsActivity
 import com.aishtech.poslite.feature.sync.OfflineSalesSyncScheduler
 import java.text.NumberFormat
 import java.util.Locale
@@ -54,6 +55,9 @@ class CashierActivity : AppCompatActivity() {
         observe()
 
         binding.buttonSync.setOnClickListener { viewModel.sync() }
+        binding.buttonReports.setOnClickListener {
+            startActivity(Intent(this, ReportsActivity::class.java))
+        }
         binding.buttonClearCart.setOnClickListener { viewModel.clearCart() }
         binding.buttonCheckout.setOnClickListener {
             val paid = binding.inputPaidAmount.text?.toString()?.toDoubleOrNull() ?: 0.0

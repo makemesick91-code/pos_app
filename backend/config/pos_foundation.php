@@ -35,6 +35,10 @@ return [
         'sale_out_movement_required' => true,
         'inventory_current_stock_from_movements' => true,
         'inventory_idempotency_safe' => true,
+        'reports_backend_authoritative' => true,
+        'daily_closing_required' => true,
+        'closing_snapshot_lock_required' => true,
+        'csv_export_tenant_isolated' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
@@ -46,5 +50,6 @@ return [
         'sprint_6' => 'Printer & Receipt Foundation',
         'sprint_7' => 'Offline Cash & Sync Foundation',
         'sprint_8' => 'Inventory Simple Foundation',
+        'sprint_9' => 'Reports & Closing Foundation',
     ],
 ];

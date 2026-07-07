@@ -34,6 +34,14 @@
             android:text="@string/cashier_sync_idle"
             android:textSize="13sp" />
 
+        <!-- Sprint 9 — open the lightweight daily summary / closing screen. -->
+        <Button
+            android:id="@+id/buttonReports"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/cashier_reports" />
+
     </LinearLayout>
 
     <!-- Sprint 7 — offline sync queue summary + manual sync trigger. -->

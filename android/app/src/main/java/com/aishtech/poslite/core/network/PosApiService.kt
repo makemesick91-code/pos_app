@@ -1,12 +1,18 @@
 package com.aishtech.poslite.core.network
 
 import com.aishtech.poslite.data.remote.dto.CategorySyncResponse
+import com.aishtech.poslite.data.remote.dto.CreateDailyClosingRequestDto
 import com.aishtech.poslite.data.remote.dto.CreateQrisPaymentRequestDto
 import com.aishtech.poslite.data.remote.dto.CreateSaleRequestDto
 import com.aishtech.poslite.data.remote.dto.CurrentStockResponseDto
+import com.aishtech.poslite.data.remote.dto.DailyClosingListResponseDto
+import com.aishtech.poslite.data.remote.dto.DailyClosingResponseDto
+import com.aishtech.poslite.data.remote.dto.DailySalesReportResponseDto
+import com.aishtech.poslite.data.remote.dto.InventoryMovementSummaryResponseDto
 import com.aishtech.poslite.data.remote.dto.LoginRequest
 import com.aishtech.poslite.data.remote.dto.LoginResponse
 import com.aishtech.poslite.data.remote.dto.MeResponse
+import com.aishtech.poslite.data.remote.dto.PaymentSummaryResponseDto
 import com.aishtech.poslite.data.remote.dto.ProductStockResponseDto
 import com.aishtech.poslite.data.remote.dto.ProductSyncResponse
 import com.aishtech.poslite.data.remote.dto.QrisPaymentResponse
@@ -85,4 +91,39 @@ interface PosApiService {
 
     @GET("api/v1/inventory/products/{product}/stock")
     suspend fun getProductStock(@Path("product") productId: Long): Response<ProductStockResponseDto>
+
+    // Sprint 9 — reports & closing foundation. All figures are backend-computed;
+    // the app only displays summaries and requests a daily close. It never
+    // calculates authoritative totals.
+    @GET("api/v1/reports/daily-sales")
+    suspend fun getDailySalesReport(
+        @Query("store_id") storeId: Long? = null,
+        @Query("date") date: String? = null,
+        @Query("cashier_id") cashierId: Long? = null,
+    ): Response<DailySalesReportResponseDto>
+
+    @GET("api/v1/reports/payment-summary")
+    suspend fun getPaymentSummary(
+        @Query("store_id") storeId: Long? = null,
+        @Query("date") date: String? = null,
+    ): Response<PaymentSummaryResponseDto>
+
+    @GET("api/v1/reports/inventory-movements-summary")
+    suspend fun getInventoryMovementsSummary(
+        @Query("store_id") storeId: Long? = null,
+        @Query("date") date: String? = null,
+    ): Response<InventoryMovementSummaryResponseDto>
+
+    @POST("api/v1/closings/daily")
+    suspend fun createDailyClosing(
+        @Body request: CreateDailyClosingRequestDto,
+    ): Response<DailyClosingResponseDto>
+
+    @GET("api/v1/closings/daily")
+    suspend fun getDailyClosings(
+        @Query("store_id") storeId: Long? = null,
+    ): Response<DailyClosingListResponseDto>
+
+    @GET("api/v1/closings/daily/{id}")
+    suspend fun getDailyClosing(@Path("id") id: Long): Response<DailyClosingResponseDto>
 }

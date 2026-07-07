@@ -10,9 +10,11 @@ import com.aishtech.poslite.core.session.SessionManager
 import com.aishtech.poslite.core.session.SharedPrefsTokenStore
 import com.aishtech.poslite.data.repository.AuthRepository
 import com.aishtech.poslite.data.repository.CatalogRepository
+import com.aishtech.poslite.data.repository.ClosingRepository
 import com.aishtech.poslite.data.repository.OfflineSaleRepository
 import com.aishtech.poslite.data.repository.QrisRepository
 import com.aishtech.poslite.data.repository.ReceiptRepository
+import com.aishtech.poslite.data.repository.ReportRepository
 import com.aishtech.poslite.data.repository.SalesRepository
 import com.aishtech.poslite.data.repository.StockRepository
 import com.aishtech.poslite.feature.printer.BluetoothPrinterConnection
@@ -51,6 +53,13 @@ object ServiceLocator {
     // Sprint 8 — read-only inventory stock for lightweight cashier visibility.
     fun stockRepository(context: Context): StockRepository =
         StockRepository(api(context))
+
+    // Sprint 9 — read-only backend report summaries + daily closing action.
+    fun reportRepository(context: Context): ReportRepository =
+        ReportRepository(api(context))
+
+    fun closingRepository(context: Context): ClosingRepository =
+        ClosingRepository(api(context))
 
     // Sprint 7 — offline CASH sale queue + sync.
     fun offlineSaleRepository(context: Context): OfflineSaleRepository {
