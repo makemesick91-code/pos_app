@@ -151,10 +151,37 @@ cd backend && php artisan test
 
 Android build/test may require Gradle wrapper, Android SDK, and JDK 17–21 depending on AGP compatibility.
 
+## Sprint 5 — QRIS Payment Gateway Foundation
+
+Sprint 5 establishes the backend-driven QRIS payment gateway foundation:
+
+- QRIS provider abstraction
+- fake/sandbox QRIS provider for local/testing
+- QRIS payment creation API
+- payment status API
+- payment webhook logging
+- webhook signature validation foundation
+- webhook idempotency
+- payment reconciliation command
+- Android QRIS DTO/API/repository/screen foundation
+- Sprint 5 runtime rules lock
+
+Validation:
+
+```bash
+bash scripts/sprint5_smoke.sh
+cd backend && php artisan test
+```
+
+Android build/test may require Gradle wrapper, Android SDK, and JDK 17–21/21 depending on AGP compatibility.
+
 ## Status
 
-Fase saat ini: **Sprint 3 — Android Cashier Foundation selesai**. Android kini memiliki
-fondasi kasir native (login, API client Retrofit/OkHttp, penyimpanan token, katalog lokal
-Room, sync produk/kategori, pencarian lokal, dan keranjang cash-first). Backend tetap
-kompatibel (auth + sync utuh). Fitur penjualan/QRIS/printer dibangun bertahap mengikuti
-Sprint Roadmap pada dokumen foundation.
+Fase saat ini: **Sprint 5 — QRIS Payment Gateway Foundation selesai**. Backend kini
+memiliki fondasi QRIS backend-driven: abstraksi provider gateway, provider fake/sandbox
+untuk lokal/testing tanpa jaringan eksternal, endpoint pembuatan QRIS & status pembayaran,
+webhook logging + validasi signature + idempotency, sinkronisasi status ke penjualan, dan
+command rekonsiliasi pembayaran. Android memperoleh DTO/API/repository/layar QRIS tanpa
+menyimpan kredensial gateway dan tanpa memanggil gateway langsung. Cash Sprint 4 tetap utuh.
+Kredensial gateway hanya hidup di environment backend. Fitur payout/refund/printer/offline
+QRIS dibangun bertahap mengikuti Sprint Roadmap pada dokumen foundation.

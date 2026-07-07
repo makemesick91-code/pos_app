@@ -1,10 +1,13 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\PaymentStatusController;
+use App\Http\Controllers\Api\V1\PaymentWebhookController;
 use App\Http\Controllers\Api\V1\ProductCategoryController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\ProductStorePriceController;
 use App\Http\Controllers\Api\V1\ProductSyncController;
+use App\Http\Controllers\Api\V1\QrisPaymentController;
 use App\Http\Controllers\Api\V1\SaleCashPaymentController;
 use App\Http\Controllers\Api\V1\SaleController;
 use App\Http\Controllers\Api\V1\TenantContextController;
@@ -27,7 +30,7 @@ Route::get('/health', function () {
         'status' => 'ok',
         'app' => 'Aish POS Lite API',
         'foundation' => 'POS_ANDROID_SAAS_FOUNDATION',
-        'sprint' => 'Sprint 4',
+        'sprint' => 'Sprint 5',
     ]);
 });
 
@@ -60,6 +63,15 @@ Route::prefix('v1')->group(function () {
             Route::get('/sales/{sale}', [SaleController::class, 'show']);
             Route::post('/sales/{sale}/cancel', [SaleController::class, 'cancel']);
             Route::post('/sales/{sale}/payments/cash', [SaleCashPaymentController::class, 'store']);
+
+            // Sprint 5 — backend-driven QRIS: create a QRIS payment for a sale
+            // and poll its status. Android never calls a payment gateway directly.
+            Route::post('/sales/{sale}/payments/qris', [QrisPaymentController::class, 'store']);
+            Route::get('/payments/{payment}/status', [PaymentStatusController::class, 'show']);
         });
     });
+
+    // Sprint 5 — QRIS payment gateway webhook. Unauthenticated by design; trust
+    // comes from the provider signature, verified in QrisWebhookService.
+    Route::post('/webhooks/payments/{provider}', [PaymentWebhookController::class, 'store']);
 });
