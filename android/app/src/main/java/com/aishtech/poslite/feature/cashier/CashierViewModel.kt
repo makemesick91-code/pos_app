@@ -11,6 +11,7 @@ import com.aishtech.poslite.data.repository.CartRepository
 import com.aishtech.poslite.data.repository.CatalogRepository
 import com.aishtech.poslite.data.repository.OfflineSaleRepository
 import com.aishtech.poslite.data.repository.SalesRepository
+import com.aishtech.poslite.data.repository.StockRepository
 import com.aishtech.poslite.feature.sync.CatalogSyncManager
 import kotlinx.coroutines.launch
 
@@ -25,6 +26,7 @@ class CashierViewModel(
     private val sales: SalesRepository,
     private val cart: CartRepository,
     private val offline: OfflineSaleRepository,
+    private val stock: StockRepository,
 ) : ViewModel() {
 
     /** UI state for the checkout flow. */
@@ -64,9 +66,34 @@ class CashierViewModel(
     private val _offlineSyncing = MutableLiveData(false)
     val offlineSyncing: LiveData<Boolean> = _offlineSyncing
 
+    // Sprint 8 — productId -> backend current_stock string for informational
+    // stock labels. Empty until a fetch resolves; the UI shows "Stok: -".
+    private val _stockLabels = MutableLiveData<Map<Long, String>>(emptyMap())
+    val stockLabels: LiveData<Map<Long, String>> = _stockLabels
+
     fun search(query: String) {
         viewModelScope.launch {
             _products.value = catalogRepository.search(query)
+        }
+    }
+
+    /**
+     * Fetch current stock from the backend for the informational cashier labels.
+     * Best-effort and non-blocking: a failure leaves labels as "-" and never
+     * affects checkout. The backend remains the stock authority.
+     */
+    fun refreshStock() {
+        viewModelScope.launch {
+            when (val result = stock.getCurrentStock()) {
+                is ResultState.Success -> {
+                    _stockLabels.value = result.data
+                        .filter { it.currentStock != null }
+                        .associate { it.productId to (it.currentStock ?: "") }
+                }
+                // Keep existing labels on error; stock is only informational.
+                is ResultState.Error -> Unit
+                ResultState.Loading -> Unit
+            }
         }
     }
 
@@ -79,6 +106,7 @@ class CashierViewModel(
                     _syncStatus.value =
                         "Tersinkron: ${result.data.products} produk, ${result.data.categories} kategori"
                     search("")
+                    refreshStock()
                 }
                 is ResultState.Error -> _syncStatus.value = result.message
                 ResultState.Loading -> Unit
@@ -129,6 +157,8 @@ class CashierViewModel(
                     cart.clear()
                     emitCart()
                     _checkout.value = CheckoutState.Success(result.data)
+                    // Stock changed on the backend (SALE_OUT) — refresh labels.
+                    refreshStock()
                 }
                 is ResultState.Error -> _checkout.value = CheckoutState.Error(result.message)
                 ResultState.Loading -> Unit

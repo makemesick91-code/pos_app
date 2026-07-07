@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\InventoryAdjustmentController;
+use App\Http\Controllers\Api\V1\InventoryCurrentStockController;
+use App\Http\Controllers\Api\V1\InventoryMovementController;
 use App\Http\Controllers\Api\V1\PaymentStatusController;
 use App\Http\Controllers\Api\V1\PaymentWebhookController;
 use App\Http\Controllers\Api\V1\ProductCategoryController;
@@ -74,6 +77,14 @@ Route::prefix('v1')->group(function () {
             // and poll its status. Android never calls a payment gateway directly.
             Route::post('/sales/{sale}/payments/qris', [QrisPaymentController::class, 'store']);
             Route::get('/payments/{payment}/status', [PaymentStatusController::class, 'show']);
+
+            // Sprint 8 — ledger-based simple inventory. Stock is derived from
+            // inventory_movements (never a mutable column); SALE_OUT is created
+            // by sales only. All endpoints are tenant/store isolated.
+            Route::get('/inventory/current-stock', [InventoryCurrentStockController::class, 'index']);
+            Route::get('/inventory/products/{product}/stock', [InventoryCurrentStockController::class, 'show']);
+            Route::get('/inventory/movements', [InventoryMovementController::class, 'index']);
+            Route::post('/inventory/adjustments', [InventoryAdjustmentController::class, 'store']);
         });
     });
 

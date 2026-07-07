@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Store;
 use App\Models\User;
+use App\Services\Inventory\InventoryMovementService;
 use App\Support\TenantContext;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
@@ -32,6 +33,7 @@ class SaleService
     public function __construct(
         private readonly InvoiceNumberGenerator $invoiceNumbers,
         private readonly ProductPriceResolver $priceResolver,
+        private readonly InventoryMovementService $inventory,
     ) {}
 
     /**
@@ -329,7 +331,7 @@ class SaleService
             /** @var Product $product */
             $product = $line['product'];
 
-            $sale->items()->create([
+            $item = $sale->items()->create([
                 'tenant_id' => $sale->tenant_id,
                 'store_id' => $sale->store_id,
                 'product_id' => $product->id,
@@ -342,6 +344,13 @@ class SaleService
                 'discount' => $line['discount'],
                 'subtotal' => $line['subtotal'],
             ]);
+
+            // Sprint 8 — decrement stock through the ledger. Only stock-tracked
+            // products create a SALE_OUT; the movement references this sale item
+            // so an idempotent offline replay (which returns the existing sale
+            // before reaching this point) can never double-decrement. Runs inside
+            // the sale transaction: if the movement fails, the sale rolls back.
+            $this->inventory->createSaleOutForSaleItem($item, $product);
         }
     }
 

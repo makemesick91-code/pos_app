@@ -157,4 +157,6 @@ class FakeSyncApi(
     override suspend fun createQrisPayment(saleId: Long, request: CreateQrisPaymentRequestDto): Response<QrisPaymentResponse> = error("unused")
     override suspend fun getPaymentStatus(paymentId: Long): Response<QrisPaymentResponse> = error("unused")
     override suspend fun getReceipt(saleId: Long): Response<ReceiptResponseDto> = error("unused")
+    override suspend fun getCurrentStock(storeId: Long?, query: String?, limit: Int?): Response<com.aishtech.poslite.data.remote.dto.CurrentStockResponseDto> = error("unused")
+    override suspend fun getProductStock(productId: Long): Response<com.aishtech.poslite.data.remote.dto.ProductStockResponseDto> = error("unused")
 }

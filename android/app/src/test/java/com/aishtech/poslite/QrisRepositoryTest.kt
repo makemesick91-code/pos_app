@@ -56,6 +56,8 @@ class QrisRepositoryTest {
 
         override suspend fun getPaymentStatus(paymentId: Long): Response<QrisPaymentResponse> = status!!
         override suspend fun getReceipt(saleId: Long): Response<ReceiptResponseDto> = error("unused")
+        override suspend fun getCurrentStock(storeId: Long?, query: String?, limit: Int?): Response<com.aishtech.poslite.data.remote.dto.CurrentStockResponseDto> = error("unused")
+        override suspend fun getProductStock(productId: Long): Response<com.aishtech.poslite.data.remote.dto.ProductStockResponseDto> = error("unused")
     }
 
     private fun samplePayment(status: String = "PENDING") = QrisPaymentDto(

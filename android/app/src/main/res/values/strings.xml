@@ -34,6 +34,9 @@
     <string name="cashier_sync_now">Sync Sekarang</string>
     <string name="cashier_sync_summary">Menunggu sync: %1$d, Gagal: %2$d</string>
     <string name="cashier_syncing">Menyinkronkan transaksi offline…</string>
+    <!-- Sprint 8 — lightweight inventory stock visibility. -->
+    <string name="cashier_stock_unknown">Stok: -</string>
+    <string name="cashier_stock_refresh">Refresh Stok</string>
     <string name="qris_offline_blocked">QRIS membutuhkan koneksi internet</string>
 
     <!-- Sprint 5 — QRIS payment -->

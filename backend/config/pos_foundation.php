@@ -31,6 +31,10 @@ return [
         'offline_qris_forbidden' => true,
         'sales_idempotency_required' => true,
         'workmanager_sync_required' => true,
+        'inventory_ledger_only' => true,
+        'sale_out_movement_required' => true,
+        'inventory_current_stock_from_movements' => true,
+        'inventory_idempotency_safe' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
@@ -41,5 +45,6 @@ return [
         'sprint_5' => 'QRIS Payment Gateway Foundation',
         'sprint_6' => 'Printer & Receipt Foundation',
         'sprint_7' => 'Offline Cash & Sync Foundation',
+        'sprint_8' => 'Inventory Simple Foundation',
     ],
 ];

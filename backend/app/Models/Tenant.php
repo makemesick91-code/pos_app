@@ -75,6 +75,11 @@ class Tenant extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function inventoryMovements(): HasMany
+    {
+        return $this->hasMany(InventoryMovement::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === self::STATUS_ACTIVE;

@@ -1,0 +1,44 @@
+<?php
+
+namespace App\Http\Requests\Api\V1;
+
+use App\Support\TenantContext;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+/**
+ * Filters for the lightweight current-stock listing. store_id, when present,
+ * must belong to the tenant context; the tenant_id is never accepted from the
+ * client. See Sprint 8 evidence.
+ */
+class IndexCurrentStockRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return app(TenantContext::class)->hasTenant();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function rules(): array
+    {
+        $tenantId = app(TenantContext::class)->tenantId();
+
+        return [
+            'store_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('stores', 'id')->where('tenant_id', $tenantId),
+            ],
+            'q' => ['nullable', 'string', 'max:100'],
+            'category_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('product_categories', 'id')->where('tenant_id', $tenantId),
+            ],
+            'active' => ['nullable', 'boolean'],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:200'],
+        ];
+    }
+}

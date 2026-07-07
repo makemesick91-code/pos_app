@@ -102,4 +102,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Sale::class, 'cashier_id');
     }
+
+    public function createdInventoryMovements(): HasMany
+    {
+        return $this->hasMany(InventoryMovement::class, 'created_by');
+    }
 }
