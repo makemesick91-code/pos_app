@@ -361,6 +361,42 @@ penagihan langganan nyata. Cash (Sprint 4), QRIS (Sprint 5), struk/printer
 (Sprint 9) tetap utuh. Android build CI menjalankan assembleDebug +
 testDebugUnitTest.
 
+## Sprint 19 — Production Operations Baseline & Post-Handover Governance Foundation
+
+Sprint 19 establishes the production operations baseline and post-handover governance foundation:
+
+- production operation run persistence
+- production incident register (P0–P4, SLA-aware, accepted-risk-aware)
+- production maintenance window register (rollback-plan-aware)
+- ProductionOperationsHealthService (15 health signals → GO/WATCH/NO-GO)
+- ProductionIncidentService, BackupRestoreGovernanceService, SupportSlaGovernanceService
+- MaintenanceWindowService, ReleaseRollbackGovernanceService, PostHandoverGovernanceReportService
+- admin operations APIs behind platform.admin
+- production:ops-health command
+- production:incident-summary command
+- production:backup-governance-check command
+- production:post-handover-go-no-go command
+- operations runbooks/governance docs under docs/operations/
+- CI production operations gate
+- no new business feature expansion
+- no automatic production deploy
+- no real alert sending
+- no real backup/restore execution
+- Sprint 19 runtime rules lock
+
+Validation:
+
+```bash
+bash scripts/sprint19_smoke.sh
+bash scripts/android_release_readiness.sh
+cd backend && php artisan production:ops-health --json
+cd backend && php artisan production:incident-summary --json
+cd backend && php artisan production:backup-governance-check --json
+cd backend && php artisan production:post-handover-go-no-go --json
+cd backend && php artisan test
+cd android && ./gradlew :app:assembleDebug && ./gradlew :app:testDebugUnitTest
+```
+
 ## Sprint 18 — Pilot Closure & Production Handover Foundation
 
 Sprint 18 establishes the pilot closure and production handover foundation:

@@ -13,6 +13,12 @@ use App\Http\Controllers\Api\V1\Admin\PilotStabilizationReportController;
 use App\Http\Controllers\Api\V1\Admin\ProductionHandoverController;
 use App\Http\Controllers\Api\V1\Admin\ProductionHandoverGoNoGoController;
 use App\Http\Controllers\Api\V1\Admin\ProductionHandoverSignoffController;
+use App\Http\Controllers\Api\V1\Admin\ProductionIncidentController;
+use App\Http\Controllers\Api\V1\Admin\ProductionIncidentSummaryController;
+use App\Http\Controllers\Api\V1\Admin\ProductionMaintenanceWindowController;
+use App\Http\Controllers\Api\V1\Admin\ProductionOperationRunController;
+use App\Http\Controllers\Api\V1\Admin\ProductionOpsHealthController;
+use App\Http\Controllers\Api\V1\Admin\ProductionPostHandoverGoNoGoController;
 use App\Http\Controllers\Api\V1\Admin\TenantDemoDataController;
 use App\Http\Controllers\Api\V1\Admin\TenantOnboardingController;
 use App\Http\Controllers\Api\V1\Admin\TenantOnboardingStatusController;
@@ -229,6 +235,38 @@ Route::prefix('v1')->group(function () {
             Route::post('/production-handovers/{handover}/signoffs', [ProductionHandoverSignoffController::class, 'store']);
 
             Route::get('/production-handover-go-no-go', [ProductionHandoverGoNoGoController::class, 'index']);
+
+            // Sprint 19 — Production Operations Baseline & Post-Handover
+            // Governance. Platform-admin controlled: record production operation
+            // runs (evidence-backed health/governance evaluation), a production
+            // incident register (severity/SLA/accepted-risk aware), and
+            // maintenance windows (rollback-plan aware). Read-only endpoints
+            // expose ops health, the incident summary, and the aggregate
+            // post-handover GO/WATCH/NO-GO. No auto production deploy, no real
+            // backup/restore execution, no real alert sending, no secrets exposed.
+            Route::get('/production-operation-runs', [ProductionOperationRunController::class, 'index']);
+            Route::post('/production-operation-runs', [ProductionOperationRunController::class, 'store']);
+            Route::get('/production-operation-runs/{operationRun}', [ProductionOperationRunController::class, 'show']);
+            Route::post('/production-operation-runs/{operationRun}/approve', [ProductionOperationRunController::class, 'approve']);
+            Route::post('/production-operation-runs/{operationRun}/block', [ProductionOperationRunController::class, 'block']);
+
+            Route::get('/production-incidents', [ProductionIncidentController::class, 'index']);
+            Route::post('/production-incidents', [ProductionIncidentController::class, 'store']);
+            Route::get('/production-incidents/{incident}', [ProductionIncidentController::class, 'show']);
+            Route::patch('/production-incidents/{incident}', [ProductionIncidentController::class, 'update']);
+            Route::post('/production-incidents/{incident}/assign', [ProductionIncidentController::class, 'assign']);
+            Route::post('/production-incidents/{incident}/status', [ProductionIncidentController::class, 'status']);
+            Route::post('/production-incidents/{incident}/accept-risk', [ProductionIncidentController::class, 'acceptRisk']);
+
+            Route::get('/production-maintenance-windows', [ProductionMaintenanceWindowController::class, 'index']);
+            Route::post('/production-maintenance-windows', [ProductionMaintenanceWindowController::class, 'store']);
+            Route::get('/production-maintenance-windows/{maintenanceWindow}', [ProductionMaintenanceWindowController::class, 'show']);
+            Route::patch('/production-maintenance-windows/{maintenanceWindow}', [ProductionMaintenanceWindowController::class, 'update']);
+            Route::post('/production-maintenance-windows/{maintenanceWindow}/status', [ProductionMaintenanceWindowController::class, 'status']);
+
+            Route::get('/production-ops-health', [ProductionOpsHealthController::class, 'index']);
+            Route::get('/production-incident-summary', [ProductionIncidentSummaryController::class, 'index']);
+            Route::get('/production-post-handover-go-no-go', [ProductionPostHandoverGoNoGoController::class, 'index']);
         });
     });
 
