@@ -1,0 +1,266 @@
+name: Sprint 20 CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  foundation-and-smoke:
+    name: Foundation & Sprint 20 smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Foundation document exists
+        run: test -f docs/foundation/POS_ANDROID_SAAS_FOUNDATION.md
+
+      - name: Project rules lock intact (Sprint 0–20)
+        run: |
+          grep -q "Foundation Lock Index" docs/PROJECT_RULES.md
+          grep -q "Sprint 0 Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 18 Pilot Closure & Production Handover Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 19 Production Operations Baseline & Post-Handover Governance Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 20 Commercial Launch Readiness & SaaS Packaging Foundation Runtime Rule" docs/PROJECT_RULES.md
+
+      - name: Sprint 20 smoke script
+        run: bash scripts/sprint20_smoke.sh
+
+      - name: Android release readiness script
+        run: bash scripts/android_release_readiness.sh
+
+      - name: No forbidden files committed
+        run: |
+          ! git ls-files | grep -E '(^|/)\.env$|\.apk$|\.aab$|(^|/)vendor/|(^|/)node_modules/|\.sqlite$|database\.sqlite|(^|/)app/build/|(^|/)\.gradle/|\.keystore$|\.jks$'
+
+  backend-tests:
+    name: Backend tests (commercial gate + Sprint 0–19 regression)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+
+      - name: Validate composer
+        working-directory: backend
+        run: composer validate --strict
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment (sqlite + migrate)
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          mkdir -p storage/app storage/logs storage/framework/cache
+          touch database/database.sqlite
+          php artisan migrate --force || true
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Run tests
+        working-directory: backend
+        run: php artisan test
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+  prior-sprint-gates:
+    name: Prior sprint gates (Sprint 13–19)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment (sqlite + migrate)
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          mkdir -p storage/app storage/logs storage/framework/cache
+          touch database/database.sqlite
+          php artisan migrate --force || true
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Release gate (readiness + go/no-go)
+        working-directory: backend
+        run: |
+          php artisan production:readiness-check --json
+          php artisan release:go-no-go --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: RC / UAT gate
+        working-directory: backend
+        run: |
+          php artisan pilot:rc-check --json
+          php artisan pilot:uat-summary --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Deployment / field trial gate
+        working-directory: backend
+        run: |
+          php artisan pilot:deployment-check --json
+          php artisan pilot:field-trial-summary --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Monitoring / hypercare gate
+        working-directory: backend
+        run: |
+          php artisan pilot:daily-monitoring-check --json --strict
+          php artisan pilot:health-summary --json --strict
+          php artisan hypercare:issue-triage --json --strict
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Stabilization / defect gate
+        working-directory: backend
+        run: |
+          php artisan pilot:defect-summary --json --strict
+          php artisan pilot:stabilization-go-no-go --json --strict
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Closure / handover gate
+        working-directory: backend
+        run: |
+          php artisan pilot:closure-check --json --strict
+          php artisan production:handover-summary --json --strict
+          php artisan production:signoff-summary --json
+          php artisan production:handover-go-no-go --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Production operations gate
+        working-directory: backend
+        run: |
+          php artisan production:ops-health --json --strict
+          php artisan production:incident-summary --json --strict
+          php artisan production:backup-governance-check --json --strict
+          php artisan production:post-handover-go-no-go --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+  commercial-launch-gate:
+    name: Commercial launch / packaging gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment (sqlite + migrate)
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          mkdir -p storage/app storage/logs storage/framework/cache
+          touch database/database.sqlite
+          php artisan migrate --force || true
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Commercial onboarding capacity (JSON, no secrets)
+        working-directory: backend
+        run: php artisan commercial:onboarding-capacity --json --strict
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      # These aggregate a governance decision. On a fresh CI database there is no
+      # active package, so the correct decision is NO_GO (exit 1). The gate here
+      # validates that the command runs cleanly and leaks no secrets; the real GO
+      # requires actual package/signoff data recorded via the admin API.
+      - name: Commercial launch readiness (JSON, no secrets)
+        working-directory: backend
+        run: php artisan commercial:launch-readiness --json || true
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Commercial package summary (JSON, no secrets)
+        working-directory: backend
+        run: php artisan commercial:package-summary --json || true
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Commercial launch GO/WATCH/NO-GO (JSON, no secrets)
+        working-directory: backend
+        run: php artisan commercial:launch-go-no-go --json || true
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+  android-build-test:
+    name: Android build & unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Package and SDK levels intact
+        run: |
+          grep -q "com.aishtech.poslite" android/app/build.gradle.kts
+          grep -q "minSdk = 26" android/app/build.gradle.kts
+          grep -q "targetSdk = 35" android/app/build.gradle.kts
+
+      - name: Android release readiness
+        run: bash scripts/android_release_readiness.sh
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Run unit tests
+        working-directory: android
+        run: ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace

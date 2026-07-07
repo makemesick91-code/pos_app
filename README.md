@@ -361,6 +361,45 @@ penagihan langganan nyata. Cash (Sprint 4), QRIS (Sprint 5), struk/printer
 (Sprint 9) tetap utuh. Android build CI menjalankan assembleDebug +
 testDebugUnitTest.
 
+## Sprint 20 — Commercial Launch Readiness & SaaS Packaging Foundation
+
+Sprint 20 establishes the commercial launch readiness and SaaS packaging foundation:
+
+- commercial launch run persistence
+- SaaS package catalog persistence (governance metadata only, no real billing)
+- commercial launch signoff persistence
+- commercial launch risk register (CRITICAL/HIGH → NO-GO, MEDIUM → WATCH)
+- CommercialLaunchReadinessService, SaaSPackageCatalogService, PricingPlanGovernanceService
+- SalesEnablementReadinessService, OnboardingCapacityService, CommercialRiskGovernanceService
+- CommercialLaunchGoNoGoService (prior gates + commercial readiness aggregate)
+- admin commercial APIs behind platform.admin
+- commercial:launch-readiness command
+- commercial:package-summary command
+- commercial:onboarding-capacity command
+- commercial:launch-go-no-go command
+- commercial docs under docs/commercial/
+- CI commercial launch gate (sprint20-ci.yml)
+- no public signup / no real billing collection / no payment subscription automation
+- no public marketing/pricing page, no new business feature, no auto deploy, no real alerts
+- Sprint 20 runtime rules lock
+
+`SubscriptionPlan` / `TenantSubscription` / `RegisteredDevice` (Sprint 10) remain
+the runtime subscription and device-limit enforcement source; the package catalog
+is an admin-only commercial packaging layer that never bypasses them.
+
+Validation:
+
+```bash
+bash scripts/sprint20_smoke.sh
+bash scripts/android_release_readiness.sh
+cd backend && php artisan commercial:launch-readiness --json
+cd backend && php artisan commercial:package-summary --json
+cd backend && php artisan commercial:onboarding-capacity --json
+cd backend && php artisan commercial:launch-go-no-go --json
+cd backend && php artisan test
+cd android && ./gradlew :app:assembleDebug && ./gradlew :app:testDebugUnitTest
+```
+
 ## Sprint 19 — Production Operations Baseline & Post-Handover Governance Foundation
 
 Sprint 19 establishes the production operations baseline and post-handover governance foundation:

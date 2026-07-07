@@ -54,6 +54,7 @@ This project is governed by:
 19. `docs/sprints/sprint-17-pilot-stabilization-defect-burndown-foundation.md`
 20. `docs/sprints/sprint-18-pilot-closure-production-handover-foundation.md`
 21. `docs/sprints/sprint-19-production-operations-post-handover-governance-foundation.md`
+22. `docs/sprints/sprint-20-commercial-launch-readiness-saas-packaging-foundation.md`
 
 No sprint may contradict these documents unless the canonical foundation is explicitly updated first.
 
@@ -558,3 +559,41 @@ Mandatory:
 25. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, closing, release hardening, RC/UAT, deployment, field trial, monitoring, hypercare, stabilization, closure, and handover behavior from previous sprints must remain intact.
 26. Android CI remains the authoritative build gate if local Android build cannot run.
 27. Post-handover production operations GO/WATCH/NO-GO report must be evidence-backed.
+
+## Sprint 20 Commercial Launch Readiness & SaaS Packaging Foundation Runtime Rule
+
+Starting Sprint 20, commercial launch must be package-governed, pricing-aware, onboarding-capacity-aware, risk-reviewed, sign-off-driven, secret-safe, and gated before a GO tag is created.
+
+Mandatory:
+
+1. Commercial launch must not be declared GO without backend tests passing.
+2. Commercial launch must not be declared GO without Android CI assembleDebug passing.
+3. Commercial launch must not be declared GO without Android CI testDebugUnitTest passing.
+4. Commercial launch must not be declared GO without Sprint 13 release readiness commands running successfully.
+5. Commercial launch must not be declared GO without Sprint 14 RC/UAT commands running successfully.
+6. Commercial launch must not be declared GO without Sprint 15 deployment/field-trial commands running successfully.
+7. Commercial launch must not be declared GO without Sprint 16 monitoring/hypercare commands running successfully.
+8. Commercial launch must not be declared GO without Sprint 17 stabilization/defect commands running successfully.
+9. Commercial launch must not be declared GO without Sprint 18 closure/handover commands running successfully.
+10. Commercial launch must not be declared GO without Sprint 19 production operations commands running successfully.
+11. SaaS package catalog must preserve package code, target segment, feature boundaries, device limit, onboarding level, support level, status, and evidence reference.
+12. Commercial pricing governance must be consistent with existing `subscription_plans` foundation and must not bypass SubscriptionPlan/TenantSubscription rules.
+13. Launch readiness must include package catalog readiness.
+14. Launch readiness must include pricing/plan governance.
+15. Launch readiness must include sales enablement readiness.
+16. Launch readiness must include onboarding capacity readiness.
+17. Launch readiness must include commercial risk review.
+18. Launch readiness must include launch sign-off.
+19. Open CRITICAL/HIGH commercial risks must force NO-GO unless valid accepted risk is documented and reviewed.
+20. Open MEDIUM commercial risks must force WATCH unless mitigation is documented.
+21. Commercial launch commands must not print secret values.
+22. Commercial launch artifacts must not contain real passwords, real payment gateway secrets, server credentials, `.env`, APK/AAB, keystore, or production customer data.
+23. Sprint 20 must not implement public signup.
+24. Sprint 20 must not implement real billing collection or subscription payment automation.
+25. Sprint 20 must not implement public marketing website/pricing page.
+26. Sprint 20 must not implement new business features.
+27. Sprint 20 must not perform automatic production deployment.
+28. Sprint 20 must not send real Slack/WhatsApp/email alerts.
+29. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, closing, release hardening, RC/UAT, deployment, field trial, monitoring, hypercare, stabilization, closure, handover, and operations behavior from previous sprints must remain intact.
+30. Android CI remains the authoritative build gate if local Android build cannot run.
+31. Commercial launch GO/WATCH/NO-GO report must be evidence-backed.
