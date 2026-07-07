@@ -11,4 +11,7 @@ data class MetaDto(
     @SerializedName("store_id") val storeId: Long?,
     @SerializedName("updated_since") val updatedSince: String?,
     @SerializedName("foundation") val foundation: String?,
+    // Sprint 7 — true when a POST /sales was an idempotent replay of an offline
+    // sale the backend already stored (no new sale was created).
+    @SerializedName("idempotent_replay") val idempotentReplay: Boolean? = null,
 )

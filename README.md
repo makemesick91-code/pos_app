@@ -198,15 +198,41 @@ cd backend && php artisan test
 cd android && ./gradlew :app:assembleDebug && ./gradlew :app:testDebugUnitTest
 ```
 
+## Sprint 7 — Offline Cash & Sync Foundation
+
+Sprint 7 establishes offline cash and sync foundation:
+
+- backend idempotency/client reference for offline sales
+- duplicate offline submit protection
+- Android local offline sale storage
+- Android WorkManager sync
+- retry/backoff foundation
+- manual sync status/action
+- QRIS online-only guard
+- offline receipt draft label
+- Android CI with assembleDebug and testDebugUnitTest
+- Sprint 7 runtime rules lock
+
+Validation:
+
+```bash
+bash scripts/sprint7_smoke.sh
+cd backend && php artisan test
+cd android && ./gradlew :app:assembleDebug && ./gradlew :app:testDebugUnitTest
+```
+
 ## Status
 
-Fase saat ini: **Sprint 6 — Printer & Receipt Foundation selesai**. Backend kini
-memiliki API preview struk yang tenant-isolated dan payment-aware: struk hanya FINAL/
-printable saat penjualan PAID (CASH maupun QRIS), sedangkan penjualan pending/unpaid/
-cancelled/expired/failed tidak menghasilkan struk final. Data struk selalu memakai snapshot
-sale item, tidak pernah membocorkan `raw_response` atau kredensial gateway. Android memperoleh
-layar struk, ESC/POS formatter murni Kotlin, fondasi printer Bluetooth native, dan penyimpanan
-pengaturan printer lokal (tanpa kredensial pembayaran). Gradle wrapper kini tersedia dan Android
-build CI menjalankan assembleDebug + testDebugUnitTest. Cash (Sprint 4) dan QRIS (Sprint 5)
-tetap utuh. Fitur payout/refund/offline sync/inventory dibangun bertahap mengikuti Sprint
+Fase saat ini: **Sprint 7 — Offline Cash & Sync Foundation selesai**. Transaksi
+CASH kini dapat dibuat offline: Android menyimpan penjualan ke antrean lokal (Room)
+dengan `client_reference` UUID, lalu WorkManager (network-aware, exponential backoff)
+menyinkronkannya ke backend saat online. Backend bersifat idempotent — submit offline
+yang terulang dengan `client_reference` sama tidak pernah membuat penjualan ganda,
+mengembalikan `meta.idempotent_replay=true`, tetap menghitung ulang total dan
+snapshot nama/harga produk, serta tetap tenant-isolated. QRIS tetap online-only dan
+diblokir saat offline. Struk offline diberi label jelas "STRUK OFFLINE / BELUM SYNC".
+Keranjang hanya dikosongkan setelah simpan lokal berhasil; sync gagal tetap menyimpan
+penjualan sebagai PENDING/FAILED. Cash (Sprint 4), QRIS (Sprint 5), dan struk/printer
+(Sprint 6) tetap utuh. Android build CI menjalankan assembleDebug + testDebugUnitTest.
+Fitur offline QRIS/inventory/reports/dashboard dibangun bertahap mengikuti Sprint
 Roadmap pada dokumen foundation.

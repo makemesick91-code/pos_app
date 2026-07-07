@@ -66,10 +66,14 @@ dependencies {
     // Logging interceptor is only attached in debug builds (see ApiClient).
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
-    // Room SQLite local product/category catalog.
+    // Room SQLite local product/category catalog + offline sale queue.
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
+
+    // Sprint 7 — WorkManager for background offline-sale sync (network-aware,
+    // exponential backoff). Kept as the single lightweight background primitive.
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
 
     // Unit tests (pure JVM: cart + catalog mapping).
     testImplementation("junit:junit:4.13.2")

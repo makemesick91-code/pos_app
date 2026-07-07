@@ -8,6 +8,8 @@ use App\Models\Sale;
 use App\Models\Store;
 use App\Models\User;
 use App\Support\TenantContext;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -43,6 +45,21 @@ class SaleService
         $store = $this->requireStore($context);
         $cashier = $context->user();
 
+        $clientReference = $this->normalizeReference($data['client_reference'] ?? null);
+        $source = $this->resolveSource($data['source'] ?? null);
+
+        // Sprint 7 idempotency: a retried offline submit carrying a reference we
+        // have already stored must return the original sale, never a duplicate.
+        if ($clientReference !== null) {
+            $existing = $this->findByClientReference($tenant->id, $store->id, $clientReference);
+
+            if ($existing !== null) {
+                $existing->idempotentReplay = true;
+
+                return $existing->load(['items', 'payments']);
+            }
+        }
+
         $lines = $this->buildLines($tenant->id, $store->id, $data['items']);
 
         $subtotal = '0.00';
@@ -66,52 +83,113 @@ class SaleService
 
         $changeTotal = bcsub($paidAmount, $grandTotal, self::SCALE);
 
-        return DB::transaction(function () use (
-            $tenant,
-            $store,
-            $cashier,
-            $lines,
-            $subtotal,
-            $discountTotal,
-            $grandTotal,
-            $paidAmount,
-            $changeTotal,
-            $data
-        ) {
-            $sale = Sale::create([
-                'tenant_id' => $tenant->id,
-                'store_id' => $store->id,
-                'device_id' => null,
-                'cashier_id' => $cashier->id,
-                'invoice_number' => $this->invoiceNumbers->generate($tenant->id, $store),
-                'sale_date' => now(),
-                'subtotal' => $subtotal,
-                'discount_total' => $discountTotal,
-                'tax_total' => '0.00',
-                'grand_total' => $grandTotal,
-                'paid_total' => $paidAmount,
-                'change_total' => $changeTotal,
-                'payment_status' => Sale::PAYMENT_STATUS_PAID,
-                'sync_status' => Sale::SYNC_STATUS_SYNCED,
-                'source' => Sale::SOURCE_ANDROID_ONLINE,
-                'notes' => $data['notes'] ?? null,
-            ]);
+        $isOffline = $source === Sale::SOURCE_ANDROID_OFFLINE;
+        $syncedAt = ($clientReference !== null || $isOffline) ? now() : null;
+        $clientCreatedAt = isset($data['client_created_at'])
+            ? Carbon::parse($data['client_created_at'])
+            : null;
 
-            $this->persistLines($sale, $lines);
+        try {
+            return DB::transaction(function () use (
+                $tenant,
+                $store,
+                $cashier,
+                $lines,
+                $subtotal,
+                $discountTotal,
+                $grandTotal,
+                $paidAmount,
+                $changeTotal,
+                $source,
+                $clientReference,
+                $clientCreatedAt,
+                $syncedAt,
+                $data
+            ) {
+                $sale = Sale::create([
+                    'tenant_id' => $tenant->id,
+                    'store_id' => $store->id,
+                    'device_id' => null,
+                    'cashier_id' => $cashier->id,
+                    'invoice_number' => $this->invoiceNumbers->generate($tenant->id, $store),
+                    'sale_date' => now(),
+                    'subtotal' => $subtotal,
+                    'discount_total' => $discountTotal,
+                    'tax_total' => '0.00',
+                    'grand_total' => $grandTotal,
+                    'paid_total' => $paidAmount,
+                    'change_total' => $changeTotal,
+                    'payment_status' => Sale::PAYMENT_STATUS_PAID,
+                    'sync_status' => Sale::SYNC_STATUS_SYNCED,
+                    'source' => $source,
+                    'client_reference' => $clientReference,
+                    'client_created_at' => $clientCreatedAt,
+                    'synced_at' => $syncedAt,
+                    'notes' => $data['notes'] ?? null,
+                ]);
 
-            Payment::create([
-                'tenant_id' => $tenant->id,
-                'store_id' => $store->id,
-                'sale_id' => $sale->id,
-                'method' => Payment::METHOD_CASH,
-                'amount' => $paidAmount,
-                'status' => Payment::STATUS_PAID,
-                'provider' => Payment::PROVIDER_MANUAL,
-                'paid_at' => now(),
-            ]);
+                $this->persistLines($sale, $lines);
 
-            return $sale->load(['items', 'payments']);
-        });
+                Payment::create([
+                    'tenant_id' => $tenant->id,
+                    'store_id' => $store->id,
+                    'sale_id' => $sale->id,
+                    'method' => Payment::METHOD_CASH,
+                    'amount' => $paidAmount,
+                    'status' => Payment::STATUS_PAID,
+                    'provider' => Payment::PROVIDER_MANUAL,
+                    'paid_at' => now(),
+                ]);
+
+                return $sale->load(['items', 'payments']);
+            });
+        } catch (QueryException $e) {
+            // Lost a race with a concurrent replay of the same offline reference:
+            // fall back to the sale the winning request created.
+            if ($clientReference !== null) {
+                $existing = $this->findByClientReference($tenant->id, $store->id, $clientReference);
+
+                if ($existing !== null) {
+                    $existing->idempotentReplay = true;
+
+                    return $existing->load(['items', 'payments']);
+                }
+            }
+
+            throw $e;
+        }
+    }
+
+    private function findByClientReference(int $tenantId, int $storeId, string $clientReference): ?Sale
+    {
+        return Sale::query()
+            ->where('tenant_id', $tenantId)
+            ->where('store_id', $storeId)
+            ->where('client_reference', $clientReference)
+            ->first();
+    }
+
+    private function normalizeReference(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+
+        return $value === '' ? null : $value;
+    }
+
+    private function resolveSource(?string $source): string
+    {
+        $allowed = [
+            Sale::SOURCE_ANDROID_ONLINE,
+            Sale::SOURCE_ANDROID_OFFLINE,
+            Sale::SOURCE_WEB_ADMIN,
+            Sale::SOURCE_API,
+        ];
+
+        return in_array($source, $allowed, true) ? $source : Sale::SOURCE_ANDROID_ONLINE;
     }
 
     /**

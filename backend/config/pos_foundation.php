@@ -28,6 +28,9 @@ return [
         'escpos_android_formatter_required' => true,
         'android_gradle_wrapper_required' => true,
         'android_build_ci_required' => true,
+        'offline_qris_forbidden' => true,
+        'sales_idempotency_required' => true,
+        'workmanager_sync_required' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
@@ -37,5 +40,6 @@ return [
         'sprint_4' => 'Sales Backend Integration',
         'sprint_5' => 'QRIS Payment Gateway Foundation',
         'sprint_6' => 'Printer & Receipt Foundation',
+        'sprint_7' => 'Offline Cash & Sync Foundation',
     ],
 ];

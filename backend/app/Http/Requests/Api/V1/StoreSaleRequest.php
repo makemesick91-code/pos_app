@@ -46,6 +46,23 @@ class StoreSaleRequest extends FormRequest
                 Rule::exists('stores', 'id')->where('tenant_id', $tenantId),
             ],
 
+            // Sprint 7 — offline sync foundation. An offline CASH sale replays a
+            // client-generated reference so the backend can dedupe retries. The
+            // client may declare its source and when the sale was rung up, but it
+            // still may never set totals, tenant, cashier, or invoice number.
+            'source' => [
+                'nullable',
+                'string',
+                Rule::in([
+                    'ANDROID_ONLINE',
+                    'ANDROID_OFFLINE',
+                    'WEB_ADMIN',
+                    'API',
+                ]),
+            ],
+            'client_reference' => ['nullable', 'string', 'max:191'],
+            'client_created_at' => ['nullable', 'date'],
+
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => [
                 'required',
@@ -61,5 +78,25 @@ class StoreSaleRequest extends FormRequest
 
             'notes' => ['nullable', 'string', 'max:1000'],
         ];
+    }
+
+    /**
+     * Offline sync is CASH-only. QRIS must always run online through the
+     * backend-driven gateway flow (Sprint 5), so an offline submit that carries a
+     * non-CASH method is rejected outright.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator): void {
+            $source = $this->input('source');
+            $method = $this->input('payment.method');
+
+            if ($source === 'ANDROID_OFFLINE' && $method !== null && $method !== 'CASH') {
+                $validator->errors()->add(
+                    'payment.method',
+                    'Offline sales support CASH only. QRIS requires an internet connection.'
+                );
+            }
+        });
     }
 }

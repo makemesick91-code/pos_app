@@ -27,6 +27,15 @@
     <string name="cashier_checkout_submitting">Memproses checkout…</string>
     <string name="cashier_checkout_success">Transaksi berhasil</string>
 
+    <!-- Sprint 7 — Offline cash & sync -->
+    <string name="cashier_checkout_cash_offline">Simpan Cash Offline</string>
+    <string name="cashier_offline_saved">Tersimpan offline (DRAFT)</string>
+    <string name="cashier_offline_draft_label">STRUK OFFLINE / BELUM SYNC</string>
+    <string name="cashier_sync_now">Sync Sekarang</string>
+    <string name="cashier_sync_summary">Menunggu sync: %1$d, Gagal: %2$d</string>
+    <string name="cashier_syncing">Menyinkronkan transaksi offline…</string>
+    <string name="qris_offline_blocked">QRIS membutuhkan koneksi internet</string>
+
     <!-- Sprint 5 — QRIS payment -->
     <string name="qris_title">Pembayaran QRIS</string>
     <string name="qris_payload_heading">Kode QR (teks):</string>
