@@ -55,6 +55,7 @@ This project is governed by:
 20. `docs/sprints/sprint-18-pilot-closure-production-handover-foundation.md`
 21. `docs/sprints/sprint-19-production-operations-post-handover-governance-foundation.md`
 22. `docs/sprints/sprint-20-commercial-launch-readiness-saas-packaging-foundation.md`
+23. `docs/sprints/sprint-21-public-website-landing-page-readiness-foundation.md`
 
 No sprint may contradict these documents unless the canonical foundation is explicitly updated first.
 
@@ -597,3 +598,42 @@ Mandatory:
 29. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, closing, release hardening, RC/UAT, deployment, field trial, monitoring, hypercare, stabilization, closure, handover, and operations behavior from previous sprints must remain intact.
 30. Android CI remains the authoritative build gate if local Android build cannot run.
 31. Commercial launch GO/WATCH/NO-GO report must be evidence-backed.
+
+## Sprint 21 Public Website / Landing Page Readiness Foundation Runtime Rule
+
+Starting Sprint 21, public website and landing page readiness must be content-governed, package-aligned, privacy-aware, lead-safe, SEO-aware, secret-safe, and gated before a GO tag is created.
+
+Mandatory:
+
+1. Public website readiness must not be declared GO without backend tests passing.
+2. Public website readiness must not be declared GO without Android CI assembleDebug passing.
+3. Public website readiness must not be declared GO without Android CI testDebugUnitTest passing.
+4. Public website readiness must not be declared GO without Sprint 13 release readiness commands running successfully.
+5. Public website readiness must not be declared GO without Sprint 14 RC/UAT commands running successfully.
+6. Public website readiness must not be declared GO without Sprint 15 deployment/field-trial commands running successfully.
+7. Public website readiness must not be declared GO without Sprint 16 monitoring/hypercare commands running successfully.
+8. Public website readiness must not be declared GO without Sprint 17 stabilization/defect commands running successfully.
+9. Public website readiness must not be declared GO without Sprint 18 closure/handover commands running successfully.
+10. Public website readiness must not be declared GO without Sprint 19 production operations commands running successfully.
+11. Public website readiness must not be declared GO without Sprint 20 commercial launch commands running successfully.
+12. Public landing pages must not create tenant/user/subscription/device records.
+13. Lead interest submissions must be interest-only and must not perform account creation.
+14. Public website package/pricing content must align with commercial package catalog and pricing governance.
+15. Public website commands must not print secret values.
+16. Public website artifacts must not contain real passwords, real payment gateway secrets, server credentials, `.env`, APK/AAB, keystore, or production customer data.
+17. Public website must not include real external analytics/tracking token in Sprint 21.
+18. Public website must not include live ad pixel in Sprint 21.
+19. Public website must not implement real billing collection.
+20. Public website must not implement subscription payment automation.
+21. Public website must not perform automatic production deployment.
+22. Public website must not send real Slack/WhatsApp/email alerts.
+23. Public website must not change Android POS business flow.
+24. Public website must include privacy/cookie/terms readiness placeholders before GO.
+25. Public website must include public route security tests.
+26. Public website must include SEO metadata readiness checks.
+27. Public website must include content approval/signoff readiness.
+28. Open CRITICAL/HIGH public website risks must force NO-GO unless valid accepted risk is documented and reviewed.
+29. Open MEDIUM public website risks must force WATCH unless mitigation is documented.
+30. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, closing, release hardening, RC/UAT, deployment, field trial, monitoring, hypercare, stabilization, closure, handover, operations, and commercial launch behavior from previous sprints must remain intact.
+31. Android CI remains the authoritative build gate if local Android build cannot run.
+32. Public website GO/WATCH/NO-GO report must be evidence-backed.

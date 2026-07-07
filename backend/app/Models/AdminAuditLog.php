@@ -68,6 +68,24 @@ class AdminAuditLog extends Model
     public const ACTION_COMMERCIAL_RISK_ACCEPTED = 'COMMERCIAL_RISK_ACCEPTED';
     public const ACTION_COMMERCIAL_RISK_CLOSED = 'COMMERCIAL_RISK_CLOSED';
 
+    // Sprint 21 — public website / landing page readiness.
+    public const ACTION_WEBSITE_PAGE_CREATED = 'WEBSITE_PAGE_CREATED';
+    public const ACTION_WEBSITE_PAGE_UPDATED = 'WEBSITE_PAGE_UPDATED';
+    public const ACTION_WEBSITE_PAGE_APPROVED = 'WEBSITE_PAGE_APPROVED';
+    public const ACTION_WEBSITE_PAGE_PUBLISHED = 'WEBSITE_PAGE_PUBLISHED';
+    public const ACTION_WEBSITE_PAGE_ARCHIVED = 'WEBSITE_PAGE_ARCHIVED';
+    public const ACTION_LANDING_VERSION_CREATED = 'LANDING_VERSION_CREATED';
+    public const ACTION_LANDING_VERSION_UPDATED = 'LANDING_VERSION_UPDATED';
+    public const ACTION_LANDING_VERSION_APPROVED = 'LANDING_VERSION_APPROVED';
+    public const ACTION_LANDING_VERSION_PUBLISHED = 'LANDING_VERSION_PUBLISHED';
+    public const ACTION_LANDING_VERSION_ARCHIVED = 'LANDING_VERSION_ARCHIVED';
+    public const ACTION_LEAD_STATUS_CHANGED = 'LEAD_STATUS_CHANGED';
+    public const ACTION_WEBSITE_RISK_CREATED = 'WEBSITE_RISK_CREATED';
+    public const ACTION_WEBSITE_RISK_UPDATED = 'WEBSITE_RISK_UPDATED';
+    public const ACTION_WEBSITE_RISK_ACCEPTED = 'WEBSITE_RISK_ACCEPTED';
+    public const ACTION_WEBSITE_RISK_CLOSED = 'WEBSITE_RISK_CLOSED';
+    public const ACTION_WEBSITE_SIGNOFF_ADDED = 'WEBSITE_SIGNOFF_ADDED';
+
     public const TARGET_TENANT = 'tenant';
     public const TARGET_SUBSCRIPTION = 'tenant_subscription';
     public const TARGET_DEVICE = 'registered_device';
@@ -84,6 +102,11 @@ class AdminAuditLog extends Model
     public const TARGET_COMMERCIAL_LAUNCH_SIGNOFF = 'commercial_launch_signoff';
     public const TARGET_SAAS_PACKAGE_CATALOG = 'saas_package_catalog';
     public const TARGET_COMMERCIAL_LAUNCH_RISK = 'commercial_launch_risk';
+    public const TARGET_PUBLIC_WEBSITE_PAGE = 'public_website_page';
+    public const TARGET_LANDING_PAGE_VERSION = 'landing_page_version';
+    public const TARGET_LEAD_INTEREST_SUBMISSION = 'lead_interest_submission';
+    public const TARGET_PUBLIC_WEBSITE_RISK = 'public_website_risk';
+    public const TARGET_PUBLIC_WEBSITE_SIGNOFF = 'public_website_signoff';
 
     protected $fillable = [
         'actor_user_id',

@@ -361,6 +361,42 @@ penagihan langganan nyata. Cash (Sprint 4), QRIS (Sprint 5), struk/printer
 (Sprint 9) tetap utuh. Android build CI menjalankan assembleDebug +
 testDebugUnitTest.
 
+## Sprint 21 — Public Website / Landing Page Readiness Foundation
+
+Sprint 21 establishes the public website and landing page readiness foundation:
+
+- public website page + landing page version persistence (content-governed)
+- lead interest submission persistence (interest-only, consent-required)
+- public website signoff + risk register (CRITICAL/HIGH → NO-GO, MEDIUM → WATCH)
+- PublicWebsiteReadinessService, LandingPageContentService, LeadInterestGovernanceService
+- SeoMetadataGovernanceService, PrivacyCookieReadinessService, PublicWebsiteRiskGovernanceService
+- PublicWebsiteGoNoGoService (prior Sprint 13–20 gates + public website readiness aggregate)
+- public routes: `/`, `/packages`, `/privacy`, `/terms`, `/thank-you`, `POST /interest` (rate-limited)
+- admin public website APIs behind platform.admin
+- public-website:readiness / content-summary / lead-summary / go-no-go commands
+- public website docs under docs/public-website/
+- CI public website gate (sprint21-ci.yml)
+- no public self-service signup / no real billing / no live analytics or ad pixel
+- no auto deploy, no real alerts, no Android business-flow change
+- Sprint 21 runtime rules lock
+
+Public pages never create tenant/user/subscription/device records; leads are
+interest-only and followed up manually. Package/pricing content aligns with the
+Sprint 20 commercial package catalog.
+
+Validation:
+
+```bash
+bash scripts/sprint21_smoke.sh
+bash scripts/android_release_readiness.sh
+cd backend && php artisan public-website:readiness --json
+cd backend && php artisan public-website:content-summary --json
+cd backend && php artisan public-website:lead-summary --json
+cd backend && php artisan public-website:go-no-go --json
+cd backend && php artisan test
+cd android && ./gradlew :app:assembleDebug && ./gradlew :app:testDebugUnitTest
+```
+
 ## Sprint 20 — Commercial Launch Readiness & SaaS Packaging Foundation
 
 Sprint 20 establishes the commercial launch readiness and SaaS packaging foundation:
