@@ -71,6 +71,11 @@ return [
         'pilot_rollback_checklist_required' => true,
         'field_issue_register_required' => true,
         'no_auto_production_deploy_sprint_15' => true,
+        'pilot_monitoring_gate_required' => true,
+        'hypercare_issue_triage_required' => true,
+        'daily_pilot_health_summary_required' => true,
+        'operator_feedback_log_required' => true,
+        'no_real_alert_sending_sprint_16' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
@@ -89,5 +94,6 @@ return [
         'sprint_13' => 'Production Readiness & Release Hardening Foundation',
         'sprint_14' => 'Pilot Release Candidate & Operator UAT Foundation',
         'sprint_15' => 'Pilot Deployment & Field Trial Evidence Foundation',
+        'sprint_16' => 'Pilot Monitoring & Hypercare Foundation',
     ],
 ];
