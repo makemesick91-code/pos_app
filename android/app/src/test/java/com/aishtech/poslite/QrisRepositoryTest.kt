@@ -11,6 +11,7 @@ import com.aishtech.poslite.data.remote.dto.MeResponse
 import com.aishtech.poslite.data.remote.dto.ProductSyncResponse
 import com.aishtech.poslite.data.remote.dto.QrisPaymentDto
 import com.aishtech.poslite.data.remote.dto.QrisPaymentResponse
+import com.aishtech.poslite.data.remote.dto.ReceiptResponseDto
 import com.aishtech.poslite.data.remote.dto.SaleResponse
 import com.aishtech.poslite.data.repository.QrisRepository
 import kotlinx.coroutines.test.runTest
@@ -54,6 +55,7 @@ class QrisRepositoryTest {
         }
 
         override suspend fun getPaymentStatus(paymentId: Long): Response<QrisPaymentResponse> = status!!
+        override suspend fun getReceipt(saleId: Long): Response<ReceiptResponseDto> = error("unused")
     }
 
     private fun samplePayment(status: String = "PENDING") = QrisPaymentDto(

@@ -24,6 +24,10 @@ return [
         'qris_backend_driven_required' => true,
         'qris_webhook_ready_required' => true,
         'payment_gateway_credentials_backend_only' => true,
+        'receipt_backend_authoritative' => true,
+        'escpos_android_formatter_required' => true,
+        'android_gradle_wrapper_required' => true,
+        'android_build_ci_required' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
@@ -32,5 +36,6 @@ return [
         'sprint_3' => 'Android Cashier Foundation',
         'sprint_4' => 'Sales Backend Integration',
         'sprint_5' => 'QRIS Payment Gateway Foundation',
+        'sprint_6' => 'Printer & Receipt Foundation',
     ],
 ];

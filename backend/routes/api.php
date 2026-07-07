@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\ProductStorePriceController;
 use App\Http\Controllers\Api\V1\ProductSyncController;
 use App\Http\Controllers\Api\V1\QrisPaymentController;
+use App\Http\Controllers\Api\V1\ReceiptController;
 use App\Http\Controllers\Api\V1\SaleCashPaymentController;
 use App\Http\Controllers\Api\V1\SaleController;
 use App\Http\Controllers\Api\V1\TenantContextController;
@@ -63,6 +64,11 @@ Route::prefix('v1')->group(function () {
             Route::get('/sales/{sale}', [SaleController::class, 'show']);
             Route::post('/sales/{sale}/cancel', [SaleController::class, 'cancel']);
             Route::post('/sales/{sale}/payments/cash', [SaleCashPaymentController::class, 'store']);
+
+            // Sprint 6 — tenant-isolated receipt preview. Backend is the sole
+            // authority for receipt data and print eligibility; Android only
+            // formats an approved payload for ESC/POS printing.
+            Route::get('/sales/{sale}/receipt', [ReceiptController::class, 'show']);
 
             // Sprint 5 — backend-driven QRIS: create a QRIS payment for a sale
             // and poll its status. Android never calls a payment gateway directly.

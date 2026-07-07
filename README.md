@@ -175,13 +175,38 @@ cd backend && php artisan test
 
 Android build/test may require Gradle wrapper, Android SDK, and JDK 17–21/21 depending on AGP compatibility.
 
+## Sprint 6 — Printer & Receipt Foundation
+
+Sprint 6 establishes the printer and receipt foundation:
+
+- backend receipt preview API
+- receipt eligibility rules for CASH and QRIS
+- tenant-isolated receipt access
+- Android receipt screen
+- ESC/POS receipt formatter
+- Bluetooth printer foundation
+- local printer settings
+- Android Gradle wrapper
+- Android build CI with assembleDebug and testDebugUnitTest
+- Sprint 6 runtime rules lock
+
+Validation:
+
+```bash
+bash scripts/sprint6_smoke.sh
+cd backend && php artisan test
+cd android && ./gradlew :app:assembleDebug && ./gradlew :app:testDebugUnitTest
+```
+
 ## Status
 
-Fase saat ini: **Sprint 5 — QRIS Payment Gateway Foundation selesai**. Backend kini
-memiliki fondasi QRIS backend-driven: abstraksi provider gateway, provider fake/sandbox
-untuk lokal/testing tanpa jaringan eksternal, endpoint pembuatan QRIS & status pembayaran,
-webhook logging + validasi signature + idempotency, sinkronisasi status ke penjualan, dan
-command rekonsiliasi pembayaran. Android memperoleh DTO/API/repository/layar QRIS tanpa
-menyimpan kredensial gateway dan tanpa memanggil gateway langsung. Cash Sprint 4 tetap utuh.
-Kredensial gateway hanya hidup di environment backend. Fitur payout/refund/printer/offline
-QRIS dibangun bertahap mengikuti Sprint Roadmap pada dokumen foundation.
+Fase saat ini: **Sprint 6 — Printer & Receipt Foundation selesai**. Backend kini
+memiliki API preview struk yang tenant-isolated dan payment-aware: struk hanya FINAL/
+printable saat penjualan PAID (CASH maupun QRIS), sedangkan penjualan pending/unpaid/
+cancelled/expired/failed tidak menghasilkan struk final. Data struk selalu memakai snapshot
+sale item, tidak pernah membocorkan `raw_response` atau kredensial gateway. Android memperoleh
+layar struk, ESC/POS formatter murni Kotlin, fondasi printer Bluetooth native, dan penyimpanan
+pengaturan printer lokal (tanpa kredensial pembayaran). Gradle wrapper kini tersedia dan Android
+build CI menjalankan assembleDebug + testDebugUnitTest. Cash (Sprint 4) dan QRIS (Sprint 5)
+tetap utuh. Fitur payout/refund/offline sync/inventory dibangun bertahap mengikuti Sprint
+Roadmap pada dokumen foundation.
