@@ -104,6 +104,15 @@ return [
         'no_auto_production_deploy_sprint_19' => true,
         'no_real_alert_sending_sprint_19' => true,
         'no_real_backup_restore_execution_sprint_19' => true,
+        'commercial_launch_readiness_required' => true,
+        'saas_package_catalog_required' => true,
+        'pricing_plan_governance_required' => true,
+        'sales_enablement_readiness_required' => true,
+        'onboarding_capacity_governance_required' => true,
+        'commercial_risk_review_required' => true,
+        'commercial_launch_go_no_go_required' => true,
+        'no_public_signup_sprint_20' => true,
+        'no_real_billing_collection_sprint_20' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
@@ -126,5 +135,6 @@ return [
         'sprint_17' => 'Pilot Stabilization & Defect Burn-down Foundation',
         'sprint_18' => 'Pilot Closure & Production Handover Foundation',
         'sprint_19' => 'Production Operations Baseline & Post-Handover Governance Foundation',
+        'sprint_20' => 'Commercial Launch Readiness & SaaS Packaging Foundation',
     ],
 ];

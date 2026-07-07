@@ -55,6 +55,18 @@ class AdminAuditLog extends Model
     public const ACTION_MAINTENANCE_CREATED = 'MAINTENANCE_CREATED';
     public const ACTION_MAINTENANCE_UPDATED = 'MAINTENANCE_UPDATED';
     public const ACTION_MAINTENANCE_STATUS_CHANGED = 'MAINTENANCE_STATUS_CHANGED';
+    public const ACTION_LAUNCH_RUN_CREATED = 'LAUNCH_RUN_CREATED';
+    public const ACTION_LAUNCH_RUN_APPROVED = 'LAUNCH_RUN_APPROVED';
+    public const ACTION_LAUNCH_RUN_BLOCKED = 'LAUNCH_RUN_BLOCKED';
+    public const ACTION_LAUNCH_SIGNOFF_ADDED = 'LAUNCH_SIGNOFF_ADDED';
+    public const ACTION_PACKAGE_CREATED = 'PACKAGE_CREATED';
+    public const ACTION_PACKAGE_UPDATED = 'PACKAGE_UPDATED';
+    public const ACTION_PACKAGE_APPROVED = 'PACKAGE_APPROVED';
+    public const ACTION_PACKAGE_RETIRED = 'PACKAGE_RETIRED';
+    public const ACTION_COMMERCIAL_RISK_CREATED = 'COMMERCIAL_RISK_CREATED';
+    public const ACTION_COMMERCIAL_RISK_UPDATED = 'COMMERCIAL_RISK_UPDATED';
+    public const ACTION_COMMERCIAL_RISK_ACCEPTED = 'COMMERCIAL_RISK_ACCEPTED';
+    public const ACTION_COMMERCIAL_RISK_CLOSED = 'COMMERCIAL_RISK_CLOSED';
 
     public const TARGET_TENANT = 'tenant';
     public const TARGET_SUBSCRIPTION = 'tenant_subscription';
@@ -68,6 +80,10 @@ class AdminAuditLog extends Model
     public const TARGET_PRODUCTION_OPERATION_RUN = 'production_operation_run';
     public const TARGET_PRODUCTION_INCIDENT = 'production_incident';
     public const TARGET_PRODUCTION_MAINTENANCE_WINDOW = 'production_maintenance_window';
+    public const TARGET_COMMERCIAL_LAUNCH_RUN = 'commercial_launch_run';
+    public const TARGET_COMMERCIAL_LAUNCH_SIGNOFF = 'commercial_launch_signoff';
+    public const TARGET_SAAS_PACKAGE_CATALOG = 'saas_package_catalog';
+    public const TARGET_COMMERCIAL_LAUNCH_RISK = 'commercial_launch_risk';
 
     protected $fillable = [
         'actor_user_id',

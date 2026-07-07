@@ -19,6 +19,14 @@ use App\Http\Controllers\Api\V1\Admin\ProductionMaintenanceWindowController;
 use App\Http\Controllers\Api\V1\Admin\ProductionOperationRunController;
 use App\Http\Controllers\Api\V1\Admin\ProductionOpsHealthController;
 use App\Http\Controllers\Api\V1\Admin\ProductionPostHandoverGoNoGoController;
+use App\Http\Controllers\Api\V1\Admin\CommercialLaunchGoNoGoController;
+use App\Http\Controllers\Api\V1\Admin\CommercialLaunchReadinessController;
+use App\Http\Controllers\Api\V1\Admin\CommercialLaunchRiskController;
+use App\Http\Controllers\Api\V1\Admin\CommercialLaunchRunController;
+use App\Http\Controllers\Api\V1\Admin\CommercialLaunchSignoffController;
+use App\Http\Controllers\Api\V1\Admin\CommercialOnboardingCapacityController;
+use App\Http\Controllers\Api\V1\Admin\CommercialPackageSummaryController;
+use App\Http\Controllers\Api\V1\Admin\SaasPackageCatalogController;
 use App\Http\Controllers\Api\V1\Admin\TenantDemoDataController;
 use App\Http\Controllers\Api\V1\Admin\TenantOnboardingController;
 use App\Http\Controllers\Api\V1\Admin\TenantOnboardingStatusController;
@@ -267,6 +275,37 @@ Route::prefix('v1')->group(function () {
             Route::get('/production-ops-health', [ProductionOpsHealthController::class, 'index']);
             Route::get('/production-incident-summary', [ProductionIncidentSummaryController::class, 'index']);
             Route::get('/production-post-handover-go-no-go', [ProductionPostHandoverGoNoGoController::class, 'index']);
+
+            // Sprint 20 — commercial launch readiness & SaaS packaging. Platform
+            // admin only. Package pricing is governance metadata only. No public
+            // signup, no real billing collection, no payment gateway subscription,
+            // no auto production deploy, no real alert sending, no secrets exposed.
+            Route::get('/commercial-launch-runs', [CommercialLaunchRunController::class, 'index']);
+            Route::post('/commercial-launch-runs', [CommercialLaunchRunController::class, 'store']);
+            Route::get('/commercial-launch-runs/{launchRun}', [CommercialLaunchRunController::class, 'show']);
+            Route::post('/commercial-launch-runs/{launchRun}/approve', [CommercialLaunchRunController::class, 'approve']);
+            Route::post('/commercial-launch-runs/{launchRun}/block', [CommercialLaunchRunController::class, 'block']);
+            Route::get('/commercial-launch-runs/{launchRun}/signoffs', [CommercialLaunchSignoffController::class, 'index']);
+            Route::post('/commercial-launch-runs/{launchRun}/signoffs', [CommercialLaunchSignoffController::class, 'store']);
+
+            Route::get('/saas-packages', [SaasPackageCatalogController::class, 'index']);
+            Route::post('/saas-packages', [SaasPackageCatalogController::class, 'store']);
+            Route::get('/saas-packages/{package}', [SaasPackageCatalogController::class, 'show']);
+            Route::patch('/saas-packages/{package}', [SaasPackageCatalogController::class, 'update']);
+            Route::post('/saas-packages/{package}/approve', [SaasPackageCatalogController::class, 'approve']);
+            Route::post('/saas-packages/{package}/retire', [SaasPackageCatalogController::class, 'retire']);
+
+            Route::get('/commercial-risks', [CommercialLaunchRiskController::class, 'index']);
+            Route::post('/commercial-risks', [CommercialLaunchRiskController::class, 'store']);
+            Route::get('/commercial-risks/{risk}', [CommercialLaunchRiskController::class, 'show']);
+            Route::patch('/commercial-risks/{risk}', [CommercialLaunchRiskController::class, 'update']);
+            Route::post('/commercial-risks/{risk}/accept-risk', [CommercialLaunchRiskController::class, 'acceptRisk']);
+            Route::post('/commercial-risks/{risk}/close', [CommercialLaunchRiskController::class, 'close']);
+
+            Route::get('/commercial-launch-readiness', [CommercialLaunchReadinessController::class, 'index']);
+            Route::get('/commercial-package-summary', [CommercialPackageSummaryController::class, 'index']);
+            Route::get('/commercial-onboarding-capacity', [CommercialOnboardingCapacityController::class, 'index']);
+            Route::get('/commercial-launch-go-no-go', [CommercialLaunchGoNoGoController::class, 'index']);
         });
     });
 
