@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.aishtech.poslite.R
 import com.aishtech.poslite.core.ServiceLocator
 import com.aishtech.poslite.data.repository.CartRepository
 import com.aishtech.poslite.databinding.ActivityCashierBinding
@@ -38,6 +39,7 @@ class CashierActivity : AppCompatActivity() {
                     CashierViewModel(
                         catalogRepository = ServiceLocator.catalogRepository(context),
                         syncManager = ServiceLocator.catalogSyncManager(context),
+                        sales = ServiceLocator.salesRepository(context),
                         cart = CartRepository(),
                     ) as T
             },
@@ -48,6 +50,10 @@ class CashierActivity : AppCompatActivity() {
 
         binding.buttonSync.setOnClickListener { viewModel.sync() }
         binding.buttonClearCart.setOnClickListener { viewModel.clearCart() }
+        binding.buttonCheckout.setOnClickListener {
+            val paid = binding.inputPaidAmount.text?.toString()?.toDoubleOrNull() ?: 0.0
+            viewModel.checkoutCash(paid)
+        }
         binding.inputSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) = Unit
             override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {
@@ -76,10 +82,42 @@ class CashierActivity : AppCompatActivity() {
         viewModel.cartItems.observe(this) { items ->
             val count = items.sumOf { it.quantity }
             binding.textCartCount.text = "Keranjang: $count item"
+            // Checkout is only possible with a non-empty cart.
+            binding.buttonCheckout.isEnabled = items.isNotEmpty()
         }
         viewModel.syncStatus.observe(this) { binding.textSyncStatus.text = it }
         viewModel.syncing.observe(this) { syncing ->
             binding.buttonSync.isEnabled = !syncing
+        }
+        viewModel.checkout.observe(this) { state -> renderCheckout(state) }
+    }
+
+    private fun renderCheckout(state: CashierViewModel.CheckoutState) {
+        val result = binding.textCheckoutResult
+        when (state) {
+            is CashierViewModel.CheckoutState.Idle -> {
+                result.visibility = View.GONE
+                binding.buttonCheckout.isEnabled = viewModel.cartItems.value?.isNotEmpty() ?: false
+            }
+            is CashierViewModel.CheckoutState.Submitting -> {
+                result.visibility = View.VISIBLE
+                result.text = getString(R.string.cashier_checkout_submitting)
+                binding.buttonCheckout.isEnabled = false
+            }
+            is CashierViewModel.CheckoutState.Success -> {
+                val sale = state.sale
+                result.visibility = View.VISIBLE
+                result.text = getString(R.string.cashier_checkout_success) +
+                    "\nInvoice: ${sale.invoiceNumber}" +
+                    "\nTotal: ${formatPrice(sale.grandTotal?.toDoubleOrNull() ?: 0.0)}" +
+                    "\nKembalian: ${formatPrice(sale.changeTotal?.toDoubleOrNull() ?: 0.0)}"
+                binding.inputPaidAmount.text?.clear()
+            }
+            is CashierViewModel.CheckoutState.Error -> {
+                result.visibility = View.VISIBLE
+                result.text = state.message
+                binding.buttonCheckout.isEnabled = viewModel.cartItems.value?.isNotEmpty() ?: false
+            }
         }
     }
 

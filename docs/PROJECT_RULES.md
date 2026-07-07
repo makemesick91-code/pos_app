@@ -38,6 +38,7 @@ This project is governed by:
 3. `docs/sprints/sprint-1-saas-tenant-foundation.md`
 4. `docs/sprints/sprint-2-product-foundation.md`
 5. `docs/sprints/sprint-3-android-cashier-foundation.md`
+6. `docs/sprints/sprint-4-sales-backend-integration.md`
 
 No sprint may contradict these documents unless the canonical foundation is explicitly updated first.
 
@@ -103,3 +104,27 @@ Mandatory:
 13. Sprint 3 must not implement sales submission, QRIS, webhook, printer, or inventory movement runtime.
 14. Android UI must remain lightweight for older HP Android devices.
 15. Android implementation must include validation evidence and smoke checks.
+
+## Sprint 4 Sales Backend Integration Runtime Rule
+
+Starting Sprint 4, sales and cash checkout implementation must enforce tenant isolation, price snapshotting, and online cash finalization.
+
+Mandatory:
+
+1. Sales must be tenant-owned.
+2. Sales must be store-owned where applicable.
+3. Sale items must be tenant-owned and store-owned.
+4. Payments must be tenant-owned and store-owned.
+5. Android may submit cart only to backend `/api/v1/sales` or approved sales endpoints.
+6. Client input may not assign arbitrary `tenant_id`.
+7. Client input may not assign arbitrary sale totals as source of truth.
+8. Backend must recalculate subtotal, discount, grand total, paid total, and change total.
+9. Backend must snapshot product name and unit price into `sale_items`.
+10. Product IDs in checkout must belong to authenticated tenant.
+11. Store context must come from authenticated tenant context and validated store selection.
+12. Tenant A must never read, create, cancel, or pay sales for tenant B.
+13. Cash payment finalization must not use QRIS/payment gateway logic.
+14. QRIS, payment webhook, printer, offline sales sync, and inventory movement runtime are not part of Sprint 4.
+15. Android cart must clear only after successful backend sale creation/payment.
+16. Android cart must remain intact if backend checkout fails.
+17. Sales endpoints must be covered by tenant isolation tests.

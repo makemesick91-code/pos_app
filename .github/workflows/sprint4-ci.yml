@@ -1,0 +1,106 @@
+name: Sprint 4 CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  foundation-validation:
+    name: Foundation & Sprint 4 smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Foundation document exists
+        run: test -f docs/foundation/POS_ANDROID_SAAS_FOUNDATION.md
+
+      - name: Project rules lock intact (Sprint 0–4)
+        run: |
+          grep -q "Foundation Lock Index" docs/PROJECT_RULES.md
+          grep -q "Sprint 0 Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 1 Multi-Tenant Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 2 Product Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 3 Android Cashier Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 4 Sales Backend Integration Runtime Rule" docs/PROJECT_RULES.md
+
+      - name: Sprint 4 smoke script
+        run: bash scripts/sprint4_smoke.sh
+
+  android-static:
+    name: Android static validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # A Gradle wrapper is not committed (the dev environment has JDK 25 only
+      # and no gradle binary; AGP 8.7.x needs JDK 17–21). CI therefore validates
+      # the module structure statically. Once a wrapper + compatible JDK are
+      # available, add setup-java (21) + Android SDK and run assembleDebug /
+      # testDebugUnitTest here.
+      - name: Package and SDK levels intact
+        run: |
+          grep -q "com.aishtech.poslite" android/app/build.gradle.kts
+          grep -q "minSdk = 26" android/app/build.gradle.kts
+          grep -q "targetSdk = 35" android/app/build.gradle.kts
+
+      - name: Sales foundation sources present
+        run: |
+          APP=android/app/src/main/java/com/aishtech/poslite
+          test -f "$APP/data/repository/SalesRepository.kt"
+          test -f "$APP/data/remote/dto/SalesDtos.kt"
+          grep -q "api/v1/sales" "$APP/core/network/PosApiService.kt"
+          grep -q "checkoutCash" "$APP/feature/cashier/CashierViewModel.kt"
+          grep -q "buttonCheckout" android/app/src/main/res/layout/activity_cashier.xml
+
+      - name: Unit test sources present
+        run: |
+          test -f android/app/src/test/java/com/aishtech/poslite/SalesRepositoryTest.kt
+
+      - name: Attempt Android build/test if a wrapper is available
+        run: |
+          if [ -f android/gradlew ]; then
+            cd android
+            ./gradlew :app:assembleDebug :app:testDebugUnitTest
+          else
+            echo "No Gradle wrapper committed — skipping Android build/test (static validation only)."
+          fi
+
+  backend-tests:
+    name: Backend (sales + auth + sync)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          # composer.lock resolves to packages requiring php >= 8.4.1;
+          # 8.5 matches the version the suite is validated against locally.
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+
+      - name: Composer validate
+        working-directory: backend
+        run: composer validate --strict
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Route compatibility (sales + auth + sync intact)
+        working-directory: backend
+        run: |
+          php artisan route:list | grep -E "api/v1/sales"
+          php artisan route:list | grep -E "api/v1/auth/login"
+          php artisan route:list | grep -E "api/v1/sync/products"
+
+      - name: Run tests
+        working-directory: backend
+        run: php artisan test

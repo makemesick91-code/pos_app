@@ -5,6 +5,8 @@ use App\Http\Controllers\Api\V1\ProductCategoryController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\ProductStorePriceController;
 use App\Http\Controllers\Api\V1\ProductSyncController;
+use App\Http\Controllers\Api\V1\SaleCashPaymentController;
+use App\Http\Controllers\Api\V1\SaleController;
 use App\Http\Controllers\Api\V1\TenantContextController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,7 +27,7 @@ Route::get('/health', function () {
         'status' => 'ok',
         'app' => 'Aish POS Lite API',
         'foundation' => 'POS_ANDROID_SAAS_FOUNDATION',
-        'sprint' => 'Sprint 2',
+        'sprint' => 'Sprint 4',
     ]);
 });
 
@@ -51,6 +53,13 @@ Route::prefix('v1')->group(function () {
             // Android incremental product/category sync.
             Route::get('/sync/products', [ProductSyncController::class, 'products']);
             Route::get('/sync/categories', [ProductSyncController::class, 'categories']);
+
+            // Sprint 4 — tenant-isolated sales + online CASH checkout.
+            Route::get('/sales', [SaleController::class, 'index']);
+            Route::post('/sales', [SaleController::class, 'store']);
+            Route::get('/sales/{sale}', [SaleController::class, 'show']);
+            Route::post('/sales/{sale}/cancel', [SaleController::class, 'cancel']);
+            Route::post('/sales/{sale}/payments/cash', [SaleCashPaymentController::class, 'store']);
         });
     });
 });

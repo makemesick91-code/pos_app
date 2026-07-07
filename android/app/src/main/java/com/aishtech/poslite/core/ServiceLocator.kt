@@ -8,6 +8,7 @@ import com.aishtech.poslite.core.session.SessionManager
 import com.aishtech.poslite.core.session.SharedPrefsTokenStore
 import com.aishtech.poslite.data.repository.AuthRepository
 import com.aishtech.poslite.data.repository.CatalogRepository
+import com.aishtech.poslite.data.repository.SalesRepository
 import com.aishtech.poslite.feature.sync.CatalogSyncManager
 
 /**
@@ -34,6 +35,9 @@ object ServiceLocator {
         val db = PosDatabase.getInstance(context)
         return CatalogRepository(db.productDao(), db.productCategoryDao())
     }
+
+    fun salesRepository(context: Context): SalesRepository =
+        SalesRepository(api(context))
 
     fun catalogSyncManager(context: Context): CatalogSyncManager {
         val db = PosDatabase.getInstance(context)
