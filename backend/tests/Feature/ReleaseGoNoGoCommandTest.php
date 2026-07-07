@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
 /**
@@ -34,6 +35,8 @@ class ReleaseGoNoGoCommandTest extends TestCase
 
     public function test_decision_is_go_when_required_checks_pass(): void
     {
+        File::ensureDirectoryExists(storage_path('app'));
+        File::ensureDirectoryExists(storage_path('logs'));
         config(['app.debug' => false]);
 
         Artisan::call('release:go-no-go', ['--json' => true]);

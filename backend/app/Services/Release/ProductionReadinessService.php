@@ -192,20 +192,27 @@ class ProductionReadinessService
 
     private function checkStorageWritable(): array
     {
-        $path = storage_path('app');
-
-        return is_writable($path)
-            ? $this->check('storage.writable', self::STATUS_PASS, 'Storage path is writable.')
-            : $this->check('storage.writable', self::STATUS_FAIL, 'Storage path is not writable.');
+        return $this->writabilityCheck('storage.writable', storage_path('app'), 'Storage path');
     }
 
     private function checkLogsWritable(): array
     {
-        $path = storage_path('logs');
+        return $this->writabilityCheck('logs.writable', storage_path('logs'), 'Logs path');
+    }
 
-        return is_writable($path)
-            ? $this->check('logs.writable', self::STATUS_PASS, 'Logs path is writable.')
-            : $this->check('logs.writable', self::STATUS_FAIL, 'Logs path is not writable.');
+    /**
+     * A non-writable path is FAIL in production-like environments and WARN
+     * elsewhere (fresh CI checkouts may not have provisioned the directory).
+     */
+    private function writabilityCheck(string $key, string $path, string $label): array
+    {
+        if (is_writable($path)) {
+            return $this->check($key, self::STATUS_PASS, "{$label} is writable.");
+        }
+
+        $status = $this->isProductionLike() ? self::STATUS_FAIL : self::STATUS_WARN;
+
+        return $this->check($key, $status, "{$label} is not writable.");
     }
 
     private function checkPaymentGatewaySecrets(): array

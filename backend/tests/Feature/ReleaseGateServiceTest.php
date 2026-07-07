@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Services\Release\ReleaseGateService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
 /**
@@ -32,6 +33,10 @@ class ReleaseGateServiceTest extends TestCase
     public function test_go_when_all_required_checks_pass(): void
     {
         // A clean production-like readiness (debug off) with all contracts intact.
+        // Guarantee the storage dirs exist/writable so a fresh CI checkout does
+        // not downgrade readiness to WARN over an unprovisioned directory.
+        File::ensureDirectoryExists(storage_path('app'));
+        File::ensureDirectoryExists(storage_path('logs'));
         config(['app.debug' => false]);
 
         $report = $this->service()->evaluate();
