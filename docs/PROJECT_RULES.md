@@ -47,6 +47,7 @@ This project is governed by:
 12. `docs/sprints/sprint-10-subscription-device-limit-foundation.md`
 13. `docs/sprints/sprint-11-admin-saas-control-panel-foundation.md`
 14. `docs/sprints/sprint-12-tenant-onboarding-demo-data-foundation.md`
+15. `docs/sprints/sprint-13-production-readiness-release-hardening-foundation.md`
 
 No sprint may contradict these documents unless the canonical foundation is explicitly updated first.
 
@@ -340,3 +341,28 @@ Mandatory:
 19. Android app must continue normal tenant/business behavior from previous sprints.
 20. Existing platform admin, subscription/device enforcement, cash, QRIS, receipt, printer, offline sync, inventory, reports, and closing behavior from previous sprints must remain intact.
 21. Android CI must continue running assembleDebug and testDebugUnitTest.
+
+## Sprint 13 Production Readiness & Release Hardening Foundation Runtime Rule
+
+Starting Sprint 13, releases must pass backend, Android, environment, security, and evidence gates before a GO tag is created.
+
+Mandatory:
+
+1. GO tag must not be created unless release readiness checks pass.
+2. Backend tests must pass before GO tag.
+3. Android CI assembleDebug must pass before GO tag.
+4. Android CI testDebugUnitTest must pass before GO tag.
+5. Production readiness checks must validate APP_ENV/APP_DEBUG/APP_KEY/database/cache/session/queue/storage assumptions without exposing secrets.
+6. Release checks must not print secret values.
+7. Release checks must fail when dangerous production settings are detected.
+8. Migration readiness must be checked before release GO.
+9. Backup/restore runbook foundation must exist before release GO.
+10. CI release gate must run smoke, backend tests, and Android build/test.
+11. Android version/package/minSdk/targetSdk governance must remain enforced.
+12. No app signing key, production credential, payment gateway secret, or `.env` file may be committed.
+13. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, and closing behavior from previous sprints must remain intact.
+14. Sprint 13 must not implement new business features.
+15. Sprint 13 must not deploy to production automatically unless explicitly approved and fully evidenced.
+16. Release evidence must be stored in sprint documentation.
+17. Working tree must be clean before GO tag.
+18. Android CI remains the authoritative build gate if local Android build cannot run.

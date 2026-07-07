@@ -361,6 +361,32 @@ penagihan langganan nyata. Cash (Sprint 4), QRIS (Sprint 5), struk/printer
 (Sprint 9) tetap utuh. Android build CI menjalankan assembleDebug +
 testDebugUnitTest.
 
+## Sprint 13 — Production Readiness & Release Hardening Foundation
+
+Sprint 13 establishes the release hardening foundation:
+
+- production readiness checks
+- release GO/NO-GO command
+- environment safety validation
+- migration/storage/cache/session/queue readiness checks
+- backup/restore runbook
+- release checklist/runbook
+- Android release readiness checks
+- version/build governance
+- Sprint 13 CI release gate
+- Sprint 13 runtime rules lock
+
+Validation:
+
+```bash
+bash scripts/sprint13_smoke.sh
+bash scripts/android_release_readiness.sh
+cd backend && php artisan production:readiness-check --json
+cd backend && php artisan release:go-no-go --json
+cd backend && php artisan test
+cd android && ./gradlew :app:assembleDebug && ./gradlew :app:testDebugUnitTest
+```
+
 ### Riwayat: Sprint 9 — Reports & Closing Foundation
 
 Sprint 9 — **Reports & Closing Foundation selesai**. Laporan kini

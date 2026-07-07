@@ -56,6 +56,11 @@ return [
         'onboarding_no_public_signup_sprint_12' => true,
         'onboarding_no_real_billing_sprint_12' => true,
         'onboarding_no_invite_automation_sprint_12' => true,
+        'release_readiness_gate_required' => true,
+        'production_env_safety_check_required' => true,
+        'backup_restore_runbook_required' => true,
+        'android_release_readiness_required' => true,
+        'automatic_production_deploy_not_in_sprint_13' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
@@ -71,5 +76,6 @@ return [
         'sprint_10' => 'Subscription & Device Limit Foundation',
         'sprint_11' => 'Admin SaaS Control Panel Foundation',
         'sprint_12' => 'Tenant Onboarding & Demo Data Foundation',
+        'sprint_13' => 'Production Readiness & Release Hardening Foundation',
     ],
 ];
