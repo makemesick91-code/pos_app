@@ -1,0 +1,126 @@
+name: Sprint 12 CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  foundation-and-smoke:
+    name: Foundation & Sprint 12 smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Foundation document exists
+        run: test -f docs/foundation/POS_ANDROID_SAAS_FOUNDATION.md
+
+      - name: Project rules lock intact (Sprint 0–12)
+        run: |
+          grep -q "Foundation Lock Index" docs/PROJECT_RULES.md
+          grep -q "Sprint 0 Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 1 Multi-Tenant Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 2 Product Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 3 Android Cashier Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 4 Sales Backend Integration Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 5 QRIS Payment Gateway Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 6 Printer & Receipt Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 7 Offline Cash & Sync Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 8 Inventory Simple Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 9 Reports & Closing Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 10 Subscription & Device Limit Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 11 Admin SaaS Control Panel Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 12 Tenant Onboarding & Demo Data Foundation Runtime Rule" docs/PROJECT_RULES.md
+
+      - name: Sprint 12 smoke script
+        run: bash scripts/sprint12_smoke.sh
+
+      - name: No forbidden files committed
+        run: |
+          ! git ls-files | grep -E '(^|/)\.env$|\.apk$|\.aab$|(^|/)vendor/|(^|/)node_modules/|\.sqlite$|database\.sqlite|(^|/)app/build/|(^|/)\.gradle/'
+
+  backend-tests:
+    name: Backend (onboarding + demo data + admin + subscription + device + business APIs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          # composer.lock resolves to packages requiring php >= 8.4.1;
+          # 8.5 matches the version the suite is validated against locally.
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+
+      - name: Composer validate
+        working-directory: backend
+        run: composer validate --strict
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Route compatibility (onboarding + demo data + admin + business APIs intact)
+        working-directory: backend
+        run: |
+          php artisan route:list | grep -E "api/v1/admin/tenant-onboarding"
+          php artisan route:list | grep -E "api/v1/admin/tenants/.*/onboarding-status"
+          php artisan route:list | grep -E "api/v1/admin/tenants/.*/demo-data"
+          php artisan route:list | grep -E "api/v1/admin/tenants"
+          php artisan route:list | grep -E "api/v1/subscription/status"
+          php artisan route:list | grep -E "api/v1/devices"
+          php artisan route:list | grep -E "api/v1/reports/daily-sales"
+          php artisan route:list | grep -E "api/v1/closings/daily"
+
+      - name: Run backend test suite
+        working-directory: backend
+        run: php artisan test
+
+  android-build-test:
+    name: Android build & unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Package and SDK levels intact
+        run: |
+          grep -q "com.aishtech.poslite" android/app/build.gradle.kts
+          grep -q "minSdk = 26" android/app/build.gradle.kts
+          grep -q "targetSdk = 35" android/app/build.gradle.kts
+
+      - name: No onboarding/admin SaaS control panel in Android source
+        run: |
+          ! grep -R "AdminActivity\|OnboardingActivity\|TenantOnboarding" \
+            android/app/src/main/java android/app/src/main/res
+
+      - name: No payment gateway secret in Android source
+        run: |
+          ! grep -R "MIDTRANS_SERVER_KEY\|XENDIT_SECRET_KEY\|DUITKU_API_KEY\|QRIS_FAKE_WEBHOOK_SECRET" \
+            android/app/src/main/java android/app/src/main/res
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Run unit tests
+        working-directory: android
+        run: ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace

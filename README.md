@@ -312,6 +312,31 @@ cd backend && php artisan test
 cd android && ./gradlew :app:assembleDebug && ./gradlew :app:testDebugUnitTest
 ```
 
+## Sprint 12 — Tenant Onboarding & Demo Data Foundation
+
+Sprint 12 establishes the tenant onboarding and demo data foundation:
+
+- platform-admin tenant onboarding
+- default store creation
+- owner user creation
+- starter/trial subscription assignment
+- demo product/category/price data
+- opening inventory via inventory movements
+- onboarding status/checklist
+- guarded demo data reset
+- onboarding/demo audit logs
+- no public signup
+- no Android onboarding/admin panel by design
+- Sprint 12 runtime rules lock
+
+Validation:
+
+```bash
+bash scripts/sprint12_smoke.sh
+cd backend && php artisan test
+cd android && ./gradlew :app:assembleDebug && ./gradlew :app:testDebugUnitTest
+```
+
 ## Status
 
 Fase saat ini: **Sprint 10 — Subscription & Device Limit Foundation selesai**.
