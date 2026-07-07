@@ -44,6 +44,17 @@ class AdminAuditLog extends Model
     public const ACTION_HANDOVER_MARKED_READY = 'HANDOVER_MARKED_READY';
     public const ACTION_HANDOVER_HANDED_OVER = 'HANDOVER_HANDED_OVER';
     public const ACTION_HANDOVER_SIGNOFF_ADDED = 'HANDOVER_SIGNOFF_ADDED';
+    public const ACTION_OPERATION_RUN_CREATED = 'OPERATION_RUN_CREATED';
+    public const ACTION_OPERATION_RUN_APPROVED = 'OPERATION_RUN_APPROVED';
+    public const ACTION_OPERATION_RUN_BLOCKED = 'OPERATION_RUN_BLOCKED';
+    public const ACTION_INCIDENT_CREATED = 'INCIDENT_CREATED';
+    public const ACTION_INCIDENT_UPDATED = 'INCIDENT_UPDATED';
+    public const ACTION_INCIDENT_ASSIGNED = 'INCIDENT_ASSIGNED';
+    public const ACTION_INCIDENT_STATUS_CHANGED = 'INCIDENT_STATUS_CHANGED';
+    public const ACTION_INCIDENT_ACCEPTED_RISK = 'INCIDENT_ACCEPTED_RISK';
+    public const ACTION_MAINTENANCE_CREATED = 'MAINTENANCE_CREATED';
+    public const ACTION_MAINTENANCE_UPDATED = 'MAINTENANCE_UPDATED';
+    public const ACTION_MAINTENANCE_STATUS_CHANGED = 'MAINTENANCE_STATUS_CHANGED';
 
     public const TARGET_TENANT = 'tenant';
     public const TARGET_SUBSCRIPTION = 'tenant_subscription';
@@ -54,6 +65,9 @@ class AdminAuditLog extends Model
     public const TARGET_PILOT_CLOSURE_RUN = 'pilot_closure_run';
     public const TARGET_PRODUCTION_HANDOVER_PACKAGE = 'production_handover_package';
     public const TARGET_PRODUCTION_HANDOVER_SIGNOFF = 'production_handover_signoff';
+    public const TARGET_PRODUCTION_OPERATION_RUN = 'production_operation_run';
+    public const TARGET_PRODUCTION_INCIDENT = 'production_incident';
+    public const TARGET_PRODUCTION_MAINTENANCE_WINDOW = 'production_maintenance_window';
 
     protected $fillable = [
         'actor_user_id',

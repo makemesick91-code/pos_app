@@ -53,6 +53,7 @@ This project is governed by:
 18. `docs/sprints/sprint-16-pilot-monitoring-hypercare-foundation.md`
 19. `docs/sprints/sprint-17-pilot-stabilization-defect-burndown-foundation.md`
 20. `docs/sprints/sprint-18-pilot-closure-production-handover-foundation.md`
+21. `docs/sprints/sprint-19-production-operations-post-handover-governance-foundation.md`
 
 No sprint may contradict these documents unless the canonical foundation is explicitly updated first.
 
@@ -523,3 +524,37 @@ Mandatory:
 27. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, closing, release hardening, RC/UAT, deployment, field trial, monitoring, hypercare, and stabilization behavior from previous sprints must remain intact.
 28. Android CI remains the authoritative build gate if local Android build cannot run.
 29. Production handover GO/WATCH/NO-GO report must be evidence-backed.
+
+## Sprint 19 Production Operations Baseline & Post-Handover Governance Foundation Runtime Rule
+
+Starting Sprint 19, production operations must be evidence-backed, incident-aware, SLA-aware, backup/restore-aware, release/rollback-aware, secret-safe, and gated before a GO tag is created.
+
+Mandatory:
+
+1. Production operations must not be declared GO without backend tests passing.
+2. Production operations must not be declared GO without Android CI assembleDebug passing.
+3. Production operations must not be declared GO without Android CI testDebugUnitTest passing.
+4. Production operations must not be declared GO without Sprint 13 release readiness commands running successfully.
+5. Production operations must not be declared GO without Sprint 14 RC/UAT commands running successfully.
+6. Production operations must not be declared GO without Sprint 15 deployment/field-trial commands running successfully.
+7. Production operations must not be declared GO without Sprint 16 monitoring/hypercare commands running successfully.
+8. Production operations must not be declared GO without Sprint 17 stabilization/defect commands running successfully.
+9. Production operations must not be declared GO without Sprint 18 closure/handover commands running successfully.
+10. Production operation runs must persist decision, status, health signals, evidence references, and actor metadata.
+11. Production incidents must persist severity, status, SLA due timestamp, breach timestamp, owner, area, impact, and evidence reference.
+12. Incident lifecycle changes must preserve history through metadata or event-style append records when applicable.
+13. Open P0/P1 production incidents must force NO-GO unless accepted risk is explicitly documented and reviewed.
+14. Open P2 incidents must force WATCH unless mitigation is documented.
+15. Backup/restore governance must be checked before GO.
+16. Support/SLA governance must be checked before GO.
+17. Maintenance windows must be tracked and must not silently hide production risk.
+18. Release/rollback governance must preserve candidate commit/tag, rollback reference, owner, and evidence.
+19. Operations commands must not print secret values.
+20. Operations commands must not execute real production deployment.
+21. Operations commands must not send real Slack/WhatsApp/email alerts.
+22. Operations artifacts must not contain real passwords, real payment gateway secrets, server credentials, `.env`, APK/AAB, keystore, or production customer data.
+23. Sprint 19 must not implement new business features.
+24. Sprint 19 must not perform automatic production deployment.
+25. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, closing, release hardening, RC/UAT, deployment, field trial, monitoring, hypercare, stabilization, closure, and handover behavior from previous sprints must remain intact.
+26. Android CI remains the authoritative build gate if local Android build cannot run.
+27. Post-handover production operations GO/WATCH/NO-GO report must be evidence-backed.
