@@ -134,4 +134,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(TenantOnboardingRun::class, 'requested_by');
     }
+
+    public function reportedPilotDefects(): HasMany
+    {
+        return $this->hasMany(PilotDefect::class, 'reported_by');
+    }
+
+    public function assignedPilotDefects(): HasMany
+    {
+        return $this->hasMany(PilotDefect::class, 'assigned_to');
+    }
 }

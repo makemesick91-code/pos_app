@@ -72,6 +72,11 @@ class Store extends Model
         return $this->hasMany(InventoryMovement::class);
     }
 
+    public function pilotDefects(): HasMany
+    {
+        return $this->hasMany(PilotDefect::class);
+    }
+
     public function isActive(): bool
     {
         return (bool) $this->is_active;

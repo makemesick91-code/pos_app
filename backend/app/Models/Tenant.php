@@ -85,6 +85,11 @@ class Tenant extends Model
         return $this->hasMany(TenantSubscription::class);
     }
 
+    public function pilotDefects(): HasMany
+    {
+        return $this->hasMany(PilotDefect::class);
+    }
+
     public function registeredDevices(): HasMany
     {
         return $this->hasMany(RegisteredDevice::class);

@@ -361,6 +361,52 @@ penagihan langganan nyata. Cash (Sprint 4), QRIS (Sprint 5), struk/printer
 (Sprint 9) tetap utuh. Android build CI menjalankan assembleDebug +
 testDebugUnitTest.
 
+## Sprint 17 — Pilot Stabilization & Defect Burn-down Foundation
+
+Sprint 17 establishes the pilot stabilization and defect burn-down foundation:
+
+- persistent pilot defect register
+- defect lifecycle event trail
+- pilot monitoring run snapshots
+- hypercare issue snapshots
+- SLA breach detection
+- accepted-risk governance
+- fix verification/retest workflow
+- defect burn-down summary
+- stabilization GO/WATCH/NO-GO report
+- admin defect APIs behind platform.admin
+- pilot:defect-summary command
+- pilot:burndown-summary command
+- pilot:sla-check command
+- pilot:stabilization-go-no-go command
+- CI stabilization/defect gate
+- no new business feature expansion
+- no automatic production deploy
+- no real alert sending
+- Sprint 17 runtime rules lock
+
+Validation:
+
+```bash
+bash scripts/sprint17_smoke.sh
+bash scripts/android_release_readiness.sh
+cd backend && php artisan production:readiness-check --json
+cd backend && php artisan release:go-no-go --json
+cd backend && php artisan pilot:rc-check --json
+cd backend && php artisan pilot:uat-summary --json
+cd backend && php artisan pilot:deployment-check --json
+cd backend && php artisan pilot:field-trial-summary --json
+cd backend && php artisan pilot:daily-monitoring-check --json
+cd backend && php artisan pilot:health-summary --json
+cd backend && php artisan hypercare:issue-triage --json
+cd backend && php artisan pilot:defect-summary --json
+cd backend && php artisan pilot:burndown-summary --json
+cd backend && php artisan pilot:sla-check --json
+cd backend && php artisan pilot:stabilization-go-no-go --json
+cd backend && php artisan test
+cd android && ./gradlew :app:assembleDebug && ./gradlew :app:testDebugUnitTest
+```
+
 ## Sprint 16 — Pilot Monitoring & Hypercare Foundation
 
 Sprint 16 establishes the pilot monitoring and hypercare foundation:

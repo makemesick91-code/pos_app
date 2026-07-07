@@ -76,6 +76,14 @@ return [
         'daily_pilot_health_summary_required' => true,
         'operator_feedback_log_required' => true,
         'no_real_alert_sending_sprint_16' => true,
+        'pilot_defect_register_required' => true,
+        'pilot_defect_event_trail_required' => true,
+        'sla_breach_detection_required' => true,
+        'accepted_risk_governance_required' => true,
+        'fix_retest_verification_required' => true,
+        'defect_burndown_summary_required' => true,
+        'stabilization_go_no_go_required' => true,
+        'no_real_alert_sending_sprint_17' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
@@ -95,5 +103,6 @@ return [
         'sprint_14' => 'Pilot Release Candidate & Operator UAT Foundation',
         'sprint_15' => 'Pilot Deployment & Field Trial Evidence Foundation',
         'sprint_16' => 'Pilot Monitoring & Hypercare Foundation',
+        'sprint_17' => 'Pilot Stabilization & Defect Burn-down Foundation',
     ],
 ];

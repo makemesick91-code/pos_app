@@ -5,6 +5,10 @@ use App\Http\Controllers\Api\V1\Admin\AdminSubscriptionPlanController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantDeviceController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantSubscriptionController;
+use App\Http\Controllers\Api\V1\Admin\PilotDefectBurnDownController;
+use App\Http\Controllers\Api\V1\Admin\PilotDefectController;
+use App\Http\Controllers\Api\V1\Admin\PilotDefectEventController;
+use App\Http\Controllers\Api\V1\Admin\PilotStabilizationReportController;
 use App\Http\Controllers\Api\V1\Admin\TenantDemoDataController;
 use App\Http\Controllers\Api\V1\Admin\TenantOnboardingController;
 use App\Http\Controllers\Api\V1\Admin\TenantOnboardingStatusController;
@@ -176,6 +180,26 @@ Route::prefix('v1')->group(function () {
             Route::get('/tenants/{tenant}/onboarding-status', [TenantOnboardingStatusController::class, 'show']);
             Route::post('/tenants/{tenant}/demo-data', [TenantDemoDataController::class, 'store']);
             Route::post('/tenants/{tenant}/demo-data/reset', [TenantDemoDataController::class, 'reset']);
+
+            // Sprint 17 — Pilot Stabilization & Defect Burn-down. Platform-admin
+            // controlled pilot defect register: create/list/show/update defects,
+            // assign, transition status, accept risk, mark fixed, and verify
+            // retests. Every lifecycle change appends an immutable defect event
+            // (never deleted); accepted risk never hides the original severity.
+            // Read-only burn-down and stabilization report aggregate the gate.
+            Route::get('/pilot-defects', [PilotDefectController::class, 'index']);
+            Route::post('/pilot-defects', [PilotDefectController::class, 'store']);
+            Route::get('/pilot-defects/{defect}', [PilotDefectController::class, 'show']);
+            Route::patch('/pilot-defects/{defect}', [PilotDefectController::class, 'update']);
+            Route::post('/pilot-defects/{defect}/assign', [PilotDefectController::class, 'assign']);
+            Route::post('/pilot-defects/{defect}/status', [PilotDefectController::class, 'status']);
+            Route::post('/pilot-defects/{defect}/accept-risk', [PilotDefectController::class, 'acceptRisk']);
+            Route::post('/pilot-defects/{defect}/mark-fixed', [PilotDefectController::class, 'markFixed']);
+            Route::post('/pilot-defects/{defect}/verify', [PilotDefectController::class, 'verify']);
+            Route::get('/pilot-defects/{defect}/events', [PilotDefectEventController::class, 'index']);
+
+            Route::get('/pilot-defect-burndown', [PilotDefectBurnDownController::class, 'index']);
+            Route::get('/pilot-stabilization-report', [PilotStabilizationReportController::class, 'index']);
         });
     });
 
