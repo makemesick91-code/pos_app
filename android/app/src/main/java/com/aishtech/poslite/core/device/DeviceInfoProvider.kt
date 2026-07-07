@@ -14,7 +14,9 @@ object DeviceInfoProvider {
     const val PLATFORM_ANDROID = "ANDROID"
 
     fun deviceName(): String =
-        listOf(Build.MANUFACTURER, Build.MODEL)
+        // Build fields are platform types that can be null in JVM unit tests;
+        // listOfNotNull + blank-filter keeps this null-safe on and off device.
+        listOfNotNull(Build.MANUFACTURER, Build.MODEL)
             .filter { it.isNotBlank() }
             .joinToString(" ")
             .ifBlank { "Android Device" }
