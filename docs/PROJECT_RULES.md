@@ -48,6 +48,7 @@ This project is governed by:
 13. `docs/sprints/sprint-11-admin-saas-control-panel-foundation.md`
 14. `docs/sprints/sprint-12-tenant-onboarding-demo-data-foundation.md`
 15. `docs/sprints/sprint-13-production-readiness-release-hardening-foundation.md`
+16. `docs/sprints/sprint-14-pilot-release-candidate-operator-uat-foundation.md`
 
 No sprint may contradict these documents unless the canonical foundation is explicitly updated first.
 
@@ -365,4 +366,31 @@ Mandatory:
 15. Sprint 13 must not deploy to production automatically unless explicitly approved and fully evidenced.
 16. Release evidence must be stored in sprint documentation.
 17. Working tree must be clean before GO tag.
+18. Android CI remains the authoritative build gate if local Android build cannot run.
+
+## Sprint 14 Pilot Release Candidate & Operator UAT Foundation Runtime Rule
+
+Starting Sprint 14, pilot release candidates must pass RC, UAT, smoke,
+issue-register, backend, Android, and release-readiness evidence gates before a
+GO tag is created.
+
+Mandatory:
+
+1. Pilot RC must not be declared GO without backend tests passing.
+2. Pilot RC must not be declared GO without Android CI assembleDebug passing.
+3. Pilot RC must not be declared GO without Android CI testDebugUnitTest passing.
+4. Pilot RC must not be declared GO without Sprint 13 release readiness commands running successfully.
+5. Pilot RC must include an operator UAT checklist.
+6. Pilot RC must include a smoke scenario pack covering login, sync, cashier, cash sale, QRIS status, receipt, printer, offline cash, inventory, reports, closing, subscription/device gate, and admin onboarding.
+7. Pilot RC must include an issue register foundation.
+8. RC decision must be GO/WATCH/NO-GO and evidence-backed.
+9. UAT evidence must not contain real passwords, real payment gateway secrets, production customer data, or private credentials.
+10. Operator UAT artifacts must use placeholders or demo tenant data only.
+11. Pilot issue register must classify severity and blocking status.
+12. Critical/blocker open issues must force NO-GO unless explicitly documented as outside scope and accepted.
+13. WATCH decision requires clear risk notes and follow-up actions.
+14. Sprint 14 must not implement new business features.
+15. Sprint 14 must not perform automatic production deployment.
+16. Sprint 14 must not commit signing keys, APK/AAB, `.env`, database dumps, or secrets.
+17. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, closing, and release hardening behavior from previous sprints must remain intact.
 18. Android CI remains the authoritative build gate if local Android build cannot run.
