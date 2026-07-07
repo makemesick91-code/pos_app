@@ -113,6 +113,15 @@ return [
         'commercial_launch_go_no_go_required' => true,
         'no_public_signup_sprint_20' => true,
         'no_real_billing_collection_sprint_20' => true,
+        'public_website_readiness_required' => true,
+        'landing_page_content_governance_required' => true,
+        'lead_interest_governance_required' => true,
+        'seo_metadata_governance_required' => true,
+        'privacy_cookie_readiness_required' => true,
+        'public_website_go_no_go_required' => true,
+        'no_public_self_service_signup_sprint_21' => true,
+        'no_real_billing_collection_sprint_21' => true,
+        'no_live_analytics_or_ad_pixel_sprint_21' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
@@ -136,5 +145,6 @@ return [
         'sprint_18' => 'Pilot Closure & Production Handover Foundation',
         'sprint_19' => 'Production Operations Baseline & Post-Handover Governance Foundation',
         'sprint_20' => 'Commercial Launch Readiness & SaaS Packaging Foundation',
+        'sprint_21' => 'Public Website / Landing Page Readiness Foundation',
     ],
 ];

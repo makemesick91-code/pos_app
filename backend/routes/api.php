@@ -27,6 +27,15 @@ use App\Http\Controllers\Api\V1\Admin\CommercialLaunchSignoffController;
 use App\Http\Controllers\Api\V1\Admin\CommercialOnboardingCapacityController;
 use App\Http\Controllers\Api\V1\Admin\CommercialPackageSummaryController;
 use App\Http\Controllers\Api\V1\Admin\SaasPackageCatalogController;
+use App\Http\Controllers\Api\V1\Admin\LandingPageVersionController;
+use App\Http\Controllers\Api\V1\Admin\LeadInterestSubmissionController;
+use App\Http\Controllers\Api\V1\Admin\PublicWebsiteContentSummaryController;
+use App\Http\Controllers\Api\V1\Admin\PublicWebsiteGoNoGoController;
+use App\Http\Controllers\Api\V1\Admin\PublicWebsitePageController;
+use App\Http\Controllers\Api\V1\Admin\PublicWebsiteLeadSummaryController;
+use App\Http\Controllers\Api\V1\Admin\PublicWebsiteReadinessController;
+use App\Http\Controllers\Api\V1\Admin\PublicWebsiteRiskController;
+use App\Http\Controllers\Api\V1\Admin\PublicWebsiteSignoffController;
 use App\Http\Controllers\Api\V1\Admin\TenantDemoDataController;
 use App\Http\Controllers\Api\V1\Admin\TenantOnboardingController;
 use App\Http\Controllers\Api\V1\Admin\TenantOnboardingStatusController;
@@ -306,6 +315,46 @@ Route::prefix('v1')->group(function () {
             Route::get('/commercial-package-summary', [CommercialPackageSummaryController::class, 'index']);
             Route::get('/commercial-onboarding-capacity', [CommercialOnboardingCapacityController::class, 'index']);
             Route::get('/commercial-launch-go-no-go', [CommercialLaunchGoNoGoController::class, 'index']);
+
+            // Sprint 21 — public website / landing page readiness. Platform admin
+            // only. Public pages/landing content are governance metadata; leads are
+            // interest-only. No public self-service signup, no real billing
+            // collection, no live analytics/ad pixel, no auto production deploy, no
+            // real alert sending, no secrets exposed.
+            Route::get('/public-website-pages', [PublicWebsitePageController::class, 'index']);
+            Route::post('/public-website-pages', [PublicWebsitePageController::class, 'store']);
+            Route::get('/public-website-pages/{page}', [PublicWebsitePageController::class, 'show']);
+            Route::patch('/public-website-pages/{page}', [PublicWebsitePageController::class, 'update']);
+            Route::post('/public-website-pages/{page}/approve', [PublicWebsitePageController::class, 'approve']);
+            Route::post('/public-website-pages/{page}/publish', [PublicWebsitePageController::class, 'publish']);
+            Route::post('/public-website-pages/{page}/archive', [PublicWebsitePageController::class, 'archive']);
+
+            Route::get('/landing-page-versions', [LandingPageVersionController::class, 'index']);
+            Route::post('/landing-page-versions', [LandingPageVersionController::class, 'store']);
+            Route::get('/landing-page-versions/{version}', [LandingPageVersionController::class, 'show']);
+            Route::patch('/landing-page-versions/{version}', [LandingPageVersionController::class, 'update']);
+            Route::post('/landing-page-versions/{version}/approve', [LandingPageVersionController::class, 'approve']);
+            Route::post('/landing-page-versions/{version}/publish', [LandingPageVersionController::class, 'publish']);
+            Route::post('/landing-page-versions/{version}/archive', [LandingPageVersionController::class, 'archive']);
+
+            Route::get('/lead-interest-submissions', [LeadInterestSubmissionController::class, 'index']);
+            Route::get('/lead-interest-submissions/{lead}', [LeadInterestSubmissionController::class, 'show']);
+            Route::post('/lead-interest-submissions/{lead}/status', [LeadInterestSubmissionController::class, 'status']);
+
+            Route::get('/public-website-risks', [PublicWebsiteRiskController::class, 'index']);
+            Route::post('/public-website-risks', [PublicWebsiteRiskController::class, 'store']);
+            Route::get('/public-website-risks/{risk}', [PublicWebsiteRiskController::class, 'show']);
+            Route::patch('/public-website-risks/{risk}', [PublicWebsiteRiskController::class, 'update']);
+            Route::post('/public-website-risks/{risk}/accept-risk', [PublicWebsiteRiskController::class, 'acceptRisk']);
+            Route::post('/public-website-risks/{risk}/close', [PublicWebsiteRiskController::class, 'close']);
+
+            Route::get('/public-website-signoffs', [PublicWebsiteSignoffController::class, 'index']);
+            Route::post('/public-website-signoffs', [PublicWebsiteSignoffController::class, 'store']);
+
+            Route::get('/public-website-readiness', [PublicWebsiteReadinessController::class, 'index']);
+            Route::get('/public-website-content-summary', [PublicWebsiteContentSummaryController::class, 'index']);
+            Route::get('/public-website-lead-summary', [PublicWebsiteLeadSummaryController::class, 'index']);
+            Route::get('/public-website-go-no-go', [PublicWebsiteGoNoGoController::class, 'index']);
         });
     });
 
