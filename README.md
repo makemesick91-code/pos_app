@@ -289,6 +289,29 @@ cd backend && php artisan test
 cd android && ./gradlew :app:assembleDebug && ./gradlew :app:testDebugUnitTest
 ```
 
+## Sprint 11 — Admin SaaS Control Panel Foundation
+
+Sprint 11 establishes the backend foundation for SaaS platform administration:
+
+- platform admin authorization
+- admin tenant list/detail APIs
+- admin subscription assign/update APIs
+- admin device list/revoke APIs
+- admin subscription plan management APIs
+- admin audit logs
+- audit logging for admin mutations
+- tenant-user blocking from admin APIs
+- no Android admin panel by design
+- Sprint 11 runtime rules lock
+
+Validation:
+
+```bash
+bash scripts/sprint11_smoke.sh
+cd backend && php artisan test
+cd android && ./gradlew :app:assembleDebug && ./gradlew :app:testDebugUnitTest
+```
+
 ## Status
 
 Fase saat ini: **Sprint 10 — Subscription & Device Limit Foundation selesai**.

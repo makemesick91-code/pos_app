@@ -45,6 +45,7 @@ This project is governed by:
 10. `docs/sprints/sprint-8-inventory-simple-foundation.md`
 11. `docs/sprints/sprint-9-reports-closing-foundation.md`
 12. `docs/sprints/sprint-10-subscription-device-limit-foundation.md`
+13. `docs/sprints/sprint-11-admin-saas-control-panel-foundation.md`
 
 No sprint may contradict these documents unless the canonical foundation is explicitly updated first.
 
@@ -285,3 +286,28 @@ Mandatory:
 17. Sprint 10 must not implement real billing charge collection, Play Billing, proration, reseller portal, or advanced billing analytics.
 18. Android CI must continue running assembleDebug and testDebugUnitTest.
 19. Android CI must continue running assembleDebug and testDebugUnitTest.
+
+## Sprint 11 Admin SaaS Control Panel Foundation Runtime Rule
+
+Starting Sprint 11, platform administration must be backend-authorized, audit-logged, and separated from tenant business APIs.
+
+Mandatory:
+
+1. Admin SaaS APIs must require authenticated platform admin authorization.
+2. Tenant users must never access admin SaaS APIs.
+3. Platform admin authorization must be backend-enforced.
+4. Platform admin APIs must be separated under an admin route namespace.
+5. Admin tenant list/detail must not expose secrets or raw payment gateway payloads.
+6. Admin subscription assignment/update must be audit-logged.
+7. Admin device revoke actions must be audit-logged.
+8. Admin plan create/update/deactivate actions must be audit-logged.
+9. Admin audit logs must record actor, action, target type, target id, tenant context when available, and timestamp.
+10. Admin APIs may manage subscription/device foundation but must not implement real billing charge collection.
+11. Admin APIs must not hard-delete tenants in Sprint 11.
+12. Admin APIs must not implement impersonation or login-as-tenant in Sprint 11.
+13. Android app must not contain admin SaaS control panel UI.
+14. Android app must continue normal tenant/business behavior from previous sprints.
+15. Existing subscription/device enforcement from Sprint 10 must remain intact.
+16. Cash, QRIS, receipt, printer, offline sync, inventory, reports, and closing behavior from previous sprints must remain intact.
+17. Sprint 11 must not implement Play Billing, proration, reseller portal, advanced admin analytics, or full web dashboard UI.
+18. Android CI must continue running assembleDebug and testDebugUnitTest.

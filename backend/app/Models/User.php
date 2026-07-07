@@ -30,6 +30,9 @@ class User extends Authenticatable
         'store_id',
         'role',
         'is_active',
+        'is_platform_admin',
+        'platform_admin_granted_at',
+        'platform_admin_revoked_at',
         'last_login_at',
     ];
 
@@ -49,6 +52,9 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'is_active' => 'boolean',
+            'is_platform_admin' => 'boolean',
+            'platform_admin_granted_at' => 'datetime',
+            'platform_admin_revoked_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
@@ -66,6 +72,17 @@ class User extends Authenticatable
     public function isSaasAdmin(): bool
     {
         return $this->role === self::ROLE_SAAS_ADMIN;
+    }
+
+    /**
+     * Whether this user is a platform administrator with access to the admin
+     * SaaS control panel APIs (Sprint 11). This is a distinct backend-enforced
+     * authorization flag — being a platform admin never grants tenant business
+     * API access, and tenant business users are never platform admins.
+     */
+    public function isPlatformAdmin(): bool
+    {
+        return (bool) $this->is_platform_admin;
     }
 
     public function isTenantOwner(): bool
@@ -106,5 +123,10 @@ class User extends Authenticatable
     public function createdInventoryMovements(): HasMany
     {
         return $this->hasMany(InventoryMovement::class, 'created_by');
+    }
+
+    public function adminAuditLogs(): HasMany
+    {
+        return $this->hasMany(AdminAuditLog::class, 'actor_user_id');
     }
 }
