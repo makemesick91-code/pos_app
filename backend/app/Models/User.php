@@ -129,4 +129,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(AdminAuditLog::class, 'actor_user_id');
     }
+
+    public function requestedOnboardings(): HasMany
+    {
+        return $this->hasMany(TenantOnboardingRun::class, 'requested_by');
+    }
 }

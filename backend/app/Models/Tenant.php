@@ -95,6 +95,11 @@ class Tenant extends Model
         return $this->hasMany(AdminAuditLog::class);
     }
 
+    public function onboardingRuns(): HasMany
+    {
+        return $this->hasMany(TenantOnboardingRun::class);
+    }
+
     /**
      * The tenant's most recent subscription row. The authoritative allowed/
      * blocked decision is computed by SubscriptionStatusService — this is only

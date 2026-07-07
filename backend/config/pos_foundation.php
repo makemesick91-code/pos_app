@@ -48,6 +48,14 @@ return [
         'admin_no_tenant_impersonation_sprint_11' => true,
         'admin_no_real_billing_collection_sprint_11' => true,
         'admin_no_tenant_hard_delete_sprint_11' => true,
+        'tenant_onboarding_platform_admin_only' => true,
+        'tenant_onboarding_idempotent_required' => true,
+        'demo_data_tenant_isolated_required' => true,
+        'demo_reset_guard_required' => true,
+        'onboarding_audit_log_required' => true,
+        'onboarding_no_public_signup_sprint_12' => true,
+        'onboarding_no_real_billing_sprint_12' => true,
+        'onboarding_no_invite_automation_sprint_12' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
@@ -62,5 +70,6 @@ return [
         'sprint_9' => 'Reports & Closing Foundation',
         'sprint_10' => 'Subscription & Device Limit Foundation',
         'sprint_11' => 'Admin SaaS Control Panel Foundation',
+        'sprint_12' => 'Tenant Onboarding & Demo Data Foundation',
     ],
 ];

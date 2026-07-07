@@ -46,6 +46,7 @@ This project is governed by:
 11. `docs/sprints/sprint-9-reports-closing-foundation.md`
 12. `docs/sprints/sprint-10-subscription-device-limit-foundation.md`
 13. `docs/sprints/sprint-11-admin-saas-control-panel-foundation.md`
+14. `docs/sprints/sprint-12-tenant-onboarding-demo-data-foundation.md`
 
 No sprint may contradict these documents unless the canonical foundation is explicitly updated first.
 
@@ -311,3 +312,31 @@ Mandatory:
 16. Cash, QRIS, receipt, printer, offline sync, inventory, reports, and closing behavior from previous sprints must remain intact.
 17. Sprint 11 must not implement Play Billing, proration, reseller portal, advanced admin analytics, or full web dashboard UI.
 18. Android CI must continue running assembleDebug and testDebugUnitTest.
+
+## Sprint 12 Tenant Onboarding & Demo Data Foundation Runtime Rule
+
+Starting Sprint 12, tenant onboarding and demo data must be platform-admin-controlled, transaction-safe, tenant-isolated, and audit-logged.
+
+Mandatory:
+
+1. Tenant onboarding must be executed only through platform admin authorization.
+2. Tenant users must never create tenants through onboarding APIs.
+3. Public self-service signup is not part of Sprint 12.
+4. Onboarding must create tenant, default store, owner/admin tenant user, and initial subscription in a transaction.
+5. Onboarding must be idempotent through a backend-approved onboarding reference.
+6. Duplicate onboarding request with the same onboarding reference must not create duplicate tenants/users/stores/subscriptions.
+7. Demo data must be tenant-owned.
+8. Demo products, prices, inventory movements, sales, payments, reports, and closings must never leak across tenants.
+9. Demo opening stock must use inventory movements, not mutable stock columns.
+10. Demo sales must use existing sales/payment services where practical and must not bypass subscription/device/inventory/report rules unsafely.
+11. Demo reset must be guarded and must not delete production tenant data unless explicitly marked demo and allowed.
+12. Demo reset must be audit-logged.
+13. Onboarding actions must be audit-logged.
+14. Onboarding status/checklist must be backend-generated, not trusted from client.
+15. Admin onboarding APIs must not implement real billing charge collection.
+16. Admin onboarding APIs must not send real email/WhatsApp invites in Sprint 12.
+17. Admin onboarding APIs must not implement tenant impersonation.
+18. Android app must not contain onboarding/admin SaaS control panel UI.
+19. Android app must continue normal tenant/business behavior from previous sprints.
+20. Existing platform admin, subscription/device enforcement, cash, QRIS, receipt, printer, offline sync, inventory, reports, and closing behavior from previous sprints must remain intact.
+21. Android CI must continue running assembleDebug and testDebugUnitTest.

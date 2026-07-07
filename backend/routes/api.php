@@ -5,6 +5,9 @@ use App\Http\Controllers\Api\V1\Admin\AdminSubscriptionPlanController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantDeviceController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantSubscriptionController;
+use App\Http\Controllers\Api\V1\Admin\TenantDemoDataController;
+use App\Http\Controllers\Api\V1\Admin\TenantOnboardingController;
+use App\Http\Controllers\Api\V1\Admin\TenantOnboardingStatusController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\DeviceHeartbeatController;
 use App\Http\Controllers\Api\V1\RegisteredDeviceController;
@@ -159,6 +162,20 @@ Route::prefix('v1')->group(function () {
 
             Route::get('/audit-logs', [AdminAuditLogController::class, 'index']);
             Route::get('/audit-logs/{auditLog}', [AdminAuditLogController::class, 'show']);
+
+            // Sprint 12 — Tenant Onboarding & Demo Data Foundation. Platform-admin
+            // controlled: create a tenant + default store + owner user +
+            // subscription (transaction-safe, idempotent by onboarding_reference)
+            // and optionally seed tenant-owned demo data. Demo reset is guarded by
+            // confirm_demo_reset and only removes onboarding-seeded demo data. No
+            // public signup, no real billing, no invites, no impersonation.
+            Route::post('/tenant-onboarding', [TenantOnboardingController::class, 'store']);
+            Route::get('/tenant-onboarding', [TenantOnboardingController::class, 'index']);
+            Route::get('/tenant-onboarding/{onboardingRun}', [TenantOnboardingController::class, 'show']);
+
+            Route::get('/tenants/{tenant}/onboarding-status', [TenantOnboardingStatusController::class, 'show']);
+            Route::post('/tenants/{tenant}/demo-data', [TenantDemoDataController::class, 'store']);
+            Route::post('/tenants/{tenant}/demo-data/reset', [TenantDemoDataController::class, 'reset']);
         });
     });
 
