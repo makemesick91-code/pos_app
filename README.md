@@ -128,6 +128,29 @@ cd backend && php artisan test
 
 Android build/test may require Android SDK and Gradle wrapper availability.
 
+## Sprint 4 — Sales Backend Integration
+
+Sprint 4 establishes the sales backend integration and cash checkout foundation:
+
+- sales
+- sale items
+- cash payment records
+- invoice number generation
+- tenant-isolated sales APIs
+- backend recalculated totals and product price snapshots
+- Android cart submit to backend
+- Android cash checkout success/failure handling
+- Sprint 4 runtime rules lock
+
+Validation:
+
+```bash
+bash scripts/sprint4_smoke.sh
+cd backend && php artisan test
+```
+
+Android build/test may require Gradle wrapper, Android SDK, and JDK 17–21 depending on AGP compatibility.
+
 ## Status
 
 Fase saat ini: **Sprint 3 — Android Cashier Foundation selesai**. Android kini memiliki

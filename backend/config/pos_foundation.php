@@ -18,11 +18,15 @@ return [
         'product_sync_required' => true,
         'android_cashier_foundation_required' => true,
         'android_local_catalog_required' => true,
+        'sales_backend_required' => true,
+        'cash_payment_backend_required' => true,
+        'qris_not_in_sprint_4' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
         'sprint_1' => 'SaaS Tenant Foundation',
         'sprint_2' => 'Product Foundation',
         'sprint_3' => 'Android Cashier Foundation',
+        'sprint_4' => 'Sales Backend Integration',
     ],
 ];

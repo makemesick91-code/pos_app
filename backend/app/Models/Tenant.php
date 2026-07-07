@@ -60,6 +60,21 @@ class Tenant extends Model
         return $this->hasMany(ProductStorePrice::class);
     }
 
+    public function sales(): HasMany
+    {
+        return $this->hasMany(Sale::class);
+    }
+
+    public function saleItems(): HasMany
+    {
+        return $this->hasMany(SaleItem::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === self::STATUS_ACTIVE;
