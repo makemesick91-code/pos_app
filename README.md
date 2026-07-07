@@ -361,6 +361,47 @@ penagihan langganan nyata. Cash (Sprint 4), QRIS (Sprint 5), struk/printer
 (Sprint 9) tetap utuh. Android build CI menjalankan assembleDebug +
 testDebugUnitTest.
 
+## Sprint 16 — Pilot Monitoring & Hypercare Foundation
+
+Sprint 16 establishes the pilot monitoring and hypercare foundation:
+
+- pilot daily monitoring command
+- pilot health summary command
+- hypercare issue triage command
+- daily monitoring runbook
+- hypercare issue triage workflow
+- field issue severity/SLA rules
+- operator feedback log
+- pilot health summary template
+- hypercare GO/WATCH/NO-GO report
+- failed sync monitoring checklist
+- payment/QRIS monitoring checklist
+- device/subscription anomaly checklist
+- closing/report monitoring checklist
+- CI pilot monitoring/hypercare gate
+- no new business feature expansion
+- no automatic production deploy
+- no real alert sending
+- Sprint 16 runtime rules lock
+
+Validation:
+
+```bash
+bash scripts/sprint16_smoke.sh
+bash scripts/android_release_readiness.sh
+cd backend && php artisan production:readiness-check --json
+cd backend && php artisan release:go-no-go --json
+cd backend && php artisan pilot:rc-check --json
+cd backend && php artisan pilot:uat-summary --json
+cd backend && php artisan pilot:deployment-check --json
+cd backend && php artisan pilot:field-trial-summary --json
+cd backend && php artisan pilot:daily-monitoring-check --json
+cd backend && php artisan pilot:health-summary --json
+cd backend && php artisan hypercare:issue-triage --json
+cd backend && php artisan test
+cd android && ./gradlew :app:assembleDebug && ./gradlew :app:testDebugUnitTest
+```
+
 ## Sprint 15 — Pilot Deployment & Field Trial Evidence Foundation
 
 Sprint 15 establishes the pilot deployment and field trial evidence foundation:

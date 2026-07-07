@@ -50,6 +50,7 @@ This project is governed by:
 15. `docs/sprints/sprint-13-production-readiness-release-hardening-foundation.md`
 16. `docs/sprints/sprint-14-pilot-release-candidate-operator-uat-foundation.md`
 17. `docs/sprints/sprint-15-pilot-deployment-field-trial-evidence-foundation.md`
+18. `docs/sprints/sprint-16-pilot-monitoring-hypercare-foundation.md`
 
 No sprint may contradict these documents unless the canonical foundation is explicitly updated first.
 
@@ -424,3 +425,31 @@ Mandatory:
 18. Sprint 15 must not perform automatic production deployment unless explicitly configured, approved, and evidenced.
 19. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, closing, release hardening, and UAT behavior from previous sprints must remain intact.
 20. Android CI remains the authoritative build gate if local Android build cannot run.
+
+## Sprint 16 Pilot Monitoring & Hypercare Foundation Runtime Rule
+
+Starting Sprint 16, pilot monitoring and hypercare must be evidence-backed,
+severity-driven, secret-safe, tenant-aware, and gated before a GO tag is created.
+
+Mandatory:
+
+1. Pilot monitoring must not be declared GO without backend tests passing.
+2. Pilot monitoring must not be declared GO without Android CI assembleDebug passing.
+3. Pilot monitoring must not be declared GO without Android CI testDebugUnitTest passing.
+4. Pilot monitoring must not be declared GO without Sprint 13 release readiness commands running successfully.
+5. Pilot monitoring must not be declared GO without Sprint 14 RC/UAT commands running successfully.
+6. Pilot monitoring must not be declared GO without Sprint 15 deployment/field-trial commands running successfully.
+7. Daily monitoring must cover login, sync, sales, payments/QRIS, receipt/printer, offline cash, inventory, reports, closing, subscription/device, and admin/onboarding health signals.
+8. Hypercare issue triage must classify severity, blocking status, owner, SLA, and status.
+9. BLOCKER/CRITICAL open hypercare issues must force NO-GO unless explicitly accepted as outside scope with documented risk.
+10. MAJOR open hypercare issues must force WATCH unless explicitly accepted with documented mitigation.
+11. Operator feedback must be captured through a safe template without real passwords, secrets, or private customer data.
+12. Monitoring artifacts must not contain real payment gateway secrets, server credentials, `.env`, APK/AAB, keystore, or production customer data.
+13. Monitoring commands must not print secret values.
+14. Monitoring commands must not mutate production data.
+15. Sprint 16 must not implement new business features.
+16. Sprint 16 must not perform automatic production deployment.
+17. Sprint 16 must not send real Slack/WhatsApp/email alerts.
+18. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, closing, release hardening, RC/UAT, and field trial behavior from previous sprints must remain intact.
+19. Android CI remains the authoritative build gate if local Android build cannot run.
+20. Hypercare GO/WATCH/NO-GO report must be evidence-backed.
