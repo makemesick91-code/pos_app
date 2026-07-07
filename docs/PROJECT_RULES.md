@@ -44,6 +44,7 @@ This project is governed by:
 9. `docs/sprints/sprint-7-offline-cash-sync-foundation.md`
 10. `docs/sprints/sprint-8-inventory-simple-foundation.md`
 11. `docs/sprints/sprint-9-reports-closing-foundation.md`
+12. `docs/sprints/sprint-10-subscription-device-limit-foundation.md`
 
 No sprint may contradict these documents unless the canonical foundation is explicitly updated first.
 
@@ -258,4 +259,29 @@ Mandatory:
 16. Android report UI must remain lightweight and summary-focused.
 17. Sprint 9 must not implement advanced BI dashboard, accounting journal, PDF/Excel export, tax reporting complex, stock valuation, or procurement reports.
 18. Cash, QRIS, receipt, printer, offline sync, and inventory behavior from previous sprints must remain intact.
+
+## Sprint 10 Subscription & Device Limit Foundation Runtime Rule
+
+Starting Sprint 10, subscription and device access must be tenant-owned, backend-enforced, and Android-aware.
+
+Mandatory:
+
+1. Subscription plans must be backend-owned.
+2. Tenant subscriptions must be tenant-owned.
+3. Registered devices must be tenant-owned.
+4. Client input may not assign arbitrary `tenant_id`.
+5. Android device registration must happen through backend-approved endpoints.
+6. Android must not bypass subscription/device checks.
+7. Active subscription status must be checked by backend, not trusted from Android.
+8. Device limit must be enforced by backend.
+9. Registered device identity must be generated and stored locally on Android.
+10. Device identity must not contain payment gateway credentials or user password.
+11. Device registration must be tied to authenticated tenant/user context.
+12. Tenant A must never view, register, revoke, or consume device slots from tenant B.
+13. Expired/cancelled/suspended subscriptions must block protected business APIs except explicitly allowed status/auth endpoints.
+14. Grace period may allow limited access only if backend marks it allowed.
+15. Offline cash from Sprint 7 must remain usable only within allowed subscription/device policy; if policy is expired, Android must surface blocked state once status is known.
+16. QRIS, cash, receipt, printer, inventory, reports, and closing behavior from previous sprints must remain intact.
+17. Sprint 10 must not implement real billing charge collection, Play Billing, proration, reseller portal, or advanced billing analytics.
+18. Android CI must continue running assembleDebug and testDebugUnitTest.
 19. Android CI must continue running assembleDebug and testDebugUnitTest.

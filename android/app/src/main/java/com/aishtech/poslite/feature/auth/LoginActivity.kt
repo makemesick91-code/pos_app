@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.aishtech.poslite.core.ServiceLocator
 import com.aishtech.poslite.databinding.ActivityLoginBinding
 import com.aishtech.poslite.feature.cashier.CashierActivity
+import com.aishtech.poslite.feature.subscription.SubscriptionStatusActivity
 
 /**
  * Login screen consuming POST /api/v1/auth/login. On success the token is
@@ -30,12 +31,15 @@ class LoginActivity : AppCompatActivity() {
             return
         }
 
+        val subscriptions = ServiceLocator.subscriptionRepository(applicationContext)
+        val devices = ServiceLocator.deviceRepository(applicationContext)
+
         viewModel = ViewModelProvider(
             this,
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    LoginViewModel(repository) as T
+                    LoginViewModel(repository, subscriptions, devices) as T
             },
         )[LoginViewModel::class.java]
 
@@ -55,12 +59,22 @@ class LoginActivity : AppCompatActivity() {
             LoginViewModel.UiState.Idle -> setLoading(false)
             LoginViewModel.UiState.Loading -> setLoading(true)
             LoginViewModel.UiState.Success -> openCashier()
+            is LoginViewModel.UiState.Blocked -> {
+                setLoading(false)
+                binding.textError.text = state.message
+                binding.textError.visibility = View.VISIBLE
+                openSubscriptionStatus()
+            }
             is LoginViewModel.UiState.Error -> {
                 setLoading(false)
                 binding.textError.text = state.message
                 binding.textError.visibility = View.VISIBLE
             }
         }
+    }
+
+    private fun openSubscriptionStatus() {
+        startActivity(Intent(this, SubscriptionStatusActivity::class.java))
     }
 
     private fun setLoading(loading: Boolean) {

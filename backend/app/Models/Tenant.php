@@ -80,6 +80,38 @@ class Tenant extends Model
         return $this->hasMany(InventoryMovement::class);
     }
 
+    public function tenantSubscriptions(): HasMany
+    {
+        return $this->hasMany(TenantSubscription::class);
+    }
+
+    public function registeredDevices(): HasMany
+    {
+        return $this->hasMany(RegisteredDevice::class);
+    }
+
+    /**
+     * The tenant's most recent subscription row. The authoritative allowed/
+     * blocked decision is computed by SubscriptionStatusService — this is only
+     * the current record it operates on.
+     */
+    public function currentSubscription(): ?TenantSubscription
+    {
+        return $this->tenantSubscriptions()
+            ->orderByDesc('id')
+            ->first();
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Collection<int, RegisteredDevice>
+     */
+    public function activeRegisteredDevices()
+    {
+        return $this->registeredDevices()
+            ->where('status', RegisteredDevice::STATUS_ACTIVE)
+            ->get();
+    }
+
     public function isActive(): bool
     {
         return $this->status === self::STATUS_ACTIVE;

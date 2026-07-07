@@ -8,6 +8,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.aishtech.poslite.R
 import com.aishtech.poslite.core.ServiceLocator
@@ -16,6 +17,7 @@ import com.aishtech.poslite.databinding.ActivityCashierBinding
 import com.aishtech.poslite.feature.receipt.ReceiptActivity
 import com.aishtech.poslite.feature.reports.ReportsActivity
 import com.aishtech.poslite.feature.sync.OfflineSalesSyncScheduler
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -53,6 +55,13 @@ class CashierActivity : AppCompatActivity() {
 
         setupList()
         observe()
+
+        // Sprint 10 — best-effort device heartbeat once an authenticated cashier
+        // session is active. Failures are ignored here (the status screen surfaces
+        // any blocked state); this never blocks the cashier UI.
+        lifecycleScope.launch {
+            ServiceLocator.deviceRepository(context).heartbeat()
+        }
 
         binding.buttonSync.setOnClickListener { viewModel.sync() }
         binding.buttonReports.setOnClickListener {

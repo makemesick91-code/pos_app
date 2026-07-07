@@ -2,6 +2,7 @@ package com.aishtech.poslite.core
 
 import android.content.Context
 import com.aishtech.poslite.core.database.PosDatabase
+import com.aishtech.poslite.core.device.DeviceIdentityStore
 import com.aishtech.poslite.core.network.AndroidNetworkMonitor
 import com.aishtech.poslite.core.network.ApiClient
 import com.aishtech.poslite.core.network.NetworkMonitor
@@ -11,12 +12,14 @@ import com.aishtech.poslite.core.session.SharedPrefsTokenStore
 import com.aishtech.poslite.data.repository.AuthRepository
 import com.aishtech.poslite.data.repository.CatalogRepository
 import com.aishtech.poslite.data.repository.ClosingRepository
+import com.aishtech.poslite.data.repository.DeviceRepository
 import com.aishtech.poslite.data.repository.OfflineSaleRepository
 import com.aishtech.poslite.data.repository.QrisRepository
 import com.aishtech.poslite.data.repository.ReceiptRepository
 import com.aishtech.poslite.data.repository.ReportRepository
 import com.aishtech.poslite.data.repository.SalesRepository
 import com.aishtech.poslite.data.repository.StockRepository
+import com.aishtech.poslite.data.repository.SubscriptionRepository
 import com.aishtech.poslite.feature.printer.BluetoothPrinterConnection
 import com.aishtech.poslite.feature.printer.PrinterRepository
 import com.aishtech.poslite.feature.printer.PrinterSettingsStore
@@ -31,13 +34,32 @@ object ServiceLocator {
     @Volatile
     private var api: PosApiService? = null
 
+    @Volatile
+    private var deviceIdentity: DeviceIdentityStore? = null
+
     fun session(context: Context): SessionManager =
         SessionManager(SharedPrefsTokenStore(context))
 
+    // Sprint 10 — single locally generated device identity for the install.
+    fun deviceIdentityStore(context: Context): DeviceIdentityStore =
+        deviceIdentity ?: synchronized(this) {
+            deviceIdentity ?: DeviceIdentityStore.create(context.applicationContext)
+                .also { deviceIdentity = it }
+        }
+
     fun api(context: Context): PosApiService =
         api ?: synchronized(this) {
-            api ?: ApiClient.create(SharedPrefsTokenStore(context)).also { api = it }
+            api ?: ApiClient.create(
+                tokenStore = SharedPrefsTokenStore(context),
+                deviceUuidProvider = deviceIdentityStore(context),
+            ).also { api = it }
         }
+
+    fun subscriptionRepository(context: Context): SubscriptionRepository =
+        SubscriptionRepository(api(context))
+
+    fun deviceRepository(context: Context): DeviceRepository =
+        DeviceRepository(api(context), deviceIdentityStore(context))
 
     fun authRepository(context: Context): AuthRepository =
         AuthRepository(api(context), session(context))

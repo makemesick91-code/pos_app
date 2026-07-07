@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Middleware\EnsureDeviceIsRegistered;
 use App\Http\Middleware\EnsureTenantIsActive;
+use App\Http\Middleware\EnsureTenantSubscriptionIsActive;
 use App\Http\Middleware\SetTenantContext;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -18,6 +20,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'tenant.active' => EnsureTenantIsActive::class,
             'tenant.context' => SetTenantContext::class,
+            'subscription.active' => EnsureTenantSubscriptionIsActive::class,
+            'device.registered' => EnsureDeviceIsRegistered::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
