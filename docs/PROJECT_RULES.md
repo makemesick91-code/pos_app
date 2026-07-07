@@ -52,6 +52,7 @@ This project is governed by:
 17. `docs/sprints/sprint-15-pilot-deployment-field-trial-evidence-foundation.md`
 18. `docs/sprints/sprint-16-pilot-monitoring-hypercare-foundation.md`
 19. `docs/sprints/sprint-17-pilot-stabilization-defect-burndown-foundation.md`
+20. `docs/sprints/sprint-18-pilot-closure-production-handover-foundation.md`
 
 No sprint may contradict these documents unless the canonical foundation is explicitly updated first.
 
@@ -486,3 +487,39 @@ Mandatory:
 23. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, closing, release hardening, RC/UAT, deployment, field trial, monitoring, and hypercare behavior from previous sprints must remain intact.
 24. Android CI remains the authoritative build gate if local Android build cannot run.
 25. Stabilization GO/WATCH/NO-GO report must be evidence-backed.
+
+## Sprint 18 Pilot Closure & Production Handover Foundation Runtime Rule
+
+Starting Sprint 18, pilot closure and production handover must be sign-off-driven, evidence-backed, defect-aware, risk-reviewed, secret-safe, and gated before a GO tag is created.
+
+Mandatory:
+
+1. Production handover must not be declared GO without backend tests passing.
+2. Production handover must not be declared GO without Android CI assembleDebug passing.
+3. Production handover must not be declared GO without Android CI testDebugUnitTest passing.
+4. Production handover must not be declared GO without Sprint 13 release readiness commands running successfully.
+5. Production handover must not be declared GO without Sprint 14 RC/UAT commands running successfully.
+6. Production handover must not be declared GO without Sprint 15 deployment/field-trial commands running successfully.
+7. Production handover must not be declared GO without Sprint 16 monitoring/hypercare commands running successfully.
+8. Production handover must not be declared GO without Sprint 17 stabilization/defect commands running successfully.
+9. Pilot closure must include final defect review.
+10. Pilot closure must include final accepted-risk review.
+11. Pilot closure must include operator/admin handover checklist.
+12. Pilot closure must include support/SLA handover.
+13. Pilot closure must include backup/restore handover.
+14. Pilot closure must include release ownership matrix.
+15. Pilot closure must include production readiness sign-off.
+16. Production handover packages must be persisted with status, decision, checklist, evidence references, and created/approved actors.
+17. Sign-off records must preserve signer role, decision, timestamp, notes, and evidence reference.
+18. Sign-off changes must not delete previous package evidence.
+19. Open BLOCKER/CRITICAL defects must force NO-GO unless valid accepted risk is documented and explicitly reviewed.
+20. Open MAJOR defects must force WATCH unless accepted with mitigation.
+21. Expired accepted risk must force NO-GO or WATCH according to severity and config.
+22. Production handover commands must not print secret values.
+23. Production handover artifacts must not contain real passwords, real payment gateway secrets, server credentials, `.env`, APK/AAB, keystore, or production customer data.
+24. Sprint 18 must not implement new business features.
+25. Sprint 18 must not perform automatic production deployment.
+26. Sprint 18 must not send real Slack/WhatsApp/email alerts.
+27. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, closing, release hardening, RC/UAT, deployment, field trial, monitoring, hypercare, and stabilization behavior from previous sprints must remain intact.
+28. Android CI remains the authoritative build gate if local Android build cannot run.
+29. Production handover GO/WATCH/NO-GO report must be evidence-backed.
