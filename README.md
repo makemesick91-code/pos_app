@@ -361,6 +361,54 @@ penagihan langganan nyata. Cash (Sprint 4), QRIS (Sprint 5), struk/printer
 (Sprint 9) tetap utuh. Android build CI menjalankan assembleDebug +
 testDebugUnitTest.
 
+## Sprint 18 — Pilot Closure & Production Handover Foundation
+
+Sprint 18 establishes the pilot closure and production handover foundation:
+
+- pilot closure run persistence
+- production handover package persistence
+- production handover sign-off records
+- final defect review
+- accepted risk final review
+- support/SLA handover
+- backup/restore handover
+- operator/admin handover
+- release ownership matrix
+- production GO/WATCH/NO-GO report
+- admin closure/handover APIs behind platform.admin
+- pilot:closure-check command
+- production:handover-summary command
+- production:signoff-summary command
+- production:handover-go-no-go command
+- CI closure/handover gate
+- no new business feature expansion
+- no automatic production deploy
+- no real alert sending
+- Sprint 18 runtime rules lock
+
+Validation:
+
+```bash
+bash scripts/sprint18_smoke.sh
+bash scripts/android_release_readiness.sh
+cd backend && php artisan production:readiness-check --json
+cd backend && php artisan release:go-no-go --json
+cd backend && php artisan pilot:rc-check --json
+cd backend && php artisan pilot:uat-summary --json
+cd backend && php artisan pilot:deployment-check --json
+cd backend && php artisan pilot:field-trial-summary --json
+cd backend && php artisan pilot:daily-monitoring-check --json
+cd backend && php artisan pilot:health-summary --json
+cd backend && php artisan hypercare:issue-triage --json
+cd backend && php artisan pilot:stabilization-go-no-go --json
+cd backend && php artisan pilot:closure-check --json
+cd backend && php artisan production:handover-summary --json
+cd backend && php artisan production:signoff-summary --json
+cd backend && php artisan production:handover-go-no-go --json
+cd backend && php artisan test
+cd android && ./gradlew :app:assembleDebug && ./gradlew :app:testDebugUnitTest
+```
+
 ## Sprint 17 — Pilot Stabilization & Defect Burn-down Foundation
 
 Sprint 17 establishes the pilot stabilization and defect burn-down foundation:

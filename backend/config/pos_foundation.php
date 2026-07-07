@@ -84,6 +84,15 @@ return [
         'defect_burndown_summary_required' => true,
         'stabilization_go_no_go_required' => true,
         'no_real_alert_sending_sprint_17' => true,
+        'pilot_closure_required' => true,
+        'production_handover_required' => true,
+        'production_signoff_required' => true,
+        'final_defect_review_required' => true,
+        'accepted_risk_final_review_required' => true,
+        'support_sla_handover_required' => true,
+        'production_handover_go_no_go_required' => true,
+        'no_auto_production_deploy_sprint_18' => true,
+        'no_real_alert_sending_sprint_18' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
@@ -104,5 +113,6 @@ return [
         'sprint_15' => 'Pilot Deployment & Field Trial Evidence Foundation',
         'sprint_16' => 'Pilot Monitoring & Hypercare Foundation',
         'sprint_17' => 'Pilot Stabilization & Defect Burn-down Foundation',
+        'sprint_18' => 'Pilot Closure & Production Handover Foundation',
     ],
 ];

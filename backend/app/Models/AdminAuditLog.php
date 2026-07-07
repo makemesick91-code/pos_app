@@ -36,6 +36,14 @@ class AdminAuditLog extends Model
     public const ACTION_DEFECT_ACCEPTED_RISK = 'DEFECT_ACCEPTED_RISK';
     public const ACTION_DEFECT_FIXED = 'DEFECT_FIXED';
     public const ACTION_DEFECT_VERIFIED = 'DEFECT_VERIFIED';
+    public const ACTION_CLOSURE_CREATED = 'CLOSURE_CREATED';
+    public const ACTION_CLOSURE_APPROVED = 'CLOSURE_APPROVED';
+    public const ACTION_CLOSURE_BLOCKED = 'CLOSURE_BLOCKED';
+    public const ACTION_HANDOVER_CREATED = 'HANDOVER_CREATED';
+    public const ACTION_HANDOVER_UPDATED = 'HANDOVER_UPDATED';
+    public const ACTION_HANDOVER_MARKED_READY = 'HANDOVER_MARKED_READY';
+    public const ACTION_HANDOVER_HANDED_OVER = 'HANDOVER_HANDED_OVER';
+    public const ACTION_HANDOVER_SIGNOFF_ADDED = 'HANDOVER_SIGNOFF_ADDED';
 
     public const TARGET_TENANT = 'tenant';
     public const TARGET_SUBSCRIPTION = 'tenant_subscription';
@@ -43,6 +51,9 @@ class AdminAuditLog extends Model
     public const TARGET_PLAN = 'subscription_plan';
     public const TARGET_ONBOARDING_RUN = 'tenant_onboarding_run';
     public const TARGET_PILOT_DEFECT = 'pilot_defect';
+    public const TARGET_PILOT_CLOSURE_RUN = 'pilot_closure_run';
+    public const TARGET_PRODUCTION_HANDOVER_PACKAGE = 'production_handover_package';
+    public const TARGET_PRODUCTION_HANDOVER_SIGNOFF = 'production_handover_signoff';
 
     protected $fillable = [
         'actor_user_id',

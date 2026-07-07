@@ -8,7 +8,11 @@ use App\Http\Controllers\Api\V1\Admin\AdminTenantSubscriptionController;
 use App\Http\Controllers\Api\V1\Admin\PilotDefectBurnDownController;
 use App\Http\Controllers\Api\V1\Admin\PilotDefectController;
 use App\Http\Controllers\Api\V1\Admin\PilotDefectEventController;
+use App\Http\Controllers\Api\V1\Admin\PilotClosureController;
 use App\Http\Controllers\Api\V1\Admin\PilotStabilizationReportController;
+use App\Http\Controllers\Api\V1\Admin\ProductionHandoverController;
+use App\Http\Controllers\Api\V1\Admin\ProductionHandoverGoNoGoController;
+use App\Http\Controllers\Api\V1\Admin\ProductionHandoverSignoffController;
 use App\Http\Controllers\Api\V1\Admin\TenantDemoDataController;
 use App\Http\Controllers\Api\V1\Admin\TenantOnboardingController;
 use App\Http\Controllers\Api\V1\Admin\TenantOnboardingStatusController;
@@ -200,6 +204,31 @@ Route::prefix('v1')->group(function () {
 
             Route::get('/pilot-defect-burndown', [PilotDefectBurnDownController::class, 'index']);
             Route::get('/pilot-stabilization-report', [PilotStabilizationReportController::class, 'index']);
+
+            // Sprint 18 — Pilot Closure & Production Handover. Platform-admin
+            // controlled: record a pilot closure run (final defect + accepted-risk
+            // + stabilization review), assemble a production handover package
+            // (release readiness + operator/admin + support/SLA + backup/restore +
+            // ownership matrix), and collect append-only sign-off records. A
+            // rejected sign-off forces NO_GO; approved-with-risk forces WATCH. The
+            // read-only go/no-go endpoint aggregates every prior gate. No auto
+            // production deploy, no real alert sending, no secrets exposed.
+            Route::get('/pilot-closures', [PilotClosureController::class, 'index']);
+            Route::post('/pilot-closures', [PilotClosureController::class, 'store']);
+            Route::get('/pilot-closures/{closure}', [PilotClosureController::class, 'show']);
+            Route::post('/pilot-closures/{closure}/approve', [PilotClosureController::class, 'approve']);
+            Route::post('/pilot-closures/{closure}/block', [PilotClosureController::class, 'block']);
+
+            Route::get('/production-handovers', [ProductionHandoverController::class, 'index']);
+            Route::post('/production-handovers', [ProductionHandoverController::class, 'store']);
+            Route::get('/production-handovers/{handover}', [ProductionHandoverController::class, 'show']);
+            Route::patch('/production-handovers/{handover}', [ProductionHandoverController::class, 'update']);
+            Route::post('/production-handovers/{handover}/mark-ready', [ProductionHandoverController::class, 'markReady']);
+            Route::post('/production-handovers/{handover}/mark-handed-over', [ProductionHandoverController::class, 'markHandedOver']);
+            Route::get('/production-handovers/{handover}/signoffs', [ProductionHandoverSignoffController::class, 'index']);
+            Route::post('/production-handovers/{handover}/signoffs', [ProductionHandoverSignoffController::class, 'store']);
+
+            Route::get('/production-handover-go-no-go', [ProductionHandoverGoNoGoController::class, 'index']);
         });
     });
 
