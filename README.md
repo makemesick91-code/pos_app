@@ -361,6 +361,42 @@ penagihan langganan nyata. Cash (Sprint 4), QRIS (Sprint 5), struk/printer
 (Sprint 9) tetap utuh. Android build CI menjalankan assembleDebug +
 testDebugUnitTest.
 
+## Sprint 15 — Pilot Deployment & Field Trial Evidence Foundation
+
+Sprint 15 establishes the pilot deployment and field trial evidence foundation:
+
+- pilot deployment checklist
+- backend deployment dry-run evidence
+- Android RC artifact handling checklist
+- operator device readiness checklist
+- demo tenant pilot setup evidence
+- post-deploy smoke checklist
+- pilot rollback checklist
+- daily pilot monitoring checklist
+- field issue register
+- field trial GO/WATCH/NO-GO report
+- pilot:deployment-check command
+- pilot:field-trial-summary command
+- CI pilot deployment/field evidence gate
+- no new business feature expansion
+- no automatic production deploy
+- Sprint 15 runtime rules lock
+
+Validation:
+
+```bash
+bash scripts/sprint15_smoke.sh
+bash scripts/android_release_readiness.sh
+cd backend && php artisan production:readiness-check --json
+cd backend && php artisan release:go-no-go --json
+cd backend && php artisan pilot:rc-check --json
+cd backend && php artisan pilot:uat-summary --json
+cd backend && php artisan pilot:deployment-check --json
+cd backend && php artisan pilot:field-trial-summary --json
+cd backend && php artisan test
+cd android && ./gradlew :app:assembleDebug && ./gradlew :app:testDebugUnitTest
+```
+
 ## Sprint 14 — Pilot Release Candidate & Operator UAT Foundation
 
 Sprint 14 establishes the pilot RC and operator UAT foundation:
