@@ -1,5 +1,6 @@
 package com.aishtech.poslite.feature.cashier
 
+import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -12,6 +13,7 @@ import com.aishtech.poslite.R
 import com.aishtech.poslite.core.ServiceLocator
 import com.aishtech.poslite.data.repository.CartRepository
 import com.aishtech.poslite.databinding.ActivityCashierBinding
+import com.aishtech.poslite.feature.receipt.ReceiptActivity
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -97,10 +99,12 @@ class CashierActivity : AppCompatActivity() {
         when (state) {
             is CashierViewModel.CheckoutState.Idle -> {
                 result.visibility = View.GONE
+                result.setOnClickListener(null)
                 binding.buttonCheckout.isEnabled = viewModel.cartItems.value?.isNotEmpty() ?: false
             }
             is CashierViewModel.CheckoutState.Submitting -> {
                 result.visibility = View.VISIBLE
+                result.setOnClickListener(null)
                 result.text = getString(R.string.cashier_checkout_submitting)
                 binding.buttonCheckout.isEnabled = false
             }
@@ -110,15 +114,25 @@ class CashierActivity : AppCompatActivity() {
                 result.text = getString(R.string.cashier_checkout_success) +
                     "\nInvoice: ${sale.invoiceNumber}" +
                     "\nTotal: ${formatPrice(sale.grandTotal?.toDoubleOrNull() ?: 0.0)}" +
-                    "\nKembalian: ${formatPrice(sale.changeTotal?.toDoubleOrNull() ?: 0.0)}"
+                    "\nKembalian: ${formatPrice(sale.changeTotal?.toDoubleOrNull() ?: 0.0)}" +
+                    "\n" + getString(R.string.cashier_view_receipt)
+                // Sprint 6 — tap the result to open the receipt for this sale.
+                result.setOnClickListener { openReceipt(sale.id) }
                 binding.inputPaidAmount.text?.clear()
             }
             is CashierViewModel.CheckoutState.Error -> {
                 result.visibility = View.VISIBLE
+                result.setOnClickListener(null)
                 result.text = state.message
                 binding.buttonCheckout.isEnabled = viewModel.cartItems.value?.isNotEmpty() ?: false
             }
         }
+    }
+
+    private fun openReceipt(saleId: Long) {
+        val intent = Intent(this, ReceiptActivity::class.java)
+            .putExtra(ReceiptActivity.EXTRA_SALE_ID, saleId)
+        startActivity(intent)
     }
 
     private fun formatPrice(value: Double): String {

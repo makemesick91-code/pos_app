@@ -8,6 +8,7 @@ import com.aishtech.poslite.data.remote.dto.LoginResponse
 import com.aishtech.poslite.data.remote.dto.MeResponse
 import com.aishtech.poslite.data.remote.dto.ProductSyncResponse
 import com.aishtech.poslite.data.remote.dto.QrisPaymentResponse
+import com.aishtech.poslite.data.remote.dto.ReceiptResponseDto
 import com.aishtech.poslite.data.remote.dto.SaleResponse
 import retrofit2.Response
 import retrofit2.http.Body
@@ -65,4 +66,9 @@ interface PosApiService {
 
     @GET("api/v1/payments/{id}/status")
     suspend fun getPaymentStatus(@Path("id") paymentId: Long): Response<QrisPaymentResponse>
+
+    // Sprint 6 — tenant-isolated receipt preview. The backend owns receipt data
+    // and print eligibility; the app only formats an approved payload for ESC/POS.
+    @GET("api/v1/sales/{id}/receipt")
+    suspend fun getReceipt(@Path("id") saleId: Long): Response<ReceiptResponseDto>
 }

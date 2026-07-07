@@ -1,5 +1,6 @@
 package com.aishtech.poslite.feature.qris
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -9,6 +10,7 @@ import com.aishtech.poslite.R
 import com.aishtech.poslite.core.ServiceLocator
 import com.aishtech.poslite.data.remote.dto.QrisPaymentDto
 import com.aishtech.poslite.databinding.ActivityQrisPaymentBinding
+import com.aishtech.poslite.feature.receipt.ReceiptActivity
 
 /**
  * QRIS payment foundation screen (Sprint 5). Launched with a sale id; it asks
@@ -20,13 +22,14 @@ class QrisPaymentActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityQrisPaymentBinding
     private lateinit var viewModel: QrisPaymentViewModel
+    private var saleId: Long = -1L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityQrisPaymentBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val saleId = intent.getLongExtra(EXTRA_SALE_ID, -1L)
+        saleId = intent.getLongExtra(EXTRA_SALE_ID, -1L)
 
         viewModel = ViewModelProvider(
             this,
@@ -70,6 +73,22 @@ class QrisPaymentActivity : AppCompatActivity() {
         binding.textExpiredAt.text = getString(R.string.qris_expired_label, payment.expiredAt ?: "-")
 
         binding.buttonRefresh.isEnabled = true
+
+        // Sprint 6 — once QRIS is settled, allow opening the (now FINAL) receipt.
+        if (payment.status == "PAID" && saleId > 0L) {
+            binding.textStatus.text =
+                getString(R.string.qris_status_label, payment.status) + "\n" +
+                getString(R.string.qris_view_receipt)
+            binding.textStatus.setOnClickListener { openReceipt(saleId) }
+        } else {
+            binding.textStatus.setOnClickListener(null)
+        }
+    }
+
+    private fun openReceipt(saleId: Long) {
+        val intent = Intent(this, ReceiptActivity::class.java)
+            .putExtra(ReceiptActivity.EXTRA_SALE_ID, saleId)
+        startActivity(intent)
     }
 
     private fun setLoading(loading: Boolean) {

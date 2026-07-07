@@ -1,0 +1,114 @@
+name: Sprint 6 CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  foundation-and-smoke:
+    name: Foundation & Sprint 6 smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Foundation document exists
+        run: test -f docs/foundation/POS_ANDROID_SAAS_FOUNDATION.md
+
+      - name: Project rules lock intact (Sprint 0–6)
+        run: |
+          grep -q "Foundation Lock Index" docs/PROJECT_RULES.md
+          grep -q "Sprint 0 Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 1 Multi-Tenant Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 2 Product Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 3 Android Cashier Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 4 Sales Backend Integration Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 5 QRIS Payment Gateway Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 6 Printer & Receipt Foundation Runtime Rule" docs/PROJECT_RULES.md
+
+      - name: Sprint 6 smoke script
+        run: bash scripts/sprint6_smoke.sh
+
+      - name: No forbidden files committed
+        run: |
+          ! git ls-files | grep -E '(^|/)\.env$|\.apk$|\.aab$|(^|/)vendor/|(^|/)node_modules/|\.sqlite$|database\.sqlite|(^|/)app/build/|(^|/)\.gradle/'
+
+  backend-tests:
+    name: Backend (receipt + qris + sales + auth + sync)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          # composer.lock resolves to packages requiring php >= 8.4.1;
+          # 8.5 matches the version the suite is validated against locally.
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+
+      - name: Composer validate
+        working-directory: backend
+        run: composer validate --strict
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Route compatibility (receipt + qris + sales + auth + sync intact)
+        working-directory: backend
+        run: |
+          php artisan route:list | grep -E "api/v1/sales/\{sale\}/receipt"
+          php artisan route:list | grep -E "api/v1/sales/\{sale\}/payments/qris"
+          php artisan route:list | grep -E "api/v1/payments/\{payment\}/status"
+          php artisan route:list | grep -E "api/v1/webhooks/payments/\{provider\}"
+          php artisan route:list | grep -E "api/v1/sales"
+          php artisan route:list | grep -E "api/v1/auth/login"
+          php artisan route:list | grep -E "api/v1/sync/products"
+
+      - name: Run tests
+        working-directory: backend
+        run: php artisan test
+
+  android-build-test:
+    name: Android build & unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Package and SDK levels intact
+        run: |
+          grep -q "com.aishtech.poslite" android/app/build.gradle.kts
+          grep -q "minSdk = 26" android/app/build.gradle.kts
+          grep -q "targetSdk = 35" android/app/build.gradle.kts
+
+      - name: No payment gateway secret in Android source
+        run: |
+          ! grep -R "MIDTRANS_SERVER_KEY\|XENDIT_SECRET_KEY\|DUITKU_API_KEY\|QRIS_FAKE_WEBHOOK_SECRET" \
+            android/app/src/main/java android/app/src/main/res
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Run unit tests
+        working-directory: android
+        run: ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace

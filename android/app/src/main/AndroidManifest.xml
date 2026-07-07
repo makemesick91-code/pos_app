@@ -4,6 +4,13 @@
     <!-- Backend catalog sync + auth over HTTP(S). -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Sprint 6 — Bluetooth ESC/POS receipt printing (paired device by MAC; no
+         discovery, so no location permission). Legacy perms are capped at API 30;
+         BLUETOOTH_CONNECT is the runtime permission on Android 12+. -->
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
     <application
         android:allowBackup="true"
         android:icon="@android:drawable/sym_def_app_icon"
@@ -31,6 +38,10 @@
 
         <activity
             android:name=".feature.qris.QrisPaymentActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".feature.receipt.ReceiptActivity"
             android:exported="false" />
 
     </application>

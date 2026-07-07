@@ -37,4 +37,14 @@
     <string name="qris_amount_label">Jumlah: Rp %1$s</string>
     <string name="qris_status_label">Status: %1$s</string>
     <string name="qris_expired_label">Kedaluwarsa: %1$s</string>
+
+    <!-- Sprint 6 — Receipt & printer -->
+    <string name="cashier_view_receipt">Ketuk untuk lihat / cetak struk</string>
+    <string name="qris_view_receipt">Ketuk untuk lihat / cetak struk</string>
+    <string name="receipt_title">Struk Penjualan</string>
+    <string name="receipt_print">Cetak Struk</string>
+    <string name="receipt_missing_sale">Sale tidak valid untuk struk.</string>
+    <string name="receipt_invoice_label">No: %1$s</string>
+    <string name="receipt_status_label">Status struk: %1$s</string>
+    <string name="receipt_not_printable">Struk final belum dapat dicetak.</string>
 </resources>
