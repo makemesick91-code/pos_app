@@ -2,6 +2,7 @@ package com.aishtech.poslite.core.network
 
 import com.aishtech.poslite.BuildConfig
 import com.aishtech.poslite.core.config.AppConfig
+import com.aishtech.poslite.core.device.DeviceUuidProvider
 import com.aishtech.poslite.core.session.TokenStore
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -18,12 +19,18 @@ object ApiClient {
 
     fun create(
         tokenStore: TokenStore,
+        deviceUuidProvider: DeviceUuidProvider? = null,
         baseUrl: String = AppConfig.DEFAULT_API_BASE_URL,
     ): PosApiService {
         val builder = OkHttpClient.Builder()
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(20, TimeUnit.SECONDS)
             .addInterceptor(AuthInterceptor(tokenStore))
+
+        // Sprint 10 — attach X-Device-UUID once a device identity exists.
+        if (deviceUuidProvider != null) {
+            builder.addInterceptor(DeviceHeaderInterceptor(deviceUuidProvider))
+        }
 
         if (BuildConfig.DEBUG) {
             val logging = HttpLoggingInterceptor().apply {

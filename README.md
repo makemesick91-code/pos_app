@@ -265,9 +265,57 @@ cd backend && php artisan test
 cd android && ./gradlew :app:assembleDebug && ./gradlew :app:testDebugUnitTest
 ```
 
+## Sprint 10 — Subscription & Device Limit Foundation
+
+Sprint 10 establishes the SaaS subscription and device limit foundation:
+
+- subscription plans
+- tenant subscriptions
+- registered devices
+- device limit enforcement
+- subscription status API
+- device registration and heartbeat API
+- device list/revoke foundation
+- Android device identity
+- Android device registration/status UI
+- protected business API enforcement
+- Sprint 10 runtime rules lock
+
+Validation:
+
+```bash
+bash scripts/sprint10_smoke.sh
+cd backend && php artisan test
+cd android && ./gradlew :app:assembleDebug && ./gradlew :app:testDebugUnitTest
+```
+
 ## Status
 
-Fase saat ini: **Sprint 9 — Reports & Closing Foundation selesai**. Laporan kini
+Fase saat ini: **Sprint 10 — Subscription & Device Limit Foundation selesai**.
+Akses bisnis kini bergantung pada langganan tenant yang aktif dan perangkat
+Android yang terdaftar. Backend memiliki `subscription_plans`,
+`tenant_subscriptions`, dan `registered_devices`; keputusan allowed/blocked
+dihitung backend dari kolom tanggal (TRIAL/ACTIVE/GRACE diizinkan; EXPIRED/
+CANCELLED/SUSPENDED/tanpa langganan diblokir) dan tidak pernah dipercaya dari
+Android. Middleware `subscription.active` + `device.registered` melindungi seluruh
+API bisnis Sprint 2–9 (produk, sync, sales, struk, QRIS, pembayaran, inventory,
+laporan, closing); endpoint auth, status langganan, dan manajemen perangkat tetap
+terbuka agar tenant yang diblokir bisa membaca status dan mendaftar/mencabut
+perangkat. Batas perangkat (`plan.max_devices`) ditegakkan backend — perangkat
+REVOKED tidak dihitung dan pendaftaran berlebih mengembalikan
+`DEVICE_LIMIT_REACHED`. Tenant A tidak pernah bisa melihat/mendaftar/mencabut atau
+memakai slot perangkat tenant B. Android membuat `device_uuid` sekali secara lokal
+(tanpa password/secret gateway), mengirimnya via header `X-Device-UUID`,
+mendaftarkan perangkat setelah login, dan menampilkan layar status ringan saat
+diblokir (tanpa billing/Play Billing). Sprint 10 tidak mengimplementasikan
+penagihan langganan nyata. Cash (Sprint 4), QRIS (Sprint 5), struk/printer
+(Sprint 6), offline sync (Sprint 7), inventory (Sprint 8), dan laporan/closing
+(Sprint 9) tetap utuh. Android build CI menjalankan assembleDebug +
+testDebugUnitTest.
+
+### Riwayat: Sprint 9 — Reports & Closing Foundation
+
+Sprint 9 — **Reports & Closing Foundation selesai**. Laporan kini
 dihasilkan backend secara otoritatif: ringkasan penjualan harian (hanya sale
 `PAID` dihitung sebagai revenue; QRIS pending/cancelled tidak), ringkasan
 pembayaran per metode/status, dan ringkasan gerakan inventory dari

@@ -48,6 +48,10 @@
             android:name=".feature.reports.ReportsActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".feature.subscription.SubscriptionStatusActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            SubscriptionPlanSeeder::class,
             Sprint1TenantSeeder::class,
             Sprint2ProductSeeder::class,
         ]);

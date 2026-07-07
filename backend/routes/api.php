@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\DeviceHeartbeatController;
+use App\Http\Controllers\Api\V1\RegisteredDeviceController;
+use App\Http\Controllers\Api\V1\SubscriptionStatusController;
 use App\Http\Controllers\Api\V1\DailyClosingController;
 use App\Http\Controllers\Api\V1\InventoryAdjustmentController;
 use App\Http\Controllers\Api\V1\InventoryCurrentStockController;
@@ -57,54 +60,74 @@ Route::prefix('v1')->group(function () {
         Route::middleware(['tenant.active', 'tenant.context'])->group(function () {
             Route::get('/tenant-context', [TenantContextController::class, 'show']);
 
-            // Sprint 2 — tenant-isolated product catalog.
-            Route::apiResource('product-categories', ProductCategoryController::class);
-            Route::apiResource('products', ProductController::class);
-            Route::apiResource('product-store-prices', ProductStorePriceController::class);
+            // Sprint 10 — subscription & device management. These endpoints are
+            // NOT wrapped by subscription.active / device.registered so a tenant
+            // can always read its (possibly blocked) status and register/revoke a
+            // device to unblock. Tenant/device ownership is still enforced inside
+            // each controller/service — a tenant can never touch another tenant's
+            // subscription or devices.
+            Route::get('/subscription/status', [SubscriptionStatusController::class, 'show']);
+            Route::post('/devices/register', [RegisteredDeviceController::class, 'store']);
+            Route::post('/devices/heartbeat', [DeviceHeartbeatController::class, 'store']);
+            Route::get('/devices', [RegisteredDeviceController::class, 'index']);
+            Route::post('/devices/{device}/revoke', [RegisteredDeviceController::class, 'revoke']);
 
-            // Android incremental product/category sync.
-            Route::get('/sync/products', [ProductSyncController::class, 'products']);
-            Route::get('/sync/categories', [ProductSyncController::class, 'categories']);
+            // Sprint 10 — protected business APIs. Beyond an active user/tenant,
+            // the tenant subscription must be allowed (backend-computed) AND the
+            // request must come from an ACTIVE registered device (X-Device-UUID).
+            // Expired/cancelled/suspended subscriptions or missing/revoked devices
+            // are blocked here; auth + subscription status + device management
+            // above remain reachable.
+            Route::middleware(['subscription.active', 'device.registered'])->group(function () {
+                // Sprint 2 — tenant-isolated product catalog.
+                Route::apiResource('product-categories', ProductCategoryController::class);
+                Route::apiResource('products', ProductController::class);
+                Route::apiResource('product-store-prices', ProductStorePriceController::class);
 
-            // Sprint 4 — tenant-isolated sales + online CASH checkout.
-            Route::get('/sales', [SaleController::class, 'index']);
-            Route::post('/sales', [SaleController::class, 'store']);
-            Route::get('/sales/{sale}', [SaleController::class, 'show']);
-            Route::post('/sales/{sale}/cancel', [SaleController::class, 'cancel']);
-            Route::post('/sales/{sale}/payments/cash', [SaleCashPaymentController::class, 'store']);
+                // Android incremental product/category sync.
+                Route::get('/sync/products', [ProductSyncController::class, 'products']);
+                Route::get('/sync/categories', [ProductSyncController::class, 'categories']);
 
-            // Sprint 6 — tenant-isolated receipt preview. Backend is the sole
-            // authority for receipt data and print eligibility; Android only
-            // formats an approved payload for ESC/POS printing.
-            Route::get('/sales/{sale}/receipt', [ReceiptController::class, 'show']);
+                // Sprint 4 — tenant-isolated sales + online CASH checkout.
+                Route::get('/sales', [SaleController::class, 'index']);
+                Route::post('/sales', [SaleController::class, 'store']);
+                Route::get('/sales/{sale}', [SaleController::class, 'show']);
+                Route::post('/sales/{sale}/cancel', [SaleController::class, 'cancel']);
+                Route::post('/sales/{sale}/payments/cash', [SaleCashPaymentController::class, 'store']);
 
-            // Sprint 5 — backend-driven QRIS: create a QRIS payment for a sale
-            // and poll its status. Android never calls a payment gateway directly.
-            Route::post('/sales/{sale}/payments/qris', [QrisPaymentController::class, 'store']);
-            Route::get('/payments/{payment}/status', [PaymentStatusController::class, 'show']);
+                // Sprint 6 — tenant-isolated receipt preview. Backend is the sole
+                // authority for receipt data and print eligibility; Android only
+                // formats an approved payload for ESC/POS printing.
+                Route::get('/sales/{sale}/receipt', [ReceiptController::class, 'show']);
 
-            // Sprint 8 — ledger-based simple inventory. Stock is derived from
-            // inventory_movements (never a mutable column); SALE_OUT is created
-            // by sales only. All endpoints are tenant/store isolated.
-            Route::get('/inventory/current-stock', [InventoryCurrentStockController::class, 'index']);
-            Route::get('/inventory/products/{product}/stock', [InventoryCurrentStockController::class, 'show']);
-            Route::get('/inventory/movements', [InventoryMovementController::class, 'index']);
-            Route::post('/inventory/adjustments', [InventoryAdjustmentController::class, 'store']);
+                // Sprint 5 — backend-driven QRIS: create a QRIS payment for a sale
+                // and poll its status. Android never calls a payment gateway directly.
+                Route::post('/sales/{sale}/payments/qris', [QrisPaymentController::class, 'store']);
+                Route::get('/payments/{payment}/status', [PaymentStatusController::class, 'show']);
 
-            // Sprint 9 — reports & closing foundation. All figures are computed
-            // by the backend report services (never trusted from the client),
-            // tenant-isolated, and store-scoped. PAID sales only count as
-            // revenue; pending QRIS/cancelled sales are excluded.
-            Route::get('/reports/daily-sales', [DailySalesReportController::class, 'index']);
-            Route::get('/reports/daily-sales/export.csv', [DailySalesCsvExportController::class, 'index']);
-            Route::get('/reports/payment-summary', [PaymentSummaryReportController::class, 'index']);
-            Route::get('/reports/inventory-movements-summary', [InventoryMovementSummaryController::class, 'index']);
+                // Sprint 8 — ledger-based simple inventory. Stock is derived from
+                // inventory_movements (never a mutable column); SALE_OUT is created
+                // by sales only. All endpoints are tenant/store isolated.
+                Route::get('/inventory/current-stock', [InventoryCurrentStockController::class, 'index']);
+                Route::get('/inventory/products/{product}/stock', [InventoryCurrentStockController::class, 'show']);
+                Route::get('/inventory/movements', [InventoryMovementController::class, 'index']);
+                Route::post('/inventory/adjustments', [InventoryAdjustmentController::class, 'store']);
 
-            // Daily closing snapshot: one closing per tenant/store/business_date,
-            // duplicate close replays the existing snapshot.
-            Route::post('/closings/daily', [DailyClosingController::class, 'store']);
-            Route::get('/closings/daily', [DailyClosingController::class, 'index']);
-            Route::get('/closings/daily/{dailyClosing}', [DailyClosingController::class, 'show']);
+                // Sprint 9 — reports & closing foundation. All figures are computed
+                // by the backend report services (never trusted from the client),
+                // tenant-isolated, and store-scoped. PAID sales only count as
+                // revenue; pending QRIS/cancelled sales are excluded.
+                Route::get('/reports/daily-sales', [DailySalesReportController::class, 'index']);
+                Route::get('/reports/daily-sales/export.csv', [DailySalesCsvExportController::class, 'index']);
+                Route::get('/reports/payment-summary', [PaymentSummaryReportController::class, 'index']);
+                Route::get('/reports/inventory-movements-summary', [InventoryMovementSummaryController::class, 'index']);
+
+                // Daily closing snapshot: one closing per tenant/store/business_date,
+                // duplicate close replays the existing snapshot.
+                Route::post('/closings/daily', [DailyClosingController::class, 'store']);
+                Route::get('/closings/daily', [DailyClosingController::class, 'index']);
+                Route::get('/closings/daily/{dailyClosing}', [DailyClosingController::class, 'show']);
+            });
         });
     });
 

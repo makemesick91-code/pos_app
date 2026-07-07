@@ -39,6 +39,10 @@ return [
         'daily_closing_required' => true,
         'closing_snapshot_lock_required' => true,
         'csv_export_tenant_isolated' => true,
+        'subscription_required' => true,
+        'device_limit_required' => true,
+        'device_registration_backend_enforced' => true,
+        'subscription_billing_not_in_sprint_10' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
@@ -51,5 +55,6 @@ return [
         'sprint_7' => 'Offline Cash & Sync Foundation',
         'sprint_8' => 'Inventory Simple Foundation',
         'sprint_9' => 'Reports & Closing Foundation',
+        'sprint_10' => 'Subscription & Device Limit Foundation',
     ],
 ];

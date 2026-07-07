@@ -73,4 +73,9 @@
     <string name="reports_sale_out_qty">Barang keluar (SALE_OUT): %1$s</string>
     <string name="reports_closing_hint">Tutup hari untuk menyimpan snapshot closing.</string>
     <string name="reports_close_today">Tutup Hari Ini</string>
+
+    <!-- Sprint 10 — Subscription & device status -->
+    <string name="subscription_title">Status Langganan &amp; Perangkat</string>
+    <string name="subscription_retry">Coba Lagi</string>
+    <string name="subscription_logout">Keluar</string>
 </resources>

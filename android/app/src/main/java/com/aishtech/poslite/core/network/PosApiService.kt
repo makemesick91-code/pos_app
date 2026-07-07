@@ -8,6 +8,11 @@ import com.aishtech.poslite.data.remote.dto.CurrentStockResponseDto
 import com.aishtech.poslite.data.remote.dto.DailyClosingListResponseDto
 import com.aishtech.poslite.data.remote.dto.DailyClosingResponseDto
 import com.aishtech.poslite.data.remote.dto.DailySalesReportResponseDto
+import com.aishtech.poslite.data.remote.dto.DeviceHeartbeatRequestDto
+import com.aishtech.poslite.data.remote.dto.DeviceListResponseDto
+import com.aishtech.poslite.data.remote.dto.RegisterDeviceRequestDto
+import com.aishtech.poslite.data.remote.dto.RegisteredDeviceResponseDto
+import com.aishtech.poslite.data.remote.dto.SubscriptionStatusResponseDto
 import com.aishtech.poslite.data.remote.dto.InventoryMovementSummaryResponseDto
 import com.aishtech.poslite.data.remote.dto.LoginRequest
 import com.aishtech.poslite.data.remote.dto.LoginResponse
@@ -126,4 +131,23 @@ interface PosApiService {
 
     @GET("api/v1/closings/daily/{id}")
     suspend fun getDailyClosing(@Path("id") id: Long): Response<DailyClosingResponseDto>
+
+    // Sprint 10 — subscription & device limit foundation. The backend owns the
+    // subscription decision and device limit; the app registers its locally
+    // generated device UUID, reads its (possibly blocked) status, and heartbeats.
+    // It never trusts a client-side status and never bypasses these checks.
+    @GET("api/v1/subscription/status")
+    suspend fun getSubscriptionStatus(): Response<SubscriptionStatusResponseDto>
+
+    @POST("api/v1/devices/register")
+    suspend fun registerDevice(@Body request: RegisterDeviceRequestDto): Response<RegisteredDeviceResponseDto>
+
+    @POST("api/v1/devices/heartbeat")
+    suspend fun deviceHeartbeat(@Body request: DeviceHeartbeatRequestDto): Response<RegisteredDeviceResponseDto>
+
+    @GET("api/v1/devices")
+    suspend fun listDevices(@Query("status") status: String? = null): Response<DeviceListResponseDto>
+
+    @POST("api/v1/devices/{device}/revoke")
+    suspend fun revokeDevice(@Path("device") deviceId: Long): Response<RegisteredDeviceResponseDto>
 }
