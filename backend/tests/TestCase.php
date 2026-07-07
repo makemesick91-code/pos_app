@@ -18,9 +18,40 @@ abstract class TestCase extends BaseTestCase
      */
     protected function setUp(): void
     {
+        // Sprint 21 — Blade view compilation (and cache/session drivers) require
+        // Laravel's runtime storage folders to exist. On a fresh CI checkout these
+        // are absent (they are git-ignored), which makes view-rendering tests fail
+        // with "Please provide a valid cache path." Create them before the app
+        // boots so every suite can compile views without extra CI wiring.
+        $this->ensureRuntimeStoragePaths();
+
         parent::setUp();
 
         $this->withHeader('X-Device-UUID', TenantFactory::AUTO_DEVICE_UUID);
+    }
+
+    /**
+     * Ensure Laravel's required runtime cache/view/session folders exist. Idempotent.
+     */
+    protected function ensureRuntimeStoragePaths(): void
+    {
+        $base = dirname(__DIR__);
+
+        $paths = [
+            $base.'/storage/framework/views',
+            $base.'/storage/framework/cache',
+            $base.'/storage/framework/cache/data',
+            $base.'/storage/framework/sessions',
+            $base.'/storage/framework/testing',
+            $base.'/storage/logs',
+            $base.'/bootstrap/cache',
+        ];
+
+        foreach ($paths as $path) {
+            if (! is_dir($path)) {
+                @mkdir($path, 0775, true);
+            }
+        }
     }
 
     /**
