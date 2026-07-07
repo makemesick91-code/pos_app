@@ -8,9 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Tenant/store-owned payment record. Sprint 4 runtime only ever writes CASH /
- * MANUAL / PAID rows; QRIS + gateway providers exist as constants for later
- * sprints but are never driven by gateway logic here.
+ * Tenant/store-owned payment record. Sprint 4 runtime writes CASH / MANUAL /
+ * PAID rows; Sprint 5 adds backend-driven QRIS rows (provider FAKE/MIDTRANS/
+ * XENDIT/DUITKU, status PENDING → PAID/FAILED/EXPIRED/CANCELLED) driven by the
+ * gateway abstraction. Gateway secrets are never stored on the model; the raw
+ * gateway response stays in the hidden `raw_response` column.
  */
 class Payment extends Model
 {
@@ -20,6 +22,7 @@ class Payment extends Model
     public const METHOD_QRIS = 'QRIS';
 
     public const PROVIDER_MANUAL = 'MANUAL';
+    public const PROVIDER_FAKE = 'FAKE';
     public const PROVIDER_MIDTRANS = 'MIDTRANS';
     public const PROVIDER_XENDIT = 'XENDIT';
     public const PROVIDER_DUITKU = 'DUITKU';
@@ -39,6 +42,10 @@ class Payment extends Model
         'status',
         'provider',
         'provider_reference',
+        'qr_payload',
+        'qr_image_url',
+        'payment_url',
+        'metadata',
         'paid_at',
         'expired_at',
         'raw_response',
@@ -48,6 +55,7 @@ class Payment extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'metadata' => 'array',
             'paid_at' => 'datetime',
             'expired_at' => 'datetime',
         ];
@@ -85,5 +93,25 @@ class Payment extends Model
     public function scopePaid(Builder $query): Builder
     {
         return $query->where('status', self::STATUS_PAID);
+    }
+
+    public function scopeQris(Builder $query): Builder
+    {
+        return $query->where('method', self::METHOD_QRIS);
+    }
+
+    public function isPaid(): bool
+    {
+        return $this->status === self::STATUS_PAID;
+    }
+
+    public function isQris(): bool
+    {
+        return $this->method === self::METHOD_QRIS;
+    }
+
+    public function webhookLogs(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(PaymentWebhookLog::class);
     }
 }

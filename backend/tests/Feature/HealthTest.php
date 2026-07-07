@@ -19,7 +19,7 @@ class HealthTest extends TestCase
                 'status' => 'ok',
                 'app' => 'Aish POS Lite API',
                 'foundation' => 'POS_ANDROID_SAAS_FOUNDATION',
-                'sprint' => 'Sprint 4',
+                'sprint' => 'Sprint 5',
             ]);
     }
 }

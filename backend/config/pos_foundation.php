@@ -21,6 +21,9 @@ return [
         'sales_backend_required' => true,
         'cash_payment_backend_required' => true,
         'qris_not_in_sprint_4' => true,
+        'qris_backend_driven_required' => true,
+        'qris_webhook_ready_required' => true,
+        'payment_gateway_credentials_backend_only' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
@@ -28,5 +31,6 @@ return [
         'sprint_2' => 'Product Foundation',
         'sprint_3' => 'Android Cashier Foundation',
         'sprint_4' => 'Sales Backend Integration',
+        'sprint_5' => 'QRIS Payment Gateway Foundation',
     ],
 ];

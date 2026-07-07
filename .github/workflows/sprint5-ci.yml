@@ -1,0 +1,121 @@
+name: Sprint 5 CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  foundation-validation:
+    name: Foundation & Sprint 5 smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Foundation document exists
+        run: test -f docs/foundation/POS_ANDROID_SAAS_FOUNDATION.md
+
+      - name: Project rules lock intact (Sprint 0–5)
+        run: |
+          grep -q "Foundation Lock Index" docs/PROJECT_RULES.md
+          grep -q "Sprint 0 Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 1 Multi-Tenant Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 2 Product Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 3 Android Cashier Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 4 Sales Backend Integration Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 5 QRIS Payment Gateway Foundation Runtime Rule" docs/PROJECT_RULES.md
+
+      - name: Sprint 5 smoke script
+        run: bash scripts/sprint5_smoke.sh
+
+  android-static:
+    name: Android static validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # A Gradle wrapper is not committed (the dev environment has JDK 25 only
+      # and no gradle binary; AGP 8.7.x needs JDK 17–21). CI therefore validates
+      # the module structure statically. When a wrapper + compatible JDK are
+      # available, the last step below will build + unit test automatically.
+      - name: Package and SDK levels intact
+        run: |
+          grep -q "com.aishtech.poslite" android/app/build.gradle.kts
+          grep -q "minSdk = 26" android/app/build.gradle.kts
+          grep -q "targetSdk = 35" android/app/build.gradle.kts
+
+      - name: QRIS foundation sources present
+        run: |
+          APP=android/app/src/main/java/com/aishtech/poslite
+          test -f "$APP/data/repository/QrisRepository.kt"
+          test -f "$APP/data/remote/dto/QrisPaymentDtos.kt"
+          test -f "$APP/feature/qris/QrisPaymentActivity.kt"
+          test -f "$APP/feature/qris/QrisPaymentViewModel.kt"
+          test -f android/app/src/main/res/layout/activity_qris_payment.xml
+          grep -q "payments/qris" "$APP/core/network/PosApiService.kt"
+          grep -q "payments/{id}/status" "$APP/core/network/PosApiService.kt"
+          grep -q "QrisPaymentActivity" android/app/src/main/AndroidManifest.xml
+
+      - name: No payment gateway secret in Android source
+        run: |
+          ! grep -R "MIDTRANS_SERVER_KEY\|XENDIT_SECRET_KEY\|DUITKU_API_KEY\|QRIS_FAKE_WEBHOOK_SECRET" \
+            android/app/src/main/java android/app/src/main/res
+
+      - name: Unit test sources present
+        run: |
+          test -f android/app/src/test/java/com/aishtech/poslite/QrisRepositoryTest.kt
+
+      - name: Attempt Android build/test if a wrapper is available
+        run: |
+          if [ -f android/gradlew ]; then
+            cd android
+            ./gradlew :app:assembleDebug :app:testDebugUnitTest
+          else
+            echo "No Gradle wrapper committed — skipping Android build/test (static validation only)."
+          fi
+
+  backend-tests:
+    name: Backend (QRIS + sales + auth + sync)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          # composer.lock resolves to packages requiring php >= 8.4.1;
+          # 8.5 matches the version the suite is validated against locally.
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+
+      - name: Composer validate
+        working-directory: backend
+        run: composer validate --strict
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Route compatibility (QRIS + sales + auth + sync intact)
+        working-directory: backend
+        run: |
+          php artisan route:list | grep -E "api/v1/sales/\{sale\}/payments/qris"
+          php artisan route:list | grep -E "api/v1/payments/\{payment\}/status"
+          php artisan route:list | grep -E "api/v1/webhooks/payments/\{provider\}"
+          php artisan route:list | grep -E "api/v1/sales"
+          php artisan route:list | grep -E "api/v1/auth/login"
+          php artisan route:list | grep -E "api/v1/sync/products"
+
+      - name: Reconciliation command registered
+        working-directory: backend
+        run: php artisan list | grep "payments:reconcile"
+
+      - name: Run tests
+        working-directory: backend
+        run: php artisan test

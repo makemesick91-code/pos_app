@@ -39,6 +39,7 @@ This project is governed by:
 4. `docs/sprints/sprint-2-product-foundation.md`
 5. `docs/sprints/sprint-3-android-cashier-foundation.md`
 6. `docs/sprints/sprint-4-sales-backend-integration.md`
+7. `docs/sprints/sprint-5-qris-payment-gateway-foundation.md`
 
 No sprint may contradict these documents unless the canonical foundation is explicitly updated first.
 
@@ -128,3 +129,27 @@ Mandatory:
 15. Android cart must clear only after successful backend sale creation/payment.
 16. Android cart must remain intact if backend checkout fails.
 17. Sales endpoints must be covered by tenant isolation tests.
+
+## Sprint 5 QRIS Payment Gateway Foundation Runtime Rule
+
+Starting Sprint 5, QRIS implementation must be backend-driven, secure, tenant-isolated, and webhook-ready.
+
+Mandatory:
+
+1. Android must never store payment gateway credentials.
+2. Android must never call payment gateway APIs directly.
+3. Android may only request QRIS through backend-approved endpoints.
+4. QRIS payment creation must be tied to an authenticated tenant-owned sale.
+5. Tenant A must never create, view, update, or receive webhook effects for tenant B payments.
+6. Payment gateway credentials must only live in backend environment/config.
+7. Tests must not depend on external payment gateway network calls.
+8. A fake/sandbox QRIS provider must be available for local/testing.
+9. QRIS payments must support statuses: PENDING, PAID, FAILED, EXPIRED, CANCELLED.
+10. QRIS webhook processing must be idempotent.
+11. Webhook payloads must be logged in `payment_webhook_logs`.
+12. Webhook signature validation foundation must exist.
+13. Payment status updates must update the related sale payment status consistently.
+14. QRIS must be online-only.
+15. Cash payment behavior from Sprint 4 must remain intact.
+16. Sprint 5 must not implement payout, refund, printer, offline QRIS, offline sales sync, or inventory movement runtime.
+17. Payment reconciliation command foundation must exist.

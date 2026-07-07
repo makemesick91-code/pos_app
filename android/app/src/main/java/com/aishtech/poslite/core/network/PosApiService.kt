@@ -1,11 +1,13 @@
 package com.aishtech.poslite.core.network
 
 import com.aishtech.poslite.data.remote.dto.CategorySyncResponse
+import com.aishtech.poslite.data.remote.dto.CreateQrisPaymentRequestDto
 import com.aishtech.poslite.data.remote.dto.CreateSaleRequestDto
 import com.aishtech.poslite.data.remote.dto.LoginRequest
 import com.aishtech.poslite.data.remote.dto.LoginResponse
 import com.aishtech.poslite.data.remote.dto.MeResponse
 import com.aishtech.poslite.data.remote.dto.ProductSyncResponse
+import com.aishtech.poslite.data.remote.dto.QrisPaymentResponse
 import com.aishtech.poslite.data.remote.dto.SaleResponse
 import retrofit2.Response
 import retrofit2.http.Body
@@ -51,4 +53,16 @@ interface PosApiService {
 
     @POST("api/v1/sales/{id}/cancel")
     suspend fun cancelSale(@Path("id") id: Long): Response<SaleResponse>
+
+    // Sprint 5 — backend-driven QRIS. The app requests a QRIS payment for a sale
+    // and polls its status; it never contacts a payment gateway or holds any
+    // gateway credential.
+    @POST("api/v1/sales/{id}/payments/qris")
+    suspend fun createQrisPayment(
+        @Path("id") saleId: Long,
+        @Body request: CreateQrisPaymentRequestDto,
+    ): Response<QrisPaymentResponse>
+
+    @GET("api/v1/payments/{id}/status")
+    suspend fun getPaymentStatus(@Path("id") paymentId: Long): Response<QrisPaymentResponse>
 }

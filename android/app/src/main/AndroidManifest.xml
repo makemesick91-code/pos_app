@@ -29,6 +29,10 @@
             android:name=".feature.cashier.CashierActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".feature.qris.QrisPaymentActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

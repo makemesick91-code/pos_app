@@ -8,6 +8,7 @@ import com.aishtech.poslite.core.session.SessionManager
 import com.aishtech.poslite.core.session.SharedPrefsTokenStore
 import com.aishtech.poslite.data.repository.AuthRepository
 import com.aishtech.poslite.data.repository.CatalogRepository
+import com.aishtech.poslite.data.repository.QrisRepository
 import com.aishtech.poslite.data.repository.SalesRepository
 import com.aishtech.poslite.feature.sync.CatalogSyncManager
 
@@ -38,6 +39,9 @@ object ServiceLocator {
 
     fun salesRepository(context: Context): SalesRepository =
         SalesRepository(api(context))
+
+    fun qrisRepository(context: Context): QrisRepository =
+        QrisRepository(api(context))
 
     fun catalogSyncManager(context: Context): CatalogSyncManager {
         val db = PosDatabase.getInstance(context)
