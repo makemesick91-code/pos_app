@@ -2,9 +2,11 @@
 
 use App\Http\Middleware\EnsureDeviceIsRegistered;
 use App\Http\Middleware\EnsurePlatformAdmin;
+use App\Http\Middleware\EnsureTenantEntitled;
 use App\Http\Middleware\EnsureTenantIsActive;
 use App\Http\Middleware\EnsureTenantLifecycleAllowed;
 use App\Http\Middleware\EnsureTenantSubscriptionIsActive;
+use App\Http\Middleware\EnsureTenantUsageLimitAvailable;
 use App\Http\Middleware\SetTenantContext;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -24,6 +26,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.context' => SetTenantContext::class,
             'subscription.active' => EnsureTenantSubscriptionIsActive::class,
             'tenant.lifecycle' => EnsureTenantLifecycleAllowed::class,
+            'tenant.entitled' => EnsureTenantEntitled::class,
+            'tenant.usage.limit' => EnsureTenantUsageLimitAvailable::class,
             'device.registered' => EnsureDeviceIsRegistered::class,
             'platform.admin' => EnsurePlatformAdmin::class,
         ]);

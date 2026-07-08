@@ -156,6 +156,16 @@ return [
         'no_auto_tenant_reactivation_sprint_25' => true,
         'no_client_side_tenant_enforcement_authority_sprint_25' => true,
         'no_tenant_lifecycle_android_ui_sprint_25' => true,
+        'tenant_plan_source_of_truth_required' => true,
+        'feature_entitlement_server_side_enforcement_required_sprint_26' => true,
+        'usage_limit_governance_required_sprint_26' => true,
+        'tenant_lifecycle_precedes_entitlement_usage_sprint_26' => true,
+        'plan_override_cannot_reenable_suspended_tenant_sprint_26' => true,
+        'plan_assignment_platform_admin_only_sprint_26' => true,
+        'entitlement_override_platform_admin_only_sprint_26' => true,
+        'tenant_plan_go_no_go_required' => true,
+        'no_client_side_entitlement_authority_sprint_26' => true,
+        'no_real_billing_charge_on_plan_change_sprint_26' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
@@ -184,5 +194,6 @@ return [
         'sprint_23' => 'Billing Collection Governance Foundation',
         'sprint_24' => 'Subscription Renewal & Dunning Governance Foundation',
         'sprint_25' => 'Tenant Lifecycle Enforcement & Manual Suspension Governance Foundation',
+        'sprint_26' => 'Tenant Plan, Feature Entitlement & Usage Limit Governance Foundation',
     ],
 ];

@@ -4,7 +4,10 @@ namespace Tests;
 
 use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
+use App\Models\TenantPlan;
+use App\Models\TenantPlanAssignment;
 use App\Models\TenantSubscription;
+use App\Services\TenantPlan\TenantPlanRegistrar;
 use Database\Factories\TenantFactory;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
@@ -91,6 +94,32 @@ abstract class TestCase extends BaseTestCase
             'status' => TenantSubscription::STATUS_ACTIVE,
             'starts_at' => now()->subDays(5),
             'ends_at' => now()->addMonth(),
+        ]);
+    }
+
+    /**
+     * Sprint 26 — replace a factory tenant's auto-assigned (enterprise) plan with
+     * an explicit catalogue plan so an entitlement/usage-limit denial can be
+     * exercised. Supersedes any active assignment and returns the new one.
+     */
+    protected function assignTenantPlan(Tenant $tenant, string $planKey): TenantPlanAssignment
+    {
+        app(TenantPlanRegistrar::class)->ensure();
+
+        $plan = TenantPlan::query()->where('key', $planKey)->firstOrFail();
+
+        TenantPlanAssignment::query()
+            ->where('tenant_id', $tenant->id)
+            ->where('status', TenantPlanAssignment::STATUS_ACTIVE)
+            ->update(['status' => TenantPlanAssignment::STATUS_EXPIRED]);
+
+        return TenantPlanAssignment::query()->create([
+            'tenant_id' => $tenant->id,
+            'tenant_plan_id' => $plan->id,
+            'status' => TenantPlanAssignment::STATUS_ACTIVE,
+            'effective_from' => now()->subDay(),
+            'effective_until' => null,
+            'source' => TenantPlanAssignment::SOURCE_TEST,
         ]);
     }
 }

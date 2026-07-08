@@ -115,6 +115,53 @@ class Tenant extends Model
         return $this->hasMany(TenantLifecycleEvent::class);
     }
 
+    public function planAssignments(): HasMany
+    {
+        return $this->hasMany(TenantPlanAssignment::class);
+    }
+
+    public function entitlementOverrides(): HasMany
+    {
+        return $this->hasMany(TenantEntitlementOverride::class);
+    }
+
+    /**
+     * The tenant's currently ACTIVE plan assignment (within its effective
+     * window), if any. This is the authoritative plan signal read by
+     * TenantPlanResolver (Sprint 26). No plan assignment falls back to the safe
+     * default plan resolved from config/tenant_plan.php.
+     */
+    public function activePlanAssignment(): ?TenantPlanAssignment
+    {
+        $now = now();
+
+        return $this->planAssignments()
+            ->where('status', TenantPlanAssignment::STATUS_ACTIVE)
+            ->where('effective_from', '<=', $now)
+            ->where(function ($query) use ($now) {
+                $query->whereNull('effective_until')->orWhere('effective_until', '>=', $now);
+            })
+            ->orderByDesc('id')
+            ->first();
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Collection<int, TenantEntitlementOverride>
+     */
+    public function activeEntitlementOverrides()
+    {
+        $now = now();
+
+        return $this->entitlementOverrides()
+            ->where('status', TenantEntitlementOverride::STATUS_ACTIVE)
+            ->where('effective_from', '<=', $now)
+            ->where(function ($query) use ($now) {
+                $query->whereNull('effective_until')->orWhere('effective_until', '>=', $now);
+            })
+            ->orderByDesc('id')
+            ->get();
+    }
+
     /**
      * The tenant's currently ACTIVE manual suspension, if any. This is the
      * authoritative manual-suspension signal read by TenantLifecycleService.
