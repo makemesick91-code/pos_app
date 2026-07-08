@@ -5,6 +5,9 @@ use App\Http\Controllers\Api\V1\Admin\AdminBillingGovernanceController;
 use App\Http\Controllers\Api\V1\Admin\AdminBillingInvoiceController;
 use App\Http\Controllers\Api\V1\Admin\AdminBillingPaymentController;
 use App\Http\Controllers\Api\V1\Admin\AdminExportGovernanceController;
+use App\Http\Controllers\Api\V1\Admin\AdminPaymentGatewayEventController;
+use App\Http\Controllers\Api\V1\Admin\AdminPaymentGatewayGovernanceController;
+use App\Http\Controllers\Api\V1\Admin\AdminPaymentGatewayIntentController;
 use App\Http\Controllers\Api\V1\Admin\AdminReportExportMeteringSummaryController;
 use App\Http\Controllers\Api\V1\Admin\AdminSubscriptionPlanController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantController;
@@ -97,6 +100,7 @@ use App\Http\Controllers\Api\V1\InventoryAdjustmentController;
 use App\Http\Controllers\Api\V1\InventoryCurrentStockController;
 use App\Http\Controllers\Api\V1\InventoryMovementController;
 use App\Http\Controllers\Api\V1\PaymentStatusController;
+use App\Http\Controllers\Api\V1\PaymentGatewayWebhookController;
 use App\Http\Controllers\Api\V1\PaymentWebhookController;
 use App\Http\Controllers\Api\V1\ProductCategoryController;
 use App\Http\Controllers\Api\V1\ProductController;
@@ -693,10 +697,40 @@ Route::prefix('v1')->group(function () {
 
             Route::get('/tenant-billing/collection-summary', [AdminBillingGovernanceController::class, 'collectionSummary']);
             Route::get('/tenant-billing/governance-summary', [AdminBillingGovernanceController::class, 'governanceSummary']);
+
+            // Sprint 31 — payment gateway / QRIS settlement governance. Platform
+            // admin only (PGW-R014). Reads are cross-tenant governance visibility;
+            // the only mutation is creating a payment intent for an invoice
+            // (idempotent per invoice+provider+channel — PGW-R003; refused for a
+            // paid invoice — PGW-R004; amount = invoice outstanding, never client
+            // input — PGW-R005). There is deliberately NO admin route that re-
+            // settles an event or lifts a suspension; settlement flows only from a
+            // verified provider webhook through the Sprint 30 collection service
+            // (PGW-R010). Prefixed `tenant-billing/gateway` — no collision with the
+            // Sprint 5 POS QRIS surface (/webhooks/payments/*).
+            Route::get('/tenant-billing/gateway/intents', [AdminPaymentGatewayIntentController::class, 'index']);
+            Route::get('/tenant-billing/gateway/intents/{intent}', [AdminPaymentGatewayIntentController::class, 'show']);
+            Route::post('/tenant-billing/gateway/invoices/{invoice}/intents', [AdminPaymentGatewayIntentController::class, 'store']);
+
+            Route::get('/tenant-billing/gateway/events', [AdminPaymentGatewayEventController::class, 'index']);
+            Route::get('/tenant-billing/gateway/events/{event}', [AdminPaymentGatewayEventController::class, 'show']);
+
+            Route::get('/tenant-billing/gateway/provider-summary', [AdminPaymentGatewayGovernanceController::class, 'providerSummary']);
+            Route::get('/tenant-billing/gateway/settlement-summary', [AdminPaymentGatewayGovernanceController::class, 'settlementSummary']);
+            Route::get('/tenant-billing/gateway/governance-summary', [AdminPaymentGatewayGovernanceController::class, 'governanceSummary']);
         });
     });
 
     // Sprint 5 — QRIS payment gateway webhook. Unauthenticated by design; trust
     // comes from the provider signature, verified in QrisWebhookService.
     Route::post('/webhooks/payments/{provider}', [PaymentWebhookController::class, 'store']);
+
+    // Sprint 31 — SaaS billing settlement webhook (PGW-R007/R015). Distinct from
+    // the Sprint 5 POS webhook above: this settles tenant billing INVOICES, not
+    // POS sales. Unauthenticated by design — trust comes ENTIRELY from the
+    // verified provider signature (PaymentGatewayWebhookService); it is not a
+    // tenant/user mutation route. Rate-limited; unsigned/invalid events are
+    // rejected and never processed.
+    Route::post('/payment-gateway/{provider}/webhook', [PaymentGatewayWebhookController::class, 'store'])
+        ->middleware('throttle:60,1');
 });
