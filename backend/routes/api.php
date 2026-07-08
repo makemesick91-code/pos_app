@@ -59,6 +59,8 @@ use App\Http\Controllers\Api\V1\Admin\ProductionIncidentSummaryController;
 use App\Http\Controllers\Api\V1\Admin\ProductionMaintenanceWindowController;
 use App\Http\Controllers\Api\V1\Admin\ProductionOperationRunController;
 use App\Http\Controllers\Api\V1\Admin\ProductionOpsHealthController;
+use App\Http\Controllers\Api\V1\Admin\AdminEntitlementDecisionController;
+use App\Http\Controllers\Api\V1\Admin\AdminTenantEntitlementAccessController;
 use App\Http\Controllers\Api\V1\Admin\ProductionPostHandoverGoNoGoController;
 use App\Http\Controllers\Api\V1\Admin\PublicWebsiteContentSummaryController;
 use App\Http\Controllers\Api\V1\Admin\PublicWebsiteGoNoGoController;
@@ -161,7 +163,12 @@ Route::prefix('v1')->group(function () {
             // each controller/service — a tenant can never touch another tenant's
             // subscription or devices.
             Route::get('/subscription/status', [SubscriptionStatusController::class, 'show']);
-            Route::post('/devices/register', [RegisteredDeviceController::class, 'store']);
+            // Sprint 32 — device registration is metered against the plan
+            // devices.max limit (ENT-R007). Runs inside tenant.context so the
+            // limit is computed server-side; an over-cap tenant is denied (429
+            // USAGE_LIMIT_EXCEEDED) before a device row is created.
+            Route::post('/devices/register', [RegisteredDeviceController::class, 'store'])
+                ->middleware('tenant.usage.limit:devices.max');
             Route::post('/devices/heartbeat', [DeviceHeartbeatController::class, 'store']);
             Route::get('/devices', [RegisteredDeviceController::class, 'index']);
             Route::post('/devices/{device}/revoke', [RegisteredDeviceController::class, 'revoke']);
@@ -187,7 +194,14 @@ Route::prefix('v1')->group(function () {
             // TENANT_SUSPENDED first (TPE-R004/R005) and can never be re-enabled by
             // plan/override. Enforcement is server-side authoritative; Android is
             // UX only (TPE-R002/R010).
-            Route::middleware(['subscription.active', 'tenant.lifecycle', 'device.registered'])->group(function () {
+            // Sprint 32 — entitlement.write is the runtime write gate on the
+            // tenant billing/subscription/lifecycle state (ENT-R011..R017). Only
+            // mutating verbs are gated; reads always pass so existing data stays
+            // readable. It runs AFTER tenant.lifecycle so a manually suspended
+            // tenant is still TENANT_SUSPENDED first (ENT-R013) and a paid invoice
+            // never lifts that (ENT-R014). Unpaid-past-grace writes are blocked
+            // (402) while reads work; within-grace writes are allowed but audited.
+            Route::middleware(['subscription.active', 'tenant.lifecycle', 'device.registered', 'entitlement.write'])->group(function () {
                 // Catalog + inventory operations require the inventory.basic feature.
                 Route::middleware('tenant.entitled:inventory.basic')->group(function () {
                     // Sprint 2 — tenant-isolated product catalog.
@@ -244,14 +258,20 @@ Route::prefix('v1')->group(function () {
                     // by the backend report services (never trusted from the client),
                     // tenant-isolated, and store-scoped. PAID sales only count as
                     // revenue; pending QRIS/cancelled sales are excluded.
-                    Route::get('/reports/daily-sales', [DailySalesReportController::class, 'index']);
+                    Route::get('/reports/daily-sales', [DailySalesReportController::class, 'index'])
+                        ->middleware('entitlement.report:reports.daily-sales');
                     // Sprint 27 — report export is metered against the plan
                     // reports.exports.monthly limit. The usage guard runs AFTER
                     // tenant.lifecycle (group) and tenant.entitled:reports.basic
                     // (group) so a suspended tenant is TENANT_SUSPENDED and an
                     // unentitled tenant is FEATURE_NOT_ENTITLED first (UEL-R009/R010).
+                    // Sprint 32 — entitlement.export enforces plan/billing export
+                    // entitlement and audits denials; it runs AFTER the Sprint 27
+                    // usage meter so an over-quota export is still answered by the
+                    // established USAGE_LIMIT_EXCEEDED contract (ENT-R010, no
+                    // regression to Sprint 27–29 metering).
                     Route::get('/reports/daily-sales/export.csv', [DailySalesCsvExportController::class, 'index'])
-                        ->middleware('tenant.usage.limit:reports.exports.monthly');
+                        ->middleware(['tenant.usage.limit:reports.exports.monthly', 'entitlement.export:reports.daily-sales.csv']);
                     Route::get('/reports/payment-summary', [PaymentSummaryReportController::class, 'index']);
                     Route::get('/reports/inventory-movements-summary', [InventoryMovementSummaryController::class, 'index']);
 
@@ -718,6 +738,26 @@ Route::prefix('v1')->group(function () {
             Route::get('/tenant-billing/gateway/provider-summary', [AdminPaymentGatewayGovernanceController::class, 'providerSummary']);
             Route::get('/tenant-billing/gateway/settlement-summary', [AdminPaymentGatewayGovernanceController::class, 'settlementSummary']);
             Route::get('/tenant-billing/gateway/governance-summary', [AdminPaymentGatewayGovernanceController::class, 'governanceSummary']);
+
+            // Sprint 32 — plan entitlement runtime enforcement & subscription
+            // access control. Platform admin only (ENT-R022). All routes are
+            // READ-ONLY governance visibility: the per-tenant entitlement/usage/
+            // billing-access summary, the configured plan catalogue, the
+            // governance posture, and the denied/degraded decision log. There is
+            // deliberately NO admin or tenant route that mutates entitlement state
+            // (ENT: tenant_route_can_mutate_entitlement_state_allowed=false), and a
+            // paid invoice never lifts a manual suspension here (ENT-R014).
+            // Prefixed `tenant-billing/entitlements` — no collision with the
+            // Sprint 26 `/tenants/{tenant}/entitlements` plan-override surface.
+            Route::get('/tenant-billing/entitlements/plan-summary', [AdminTenantEntitlementAccessController::class, 'planSummary']);
+            Route::get('/tenant-billing/entitlements/governance-summary', [AdminTenantEntitlementAccessController::class, 'governanceSummary']);
+            Route::get('/tenants/{tenant}/tenant-billing/entitlements/summary', [AdminTenantEntitlementAccessController::class, 'tenantSummary']);
+            Route::get('/tenants/{tenant}/tenant-billing/entitlements/usage-summary', [AdminTenantEntitlementAccessController::class, 'usageSummary']);
+            Route::get('/tenants/{tenant}/tenant-billing/entitlements/billing-state', [AdminTenantEntitlementAccessController::class, 'billingState']);
+
+            Route::get('/tenant-billing/entitlements/decisions', [AdminEntitlementDecisionController::class, 'index']);
+            Route::get('/tenant-billing/entitlements/decisions/{decision}', [AdminEntitlementDecisionController::class, 'show']);
+            Route::get('/tenant-billing/entitlements/decision-summary', [AdminEntitlementDecisionController::class, 'summary']);
         });
     });
 
