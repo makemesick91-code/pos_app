@@ -1018,3 +1018,40 @@ Mandatory:
 13. Sprint 30 rules (`BIL-R001..R016`) coexist with Sprint 25 `TLS-R001..R010`, Sprint 26 `TPE-R001..R012`, Sprint 27 `UEL-R001..R015`, Sprint 28 `ULR-R001..R016`, and Sprint 29 `EGC-R001..R015` (`BIL-R016`). See `docs/sprints/sprint-30-billing-invoice-generation-payment-collection-governance-foundation.md`.
 14. Android/UI is not a billing authority; server-side generation and collection state are authoritative.
 15. GO/WATCH/NO-GO report must be evidence-backed.
+
+## Sprint 31 Payment Gateway / QRIS Settlement Governance Foundation Runtime Rule
+
+Canonical foundation rules (locked in `backend/config/payment_gateway_governance.php`, mirrored here, exercised by tests/gates):
+
+- `PGW-R001` — A payment gateway provider must be explicitly configured; the default is a deterministic mock.
+- `PGW-R002` — No real payment gateway call may be made in CI by default; the mock provider is used.
+- `PGW-R003` — A gateway payment intent must be idempotent per invoice, provider, and channel.
+- `PGW-R004` — A paid invoice must not be able to create a new payable payment intent.
+- `PGW-R005` — A settlement amount must match the invoice outstanding amount unless partial payment is explicitly enabled.
+- `PGW-R006` — Overpayment must be rejected unless explicitly enabled.
+- `PGW-R007` — A gateway webhook must carry a verified provider signature.
+- `PGW-R008` — Webhook replay must be idempotent; a duplicate provider event must never be reprocessed.
+- `PGW-R009` — A failed, cancelled, expired, or rejected event must never mark an invoice paid.
+- `PGW-R010` — Settlement must use the Sprint 30 payment collection service, never a direct invoice mutation.
+- `PGW-R011` — Settlement/intent/event metadata must be redacted and must not store secrets, signatures, or PII.
+- `PGW-R012` — Provider reference uniqueness must be enforced so a single provider payment settles once.
+- `PGW-R013` — A manual tenant suspension must never be lifted by a payment settlement.
+- `PGW-R014` — All admin gateway mutations must require `platform.admin`.
+- `PGW-R015` — There must be no tenant/public route that can mutate gateway/intent/settlement state (the verified webhook is not a tenant mutation route).
+- `PGW-R016` — Gateway audit/command/API output must not leak secrets or PII.
+- `PGW-R017` — Gateway go/no-go must verify Sprint 30 billing-layer compatibility.
+- `PGW-R018` — The mock provider must be deterministic for tests and smoke.
+
+Mandatory:
+
+1. Payment intents are created only by `PaymentGatewayIntentService`; the amount always equals the invoice outstanding amount (never client input), a paid/void/cancelled invoice is refused (`GATEWAY_INVOICE_ALREADY_PAID`/`GATEWAY_INVOICE_NOT_PAYABLE`), and creation is idempotent per invoice + provider + channel (`PGW-R003`, `PGW-R004`, `PGW-R005`).
+2. Overpayment and partial settlement are rejected unless explicitly enabled in `payment_gateway_governance` (both default false) — enforced both in the settlement service and in the underlying Sprint 30 collection service (`PGW-R005`, `PGW-R006`).
+3. Provider webhooks are ingested only by `PaymentGatewayWebhookService`, which verifies the signature (an unsigned/invalid event is stored `rejected` and never processed → HTTP 401), detects replays via `UNIQUE(provider, provider_event_id)` / `UNIQUE(provider, payload_hash)`, and normalizes status before routing (`PGW-R007`, `PGW-R008`).
+4. Only a verified `paid` event settles, through `PaymentGatewaySettlementService` → the Sprint 30 `TenantPaymentCollectionService::record()` (idempotency key derived from invoice + `provider_reference`), so a replayed paid event never double-collects; a failed/expired/cancelled event updates intent/event state but never marks the invoice paid (`PGW-R009`, `PGW-R010`, `PGW-R012`).
+5. Settlement never touches tenant lifecycle — a manually suspended tenant stays suspended (`PGW-R013`).
+6. All intent/event metadata passes `PaymentGatewayRedactor` (reusing the Sprint 30 `BillingMetadataSanitizer`); the raw signature is never stored (only a truncated fingerprint), and no secret/PII appears in config, audit, command, smoke, or API output (`PGW-R011`, `PGW-R016`).
+7. All admin gateway mutations are `platform.admin` only and audit-logged; the only unauthenticated write is the signature-verified webhook, which is not a tenant/user mutation route (`PGW-R014`, `PGW-R015`).
+8. The Sprint 31 surface is kept SEPARATE from the Sprint 5 POS QRIS surface (`App\Services\Payments`, `/webhooks/payments/{provider}`) and the Sprint 23 `saas_billing_*` / Sprint 30 `tenant_billing_*` invoice surfaces — no route or table collision.
+9. `payment-gateway:go-no-go` must FAIL if the gateway governance audit is NO_GO, a Sprint 31 command is missing, a Sprint 24–30 prior gate is not registered, the Sprint 30 billing layer is absent, or a required doc is missing (`PGW-R017`). See `docs/sprints/sprint-31-payment-gateway-qris-settlement-governance-evidence.md`.
+10. Sprint 31 rules (`PGW-R001..R018`) coexist with Sprint 25 `TLS-R001..R010`, Sprint 26 `TPE-R001..R012`, Sprint 27 `UEL-R001..R015`, Sprint 28 `ULR-R001..R016`, Sprint 29 `EGC-R001..R015`, and Sprint 30 `BIL-R001..R016`.
+11. GO/WATCH/NO-GO report must be evidence-backed.
