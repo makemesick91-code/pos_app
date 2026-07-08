@@ -26,6 +26,10 @@ jobs:
         working-directory: backend
         run: |
           cp .env.example .env
+          # The smoke script runs `php artisan` gates without a step env override,
+          # so persist sqlite into .env (the example defaults to pgsql).
+          sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/' .env
+          sed -i 's#^DB_DATABASE=.*#DB_DATABASE=database/database.sqlite#' .env
           php artisan key:generate
           mkdir -p storage/app storage/logs storage/framework/views storage/framework/cache storage/framework/cache/data storage/framework/sessions storage/framework/testing bootstrap/cache
           touch database/database.sqlite
