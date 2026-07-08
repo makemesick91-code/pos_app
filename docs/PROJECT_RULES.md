@@ -1055,3 +1055,45 @@ Mandatory:
 9. `payment-gateway:go-no-go` must FAIL if the gateway governance audit is NO_GO, a Sprint 31 command is missing, a Sprint 24–30 prior gate is not registered, the Sprint 30 billing layer is absent, or a required doc is missing (`PGW-R017`). See `docs/sprints/sprint-31-payment-gateway-qris-settlement-governance-evidence.md`.
 10. Sprint 31 rules (`PGW-R001..R018`) coexist with Sprint 25 `TLS-R001..R010`, Sprint 26 `TPE-R001..R012`, Sprint 27 `UEL-R001..R015`, Sprint 28 `ULR-R001..R016`, Sprint 29 `EGC-R001..R015`, and Sprint 30 `BIL-R001..R016`.
 11. GO/WATCH/NO-GO report must be evidence-backed.
+
+## Sprint 32 Plan Entitlement Runtime Enforcement & Subscription Access Control Runtime Rule
+
+Canonical foundation rules (locked in `backend/config/entitlement_governance.php`, mirrored in `backend/config/pos_foundation.php` and here, exercised by tests/gates):
+
+- `ENT-R001` — Tenant plan must resolve through the canonical `TenantPlanResolver`; runtime enforcement is enabled by default.
+- `ENT-R002` — A missing or unknown plan must fail closed, never fall back to unlimited access.
+- `ENT-R003` — Runtime entitlement checks must go through `EntitlementAccessService`, not ad-hoc controller logic.
+- `ENT-R004` — Branch creation must enforce the plan branch limit.
+- `ENT-R005` — User creation/invitation must enforce the plan user limit.
+- `ENT-R006` — Cashier/operator creation or cashier role assignment must enforce the cashier limit.
+- `ENT-R007` — Device registration/activation must enforce the plan device limit.
+- `ENT-R008` — Outlet/register creation must enforce the outlet/register limit.
+- `ENT-R009` — Premium feature routes/actions must enforce feature entitlement.
+- `ENT-R010` — Export/report routes/actions must enforce export/report entitlement.
+- `ENT-R011` — Unpaid tenants within grace may use allowed degraded access only, never a silent grace extension.
+- `ENT-R012` — Unpaid tenants past grace must be blocked or read-only per governance.
+- `ENT-R013` — Manual suspension always wins over payment/billing status.
+- `ENT-R014` — A paid invoice never automatically lifts a manual tenant suspension.
+- `ENT-R015` — Trial tenants follow trial-specific entitlements and expiry rules.
+- `ENT-R016` — Expired trials must be blocked or read-only per governance.
+- `ENT-R017` — Over-quota tenants must be denied new resource creation but existing data remains readable unless a suspended policy says otherwise.
+- `ENT-R018` — Denied entitlement access must be audit-logged with redacted metadata.
+- `ENT-R019` — Entitlement decisions must be deterministic and explainable with stable reason codes.
+- `ENT-R020` — CLI/API/admin output must not leak secrets or PII.
+- `ENT-R021` — The entitlement cache must not create stale privilege escalation.
+- `ENT-R022` — Super-admin/platform-admin operations must still be audited when a bypass is explicitly allowed.
+- `ENT-R023` — Prior Sprint 24–31 billing/payment/lifecycle semantics must not be bypassed.
+- `ENT-R024` — Go/no-go must verify runtime enforcement for all core limits.
+
+Mandatory:
+
+1. The single runtime gate is `App\Services\Entitlements\EntitlementAccessService`, which composes the Sprint 26 `TenantPlanResolver` (fail-closed on unknown plan), the Sprint 32 `EntitlementBillingStateService` (billing/subscription/lifecycle write access), the Sprint 26 `FeatureEntitlementService`, and the Sprint 26 `TenantUsageLimitService` (`ENT-R001`, `ENT-R002`, `ENT-R003`).
+2. `EntitlementBillingStateService` resolves a deterministic write-access state in strict precedence: manual suspension (Sprint 25) → subscription status (Sprint 10, trial/active/grace/expired/cancelled) → outstanding billing invoices (Sprint 30, unpaid-within-grace degraded vs unpaid-past-grace read-only). Settlement (Sprint 31) is consulted only through the trusted collection layer that produced the invoice `collection_state`, so a failed/expired/cancelled provider event can never unlock writes (`ENT-R011..R016`, `ENT-R023`).
+3. Manual suspension always denies writes and is never lifted by a paid invoice; the resolver checks the suspension source of truth first (`ENT-R013`, `ENT-R014`).
+4. Resource creation (branch/outlet/register → `branches.max`, user/cashier → `users.max`, device → `devices.max`) is denied `OVER_QUOTA` at/over the plan cap while reads of existing data still pass (`ENT-R004..R008`, `ENT-R017`). The write gate `entitlement.write` gates only mutating verbs; reads always pass.
+5. Premium feature (`entitlement.feature`), export (`entitlement.export`), and report (`entitlement.report`) middleware enforce plan entitlement and billing state and audit denials; export enforcement runs after the Sprint 27 usage meter so the established `USAGE_LIMIT_EXCEEDED` contract is preserved (`ENT-R009`, `ENT-R010`).
+6. Every denied/degraded/read_only/bypassed decision is persisted to `tenant_entitlement_decisions` with metadata redacted by `EntitlementRedactor` (drops secret/token/credential/card/KTP/NIK/phone/email/name keys); routine allowed reads are not persisted, and no secret/PII appears in config, audit, command, smoke, docs, or API output (`ENT-R018`, `ENT-R019`, `ENT-R020`).
+7. The admin surface (`tenant-billing/entitlements/*`) is `platform.admin` only and READ-ONLY; there is deliberately no admin or tenant route that mutates entitlement state (`tenant_route_can_mutate_entitlement_state_allowed=false`) (`ENT-R022`).
+8. `entitlement:go-no-go` must FAIL if the entitlement governance audit is NO_GO, a core limit is unwired, an enforcement middleware is unregistered, a Sprint 32 command is missing, a Sprint 24–31 prior gate is not registered, or a required doc is missing (`ENT-R024`). See `docs/sprints/sprint-32-plan-entitlement-runtime-enforcement-evidence.md`.
+9. Sprint 32 rules (`ENT-R001..R024`) coexist with Sprint 25 `TLS-R001..R010`, Sprint 26 `TPE-R001..R012`, Sprint 27 `UEL-R001..R015`, Sprint 28 `ULR-R001..R016`, Sprint 29 `EGC-R001..R015`, Sprint 30 `BIL-R001..R016`, and Sprint 31 `PGW-R001..R018`; suspended must remain a blocked lifecycle status.
+10. GO/WATCH/NO-GO report must be evidence-backed.
