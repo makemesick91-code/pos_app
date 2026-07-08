@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnsureDeviceIsRegistered;
 use App\Http\Middleware\EnsurePlatformAdmin;
 use App\Http\Middleware\EnsureTenantIsActive;
+use App\Http\Middleware\EnsureTenantLifecycleAllowed;
 use App\Http\Middleware\EnsureTenantSubscriptionIsActive;
 use App\Http\Middleware\SetTenantContext;
 use Illuminate\Foundation\Application;
@@ -22,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.active' => EnsureTenantIsActive::class,
             'tenant.context' => SetTenantContext::class,
             'subscription.active' => EnsureTenantSubscriptionIsActive::class,
+            'tenant.lifecycle' => EnsureTenantLifecycleAllowed::class,
             'device.registered' => EnsureDeviceIsRegistered::class,
             'platform.admin' => EnsurePlatformAdmin::class,
         ]);
