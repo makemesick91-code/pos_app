@@ -943,3 +943,39 @@ Mandatory:
 11. `usage-ledger:go-no-go` must FAIL if the detector/planner are not wired, repair apply is not governed, a runtime ledger mutation route exists, a guardrail flag is enabled, redaction is off, the report export meter is not meterable, a required doc is missing, or a prior-sprint gate (Sprint 25/26/27) is not green (`ULR-R015`).
 12. Sprint 28 rules (`ULR-R001..R016`) must coexist with Sprint 25 `TLS-R001..R010`, Sprint 26 `TPE-R001..R012`, and Sprint 27 `UEL-R001..R015` (`ULR-R016`). See `docs/sprints/sprint-28-usage-ledger-anomaly-detection-governed-repair-foundation.md`.
 13. GO/WATCH/NO-GO report must be evidence-backed.
+
+## Sprint 29 Multi-Export Route Metering Coverage & Export Governance Expansions Foundation Runtime Rule
+
+Canonical foundation rules (locked in `backend/config/export_governance.php`, mirrored here, exercised by tests/gates):
+
+- `EGC-R001` — Every export-like route must be registered in the canonical export governance registry or explicitly exempted with a reason.
+- `EGC-R002` — Export route discovery must be server-side and must be checked by governance commands.
+- `EGC-R003` — Metered export routes must run tenant lifecycle enforcement before entitlement and usage limit enforcement.
+- `EGC-R004` — Metered export routes must require a report/export entitlement before usage limit consumption.
+- `EGC-R005` — Metered export routes must use `reports.exports.monthly` as the canonical meter key unless explicitly exempted.
+- `EGC-R006` — Metered export routes must record `report.exported` usage events only after successful export.
+- `EGC-R007` — Blocked or failed export routes must not increment usage.
+- `EGC-R008` — Export metering must be idempotent and must prevent double counting during retries.
+- `EGC-R009` — Export metering metadata must be sanitized and must not store secrets, credentials, tokens, or excessive PII.
+- `EGC-R010` — Export exemptions must be explicit, documented, and visible in governance summary.
+- `EGC-R011` — Platform admin may inspect export governance coverage, but normal tenants must not see cross-tenant governance data.
+- `EGC-R012` — Export governance must not expose runtime bypass routes for metering, usage limits, or usage ledger mutation.
+- `EGC-R013` — `reports.exports.monthly` must remain meterable from the usage event ledger after Sprint 29.
+- `EGC-R014` — Sprint 29 GO requires `export-governance:go-no-go` green.
+- `EGC-R015` — Sprint 29 rules must coexist with Sprint 25 `TLS-R001..R010`, Sprint 26 `TPE-R001..R012`, Sprint 27 `UEL-R001..R015`, and Sprint 28 `ULR-R001..R016`.
+
+Mandatory:
+
+1. Every export-like route (a route whose URI ends with a `.csv/.xlsx/.xls/.pdf` extension or carries an `export/download` path segment) must appear in `config('export_governance.routes')` as `metered` or `exempt`; `ExportRouteDiscoveryService` scans the live route table server-side and `export-governance:metering-audit` FAILS on any unregistered export-like route (`EGC-R001`, `EGC-R002`).
+2. Metered export routes must carry `tenant.lifecycle` before `tenant.entitled:<feature>` before `tenant.usage.limit:reports.exports.monthly`; a suspended tenant returns `TENANT_SUSPENDED`, an unentitled tenant `FEATURE_NOT_ENTITLED`, an over-quota tenant `429 USAGE_LIMIT_EXCEEDED` (`EGC-R003`, `EGC-R004`).
+3. Metered export routes use the canonical `reports.exports.monthly` meter and record exactly one `report.exported` / `report_export` usage event only after a successful export, through `ReportExportMeteringService` (`EGC-R005`, `EGC-R006`).
+4. A blocked (suspended/unentitled/over-quota) or failed export must never reach the recorder and must never increment usage; metering is idempotent (explicit `Idempotency-Key` header or deterministic tenant+route+user+report+filter+minute fingerprint) so a retry never double counts (`EGC-R007`, `EGC-R008`).
+5. Export metering metadata must pass `SanitizesUsageEventMetadata`; no secret, token, payment credential, or raw PII is stored (`EGC-R009`).
+6. Export exemptions must carry an explicit `exempt_reason`, must keep `metering_enabled=false`, and are surfaced in the coverage summary; `export-governance:metering-audit` FAILS on an exemption without a reason (`EGC-R010`).
+7. Platform admin may inspect export governance coverage (`platform.admin` only, read-only, redacted route governance — not tenant usage); normal tenants cannot access it (`EGC-R011`).
+8. There is deliberately no runtime route that bypasses export metering, overrides the usage limit, or mutates the usage ledger; export governance adds only read-only admin visibility (`EGC-R012`).
+9. `reports.exports.monthly` remains `meterable: true` and metered from the ledger after Sprint 29 (`EGC-R013`).
+10. `export-governance:go-no-go` must FAIL if the enforcement audit is NO_GO, a Sprint 29 command is missing, a prior-sprint gate (Sprint 25/26/27/28) is not green, the meter is not meterable, or a required doc is missing (`EGC-R014`).
+11. Sprint 29 rules (`EGC-R001..R015`) must coexist with Sprint 25 `TLS-R001..R010`, Sprint 26 `TPE-R001..R012`, Sprint 27 `UEL-R001..R015`, and Sprint 28 `ULR-R001..R016` (`EGC-R015`). See `docs/sprints/sprint-29-multi-export-route-metering-coverage-export-governance-expansions.md`.
+12. Existing subscription/device, tenant lifecycle/suspension, subscription renewal/dunning, tenant plan/entitlement/usage, report export metering, usage ledger anomaly/repair, and all prior-sprint behavior must remain intact.
+13. GO/WATCH/NO-GO report must be evidence-backed.

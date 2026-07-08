@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\V1\Admin\SubscriptionRenewalSignoffController;
 use App\Http\Controllers\Api\V1\Admin\BillingCollectionActivityController;
 use App\Http\Controllers\Api\V1\Admin\BillingCollectionGoNoGoController;
 use App\Http\Controllers\Api\V1\Admin\BillingCollectionReadinessController;
+use App\Http\Controllers\Api\V1\Admin\AdminExportGovernanceController;
 use App\Http\Controllers\Api\V1\Admin\BillingCollectionRiskController;
 use App\Http\Controllers\Api\V1\Admin\BillingCollectionSignoffController;
 use App\Http\Controllers\Api\V1\Admin\BillingCollectionSummaryController;
@@ -658,6 +659,15 @@ Route::prefix('v1')->group(function () {
             Route::get('/usage-ledger/anomalies', [AdminUsageLedgerAnomalyController::class, 'index']);
             Route::get('/tenants/{tenant}/usage-ledger/anomalies', [AdminUsageLedgerAnomalyController::class, 'forTenant']);
             Route::get('/usage-ledger/repair-summary', [AdminUsageLedgerRepairSummaryController::class, 'show']);
+
+            // Sprint 29 — multi-export route metering coverage & export governance.
+            // Platform admin only, READ-ONLY (EGC-R011). Describes route governance
+            // (registered/metered/exempt export routes + discovered coverage), never
+            // tenant usage. There is deliberately NO metering-bypass, usage-limit
+            // override, or usage ledger mutation route here (EGC-R012).
+            Route::get('/export-governance/routes', [AdminExportGovernanceController::class, 'routes']);
+            Route::get('/export-governance/coverage-summary', [AdminExportGovernanceController::class, 'coverageSummary']);
+            Route::get('/export-governance/metering-summary', [AdminExportGovernanceController::class, 'meteringSummary']);
         });
     });
 
