@@ -57,6 +57,7 @@ This project is governed by:
 22. `docs/sprints/sprint-20-commercial-launch-readiness-saas-packaging-foundation.md`
 23. `docs/sprints/sprint-21-public-website-landing-page-readiness-foundation.md`
 24. `docs/sprints/sprint-22-lead-management-sales-pipeline-readiness-foundation.md`
+25. `docs/sprints/sprint-23-billing-collection-governance-foundation.md`
 
 No sprint may contradict these documents unless the canonical foundation is explicitly updated first.
 
@@ -680,3 +681,53 @@ Mandatory:
 33. No APK/AAB/keystore/signing key/secret may be committed.
 34. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, closing, release hardening, RC/UAT, deployment, field trial, monitoring, hypercare, stabilization, closure, handover, operations, commercial launch, and public website behavior from previous sprints must remain intact.
 35. GO/WATCH/NO-GO report must be evidence-backed.
+
+## Sprint 23 Billing Collection Governance Foundation Runtime Rule
+
+Starting Sprint 23, SaaS billing collection must be admin-governed, audit-logged, evidence-backed, manual-review-first, secret-safe, and gated before a GO tag is created.
+
+Mandatory:
+
+1. Billing collection readiness must not be declared GO without backend tests passing.
+2. Billing collection readiness must not be declared GO without Android CI assembleDebug passing.
+3. Billing collection readiness must not be declared GO without Android CI testDebugUnitTest passing.
+4. Billing collection readiness must not be declared GO without Sprint 13 release gates passing.
+5. Billing collection readiness must not be declared GO without Sprint 14 RC/UAT gates passing.
+6. Billing collection readiness must not be declared GO without Sprint 15 deployment/field gates passing.
+7. Billing collection readiness must not be declared GO without Sprint 16 monitoring/hypercare gates passing.
+8. Billing collection readiness must not be declared GO without Sprint 17 stabilization/defect gates passing.
+9. Billing collection readiness must not be declared GO without Sprint 18 closure/handover gates passing.
+10. Billing collection readiness must not be declared GO without Sprint 19 production operations gates passing.
+11. Billing collection readiness must not be declared GO without Sprint 20 commercial launch gates passing.
+12. Billing collection readiness must not be declared GO without Sprint 21 public website gates passing.
+13. Billing collection readiness must not be declared GO without Sprint 22 sales pipeline gates passing.
+14. SaaS billing invoices are platform-to-tenant billing records and must not be mixed with tenant POS cashier/customer payments.
+15. Billing collection must not call payment gateway APIs in Sprint 23.
+16. Billing collection must not auto-charge tenants.
+17. Billing collection must not automate subscription payment collection.
+18. Billing collection must not generate public payment links.
+19. Billing collection must not auto-suspend tenant access.
+20. Billing collection must not auto-renew subscriptions.
+21. Billing collection must not change device limits automatically.
+22. Billing collection payment evidence is manual evidence only.
+23. Manual QRIS reference is a label only and must not call QRIS runtime.
+24. Billing collection activities marked WhatsApp/email are manual notes only.
+25. Billing collection must not send real WhatsApp/email/Slack/Telegram messages.
+26. Billing collection must not integrate with real CRM or accounting APIs in Sprint 23.
+27. Admin billing APIs must be protected by auth:sanctum and platform.admin.
+28. Tenant users must not access billing collection admin APIs.
+29. Billing collection mutations must be audit-logged when audit logging exists.
+30. Billing collection resources and commands must not expose secrets.
+31. Billing collection risks with open CRITICAL/HIGH severity must force NO-GO unless a valid accepted risk is documented.
+32. Billing collection risks with open MEDIUM severity must force WATCH unless mitigated.
+33. Rejected billing collection signoff must force NO-GO.
+34. Approved-with-risk billing collection signoff must force WATCH.
+35. Invoice totals must be server-calculated from invoice lines.
+36. Payment evidence acceptance must update invoice paid/remaining status through service governance only.
+37. Rejected payment evidence must not update invoice paid amount.
+38. Voided invoices must not accept payment evidence.
+39. No Android POS business flow may be changed by Sprint 23.
+40. No Android billing/admin UI may be introduced in Sprint 23.
+41. No APK/AAB/keystore/signing key/secret may be committed.
+42. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, closing, release hardening, RC/UAT, deployment, field trial, monitoring, hypercare, stabilization, closure, handover, operations, commercial launch, public website, and sales pipeline behavior from previous sprints must remain intact.
+43. GO/WATCH/NO-GO report must be evidence-backed.

@@ -108,6 +108,34 @@ class AdminAuditLog extends Model
     public const ACTION_SALES_RISK_CLOSED = 'SALES_RISK_CLOSED';
     public const ACTION_SALES_SIGNOFF_ADDED = 'SALES_SIGNOFF_ADDED';
 
+    // Sprint 23 — billing collection governance.
+    public const ACTION_BILLING_ACCOUNT_CREATED = 'BILLING_ACCOUNT_CREATED';
+    public const ACTION_BILLING_ACCOUNT_UPDATED = 'BILLING_ACCOUNT_UPDATED';
+    public const ACTION_BILLING_CYCLE_CREATED = 'BILLING_CYCLE_CREATED';
+    public const ACTION_BILLING_CYCLE_UPDATED = 'BILLING_CYCLE_UPDATED';
+    public const ACTION_BILLING_CYCLE_TRANSITIONED = 'BILLING_CYCLE_TRANSITIONED';
+    public const ACTION_BILLING_INVOICE_CREATED = 'BILLING_INVOICE_CREATED';
+    public const ACTION_BILLING_INVOICE_UPDATED = 'BILLING_INVOICE_UPDATED';
+    public const ACTION_BILLING_INVOICE_LINE_ADDED = 'BILLING_INVOICE_LINE_ADDED';
+    public const ACTION_BILLING_INVOICE_LINE_UPDATED = 'BILLING_INVOICE_LINE_UPDATED';
+    public const ACTION_BILLING_INVOICE_ISSUED = 'BILLING_INVOICE_ISSUED';
+    public const ACTION_BILLING_INVOICE_OVERDUE = 'BILLING_INVOICE_OVERDUE';
+    public const ACTION_BILLING_INVOICE_DISPUTED = 'BILLING_INVOICE_DISPUTED';
+    public const ACTION_BILLING_INVOICE_VOIDED = 'BILLING_INVOICE_VOIDED';
+    public const ACTION_BILLING_PAYMENT_EVIDENCE_SUBMITTED = 'BILLING_PAYMENT_EVIDENCE_SUBMITTED';
+    public const ACTION_BILLING_PAYMENT_EVIDENCE_UNDER_REVIEW = 'BILLING_PAYMENT_EVIDENCE_UNDER_REVIEW';
+    public const ACTION_BILLING_PAYMENT_EVIDENCE_ACCEPTED = 'BILLING_PAYMENT_EVIDENCE_ACCEPTED';
+    public const ACTION_BILLING_PAYMENT_EVIDENCE_REJECTED = 'BILLING_PAYMENT_EVIDENCE_REJECTED';
+    public const ACTION_BILLING_PAYMENT_EVIDENCE_VOIDED = 'BILLING_PAYMENT_EVIDENCE_VOIDED';
+    public const ACTION_BILLING_ACTIVITY_CREATED = 'BILLING_ACTIVITY_CREATED';
+    public const ACTION_BILLING_ACTIVITY_COMPLETED = 'BILLING_ACTIVITY_COMPLETED';
+    public const ACTION_BILLING_ACTIVITY_CANCELLED = 'BILLING_ACTIVITY_CANCELLED';
+    public const ACTION_BILLING_RISK_CREATED = 'BILLING_RISK_CREATED';
+    public const ACTION_BILLING_RISK_UPDATED = 'BILLING_RISK_UPDATED';
+    public const ACTION_BILLING_RISK_ACCEPTED = 'BILLING_RISK_ACCEPTED';
+    public const ACTION_BILLING_RISK_CLOSED = 'BILLING_RISK_CLOSED';
+    public const ACTION_BILLING_SIGNOFF_ADDED = 'BILLING_SIGNOFF_ADDED';
+
     public const TARGET_TENANT = 'tenant';
     public const TARGET_SUBSCRIPTION = 'tenant_subscription';
     public const TARGET_DEVICE = 'registered_device';
@@ -135,6 +163,16 @@ class AdminAuditLog extends Model
     public const TARGET_SALES_LEAD_ASSIGNMENT = 'sales_lead_assignment';
     public const TARGET_SALES_PIPELINE_RISK = 'sales_pipeline_risk';
     public const TARGET_SALES_PIPELINE_SIGNOFF = 'sales_pipeline_signoff';
+
+    // Sprint 23 — billing collection governance.
+    public const TARGET_SAAS_BILLING_ACCOUNT = 'saas_billing_account';
+    public const TARGET_SAAS_BILLING_CYCLE = 'saas_billing_cycle';
+    public const TARGET_SAAS_BILLING_INVOICE = 'saas_billing_invoice';
+    public const TARGET_SAAS_BILLING_INVOICE_LINE = 'saas_billing_invoice_line';
+    public const TARGET_SAAS_BILLING_PAYMENT_EVIDENCE = 'saas_billing_payment_evidence';
+    public const TARGET_SAAS_BILLING_COLLECTION_ACTIVITY = 'saas_billing_collection_activity';
+    public const TARGET_SAAS_BILLING_COLLECTION_RISK = 'saas_billing_collection_risk';
+    public const TARGET_SAAS_BILLING_COLLECTION_SIGNOFF = 'saas_billing_collection_signoff';
 
     protected $fillable = [
         'actor_user_id',

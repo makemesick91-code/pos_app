@@ -361,6 +361,31 @@ penagihan langganan nyata. Cash (Sprint 4), QRIS (Sprint 5), struk/printer
 (Sprint 9) tetap utuh. Android build CI menjalankan assembleDebug +
 testDebugUnitTest.
 
+## Sprint 23 — Billing Collection Governance Foundation
+
+Sprint 23 establishes SaaS billing collection governance after commercial launch, public website, and sales pipeline readiness:
+
+- SaaS billing accounts
+- billing cycles
+- billing invoices
+- billing invoice lines
+- manual payment evidence
+- collection activities
+- collection risks
+- collection signoffs
+- admin billing APIs behind platform.admin
+- billing-collection:readiness
+- billing-collection:invoice-summary
+- billing-collection:collection-summary
+- billing-collection:go-no-go
+- no payment gateway automation
+- no auto-charge
+- no auto tenant suspension
+- no auto subscription renewal
+- no real billing email/WhatsApp sending
+- no public payment link
+- no Android POS business flow change
+
 ## Sprint 22 — Lead Management / Sales Pipeline Readiness Foundation
 
 Sprint 22 establishes sales pipeline readiness after public website lead interest:

@@ -1,6 +1,18 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Admin\AdminAuditLogController;
+use App\Http\Controllers\Api\V1\Admin\BillingAccountController;
+use App\Http\Controllers\Api\V1\Admin\BillingCollectionActivityController;
+use App\Http\Controllers\Api\V1\Admin\BillingCollectionGoNoGoController;
+use App\Http\Controllers\Api\V1\Admin\BillingCollectionReadinessController;
+use App\Http\Controllers\Api\V1\Admin\BillingCollectionRiskController;
+use App\Http\Controllers\Api\V1\Admin\BillingCollectionSignoffController;
+use App\Http\Controllers\Api\V1\Admin\BillingCollectionSummaryController;
+use App\Http\Controllers\Api\V1\Admin\BillingCycleController;
+use App\Http\Controllers\Api\V1\Admin\BillingInvoiceController;
+use App\Http\Controllers\Api\V1\Admin\BillingInvoiceLineController;
+use App\Http\Controllers\Api\V1\Admin\BillingInvoiceSummaryController;
+use App\Http\Controllers\Api\V1\Admin\BillingPaymentEvidenceController;
 use App\Http\Controllers\Api\V1\Admin\AdminSubscriptionPlanController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantDeviceController;
@@ -409,6 +421,64 @@ Route::prefix('v1')->group(function () {
             Route::get('/sales-pipeline/lead-summary', [SalesPipelineLeadSummaryController::class, 'index']);
             Route::get('/sales-pipeline/activity-summary', [SalesPipelineActivitySummaryController::class, 'index']);
             Route::get('/sales-pipeline/go-no-go', [SalesPipelineGoNoGoController::class, 'index']);
+
+            // Sprint 23 — billing collection governance. Platform admin only.
+            // SaaS billing collection is platform-to-tenant governance and is
+            // NEVER mixed with tenant POS cashier/customer payments. Invoices
+            // never trigger a payment gateway, never auto-charge, and never auto-
+            // suspend a tenant; paid/remaining are only mutated through payment
+            // evidence review. MANUAL_QRIS_REFERENCE and WhatsApp/email activities
+            // are labels/notes only — no real gateway/message sending. No secrets
+            // exposed.
+            Route::get('/billing/accounts', [BillingAccountController::class, 'index']);
+            Route::post('/billing/accounts', [BillingAccountController::class, 'store']);
+            Route::get('/billing/accounts/{account}', [BillingAccountController::class, 'show']);
+            Route::patch('/billing/accounts/{account}', [BillingAccountController::class, 'update']);
+
+            Route::get('/billing/cycles', [BillingCycleController::class, 'index']);
+            Route::post('/billing/cycles', [BillingCycleController::class, 'store']);
+            Route::patch('/billing/cycles/{cycle}', [BillingCycleController::class, 'update']);
+            Route::post('/billing/cycles/{cycle}/open', [BillingCycleController::class, 'open']);
+            Route::post('/billing/cycles/{cycle}/lock', [BillingCycleController::class, 'lock']);
+            Route::post('/billing/cycles/{cycle}/close', [BillingCycleController::class, 'close']);
+
+            Route::get('/billing/invoices', [BillingInvoiceController::class, 'index']);
+            Route::post('/billing/invoices', [BillingInvoiceController::class, 'store']);
+            Route::get('/billing/invoices/{invoice}', [BillingInvoiceController::class, 'show']);
+            Route::patch('/billing/invoices/{invoice}', [BillingInvoiceController::class, 'update']);
+            Route::post('/billing/invoices/{invoice}/lines', [BillingInvoiceLineController::class, 'store']);
+            Route::patch('/billing/invoices/{invoice}/lines/{line}', [BillingInvoiceLineController::class, 'update']);
+            Route::post('/billing/invoices/{invoice}/issue', [BillingInvoiceController::class, 'issue']);
+            Route::post('/billing/invoices/{invoice}/mark-overdue', [BillingInvoiceController::class, 'markOverdue']);
+            Route::post('/billing/invoices/{invoice}/mark-disputed', [BillingInvoiceController::class, 'markDisputed']);
+            Route::post('/billing/invoices/{invoice}/void', [BillingInvoiceController::class, 'void']);
+
+            Route::get('/billing/invoices/{invoice}/payment-evidences', [BillingPaymentEvidenceController::class, 'index']);
+            Route::post('/billing/invoices/{invoice}/payment-evidences', [BillingPaymentEvidenceController::class, 'store']);
+            Route::post('/billing/payment-evidences/{paymentEvidence}/under-review', [BillingPaymentEvidenceController::class, 'underReview']);
+            Route::post('/billing/payment-evidences/{paymentEvidence}/accept', [BillingPaymentEvidenceController::class, 'accept']);
+            Route::post('/billing/payment-evidences/{paymentEvidence}/reject', [BillingPaymentEvidenceController::class, 'reject']);
+            Route::post('/billing/payment-evidences/{paymentEvidence}/void', [BillingPaymentEvidenceController::class, 'void']);
+
+            Route::get('/billing/activities', [BillingCollectionActivityController::class, 'index']);
+            Route::post('/billing/activities', [BillingCollectionActivityController::class, 'store']);
+            Route::post('/billing/activities/{activity}/complete', [BillingCollectionActivityController::class, 'complete']);
+            Route::post('/billing/activities/{activity}/cancel', [BillingCollectionActivityController::class, 'cancel']);
+
+            Route::get('/billing/risks', [BillingCollectionRiskController::class, 'index']);
+            Route::post('/billing/risks', [BillingCollectionRiskController::class, 'store']);
+            Route::get('/billing/risks/{risk}', [BillingCollectionRiskController::class, 'show']);
+            Route::patch('/billing/risks/{risk}', [BillingCollectionRiskController::class, 'update']);
+            Route::post('/billing/risks/{risk}/accept-risk', [BillingCollectionRiskController::class, 'acceptRisk']);
+            Route::post('/billing/risks/{risk}/close', [BillingCollectionRiskController::class, 'close']);
+
+            Route::get('/billing/signoffs', [BillingCollectionSignoffController::class, 'index']);
+            Route::post('/billing/signoffs', [BillingCollectionSignoffController::class, 'store']);
+
+            Route::get('/billing/readiness', [BillingCollectionReadinessController::class, 'index']);
+            Route::get('/billing/invoice-summary', [BillingInvoiceSummaryController::class, 'index']);
+            Route::get('/billing/collection-summary', [BillingCollectionSummaryController::class, 'index']);
+            Route::get('/billing/go-no-go', [BillingCollectionGoNoGoController::class, 'index']);
         });
     });
 
