@@ -1190,3 +1190,52 @@ Mandatory:
 7. `android-runtime:go-no-go` must FAIL if the governance audit is NO_GO, a hard guardrail is not locked false, a Sprint 34 command is missing, a Sprint 24–33 prior gate is not registered, a runtime service is missing, or a commercial-chain service is missing (`ADR-R030`). See `docs/sprints/sprint-34-android-runtime-hardening-evidence.md`.
 8. Sprint 34 rules (`ADR-R001..R030`) coexist with Sprint 25 `TLS-R001..R010`, Sprint 26 `TPE-R001..R012`, Sprint 27 `UEL-R001..R015`, Sprint 28 `ULR-R001..R016`, Sprint 29 `EGC-R001..R015`, Sprint 30 `BIL-R001..R016`, Sprint 31 `PGW-R001..R018`, Sprint 32 `ENT-R001..R024`, and Sprint 33 `ONB-R001..R026`; the Sprint 34 `tenant_device_activations`/`tenant_android_sync_batches`/`tenant_android_sync_items` tables are additive and separate from the Sprint 10 `registered_devices` table they bridge.
 9. GO/WATCH/NO-GO report must be evidence-backed.
+
+## Sprint 35 Support Console, Tenant Operations & Incident Diagnostics Foundation Runtime Rule
+
+Sprint 35 makes the SaaS operationally supportable for real tenants WITHOUT opening the database directly: a platform-admin support console for tenant health, a deterministic diagnostic timeline, read-only billing/payment/entitlement/onboarding/device/sync viewers, a blocked/denied-action explorer, sync failure inspection, a governed device revoke/reactivate support flow, tenant-isolated incident notes, a support audit trail, and a time-bound read-only support context. It is additive and does not change Sprint 23–34 semantics.
+
+Canonical rules (mirrored in `backend/config/support_operations_governance.php`, `backend/config/pos_foundation.php` and enforced by tests + `support-ops:governance-audit`/`support-ops:go-no-go`):
+
+- `SUP-R001` — Support console must require platform.admin.
+- `SUP-R002` — Tenant health must be computed through `SupportTenantHealthService`.
+- `SUP-R003` — Support diagnostics must be tenant-isolated.
+- `SUP-R004` — Support console must be read-only by default.
+- `SUP-R005` — Support mutations must require an explicit reason code.
+- `SUP-R006` — Support actions must be audit-logged with redacted metadata.
+- `SUP-R007` — Support output must not leak secrets/PII.
+- `SUP-R008` — Support billing viewer must not mutate invoice/payment/collection state.
+- `SUP-R009` — Support payment viewer must not bypass Sprint 31 settlement rules.
+- `SUP-R010` — Support entitlement viewer must not bypass Sprint 32 enforcement.
+- `SUP-R011` — Support onboarding viewer must not mutate Sprint 33 provisioning lifecycle except governed retry/cancel if explicitly supported.
+- `SUP-R012` — Support device revoke/reactivate must use Sprint 34 services.
+- `SUP-R013` — A revoked device must remain blocked until a governed reactivation.
+- `SUP-R014` — Manual suspension always wins over support actions.
+- `SUP-R015` — A support action must not mark an invoice paid.
+- `SUP-R016` — A support action must not unlock paid entitlement.
+- `SUP-R017` — Support read-only context must be tenant-scoped and time-bound.
+- `SUP-R018` — Support impersonation is disabled by default unless governed, audited, time-bound, and read-only-safe.
+- `SUP-R019` — Support impersonation must never expose raw credentials/tokens.
+- `SUP-R020` — The diagnostic timeline must be deterministic and explainable.
+- `SUP-R021` — The blocked/denied action explorer must source from audited decisions/logs.
+- `SUP-R022` — Sync failure inspection must source from Sprint 34 sync ledgers.
+- `SUP-R023` — Support incident notes must be redacted and tenant-isolated.
+- `SUP-R024` — Support incident status changes must be audited.
+- `SUP-R025` — Support summaries must use safe reason codes.
+- `SUP-R026` — A platform-admin bypass must be explicit and audited.
+- `SUP-R027` — No tenant/public support mutation route may exist.
+- `SUP-R028` — No direct DB-state repair mutation without a governed service.
+- `SUP-R029` — Prior Sprint 24–34 gates must remain green.
+- `SUP-R030` — Go/no-go must verify tenant health, timeline, incident notes, support audit, device support flow, sync diagnostics, billing/payment/entitlement/onboarding visibility, and redaction.
+
+Mandatory:
+
+1. The whole support console lives under `api/v1/admin/support-ops/*` behind `platform.admin`; there is NO tenant/public support route and no route mutates invoice/payment/collection/settlement/entitlement/onboarding/device state through its own SQL (`SUP-R001`, `SUP-R027`, `SUP-R028`, `support_console_public_or_tenant_mutation_allowed=false`).
+2. Every read goes through a governed viewer/health service that only reads the Sprint 30/31/32/33/34 ledgers; the viewers are declared read-only and never mutate the state they read (`SUP-R008..R011`, `viewers_read_only.*=true`). Tenant health is computed only in `SupportTenantHealthService` and manual suspension always resolves to `critical` (`SUP-R002`, `SUP-R014`).
+3. Every mutation (device revoke/reactivate, incident create/update, note add, read-only context start/end) requires an enumerable `reason_code` and is written to the `tenant_support_actions` ledger AND mirrored to `admin_audit_logs`, both redacted (`SUP-R005`, `SUP-R006`, `SUP-R024`, `SUP-R026`). No support action can mark an invoice paid, unlock entitlement, bypass settlement or lift/silently reactivate a manual suspension (`SUP-R014..R016`, `support_marks_invoice_paid_allowed=false`, `support_unlocks_entitlement_allowed=false`, `support_lifts_manual_suspension_allowed=false`).
+4. Device revoke delegates to the Sprint 34 `DeviceRevocationService` (a revoked device stays blocked); reactivation is disabled by default and returns a governed not-supported response so re-activation must re-run the standard Sprint 34 activation + entitlement/device-limit gate (`SUP-R012`, `SUP-R013`, `support_reactivates_suspended_tenant_allowed=false`).
+5. Impersonation is disabled by default (`impersonation.enabled=false`); a start attempt records a governed DENIED action and never returns/persists a raw credential/token (`SUP-R018`, `SUP-R019`, `impersonation_enabled_without_governance_allowed=false`, `impersonation_exposes_raw_credentials_allowed=false`). The read-only context is time-bound (`expires_at`) and expiry is enforced by query/service check (`SUP-R017`).
+6. Incidents and notes are tenant-isolated; titles/summaries/note bodies and all metadata are redacted before persistence and no command/API/console output leaks a secret or PII (`SUP-R003`, `SUP-R007`, `SUP-R023`, `support_output_leaks_secret_or_pii_allowed=false`). The diagnostic timeline is deterministic (timestamp desc, then source, then id) and sources only from audited/ledger sources (`SUP-R020`, `SUP-R021`, `SUP-R022`).
+7. `support-ops:go-no-go` must FAIL if the governance audit is NO_GO, a hard guardrail is not locked false, a Sprint 35 command is missing, a Sprint 24–34 prior gate is not registered, a support service is missing, or a commercial-chain service is missing (`SUP-R030`). See `docs/sprints/sprint-35-support-console-tenant-operations-incident-diagnostics-evidence.md`.
+8. Sprint 35 rules (`SUP-R001..R030`) coexist with Sprint 25 `TLS-R001..R010`, Sprint 26 `TPE-R001..R012`, Sprint 27 `UEL-R001..R015`, Sprint 28 `ULR-R001..R016`, Sprint 29 `EGC-R001..R015`, Sprint 30 `BIL-R001..R016`, Sprint 31 `PGW-R001..R018`, Sprint 32 `ENT-R001..R024`, Sprint 33 `ONB-R001..R026`, and Sprint 34 `ADR-R001..R030`; the Sprint 35 `tenant_support_incidents`/`tenant_support_incident_notes`/`tenant_support_actions`/`tenant_support_sessions` tables are additive and read every prior ledger without altering it.
+9. GO/WATCH/NO-GO report must be evidence-backed.
