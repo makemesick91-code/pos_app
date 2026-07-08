@@ -1,0 +1,175 @@
+name: Sprint 34 CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  foundation-and-smoke:
+    name: Foundation & Sprint 34 smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment (sqlite)
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/' .env
+          sed -i 's#^DB_DATABASE=.*#DB_DATABASE=database/database.sqlite#' .env
+          php artisan key:generate
+          mkdir -p storage/app storage/logs storage/framework/views storage/framework/cache storage/framework/cache/data storage/framework/sessions storage/framework/testing bootstrap/cache
+          touch database/database.sqlite
+          php artisan migrate --force || true
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Foundation document exists
+        run: test -f docs/foundation/POS_ANDROID_SAAS_FOUNDATION.md
+
+      - name: Project rules lock intact (Sprint 33–34)
+        run: |
+          grep -q "Sprint 33 Tenant Onboarding, Trial Activation & First-Branch Provisioning Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 34 Android Offline, Sync, Device Activation & Cashier Runtime Hardening Foundation Runtime Rule" docs/PROJECT_RULES.md
+
+      - name: ADR rules present in config, foundation, and docs
+        run: |
+          grep -R "ADR-R001" backend/config/android_runtime_governance.php backend/config/pos_foundation.php docs/PROJECT_RULES.md
+          grep -R "ADR-R016" backend/config/android_runtime_governance.php docs/PROJECT_RULES.md
+          grep -R "ADR-R024" backend/config/android_runtime_governance.php docs/PROJECT_RULES.md
+          grep -R "ADR-R030" backend/config/android_runtime_governance.php docs/PROJECT_RULES.md
+
+      - name: Sprint 34 architecture + evidence docs exist
+        run: |
+          test -f docs/architecture/sprint-34-android-offline-sync-device-activation-cashier-runtime-hardening.md
+          test -f docs/sprints/sprint-34-android-runtime-hardening-evidence.md
+
+      - name: Sprint 34 smoke script
+        run: bash scripts/sprint34_smoke.sh
+
+      - name: No forbidden files committed
+        run: |
+          ! git ls-files | grep -E '(^|/)\.env$|\.apk$|\.aab$|(^|/)vendor/|(^|/)node_modules/|\.sqlite$|database\.sqlite|(^|/)app/build/|(^|/)\.gradle/|\.keystore$|\.jks$'
+
+  backend-tests:
+    name: Backend tests (android runtime + Sprint 0–33 regression)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+
+      - name: Validate composer
+        working-directory: backend
+        run: composer validate --strict
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment (sqlite + migrate)
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          mkdir -p storage/app storage/logs storage/framework/views storage/framework/cache storage/framework/cache/data storage/framework/sessions storage/framework/testing bootstrap/cache
+          touch database/database.sqlite
+          php artisan migrate --force || true
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Android runtime governance audit
+        working-directory: backend
+        run: php artisan android-runtime:governance-audit
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Android runtime GO / WATCH / NO-GO (Sprint 34 gate)
+        working-directory: backend
+        run: php artisan android-runtime:go-no-go --strict --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Prior sprint gates (Sprint 24–33) still green
+        working-directory: backend
+        run: |
+          php artisan onboarding:go-no-go --json
+          php artisan entitlement:go-no-go --json
+          php artisan payment-gateway:go-no-go --json
+          php artisan billing:go-no-go --json
+          php artisan export-governance:go-no-go --strict --json
+          php artisan usage-ledger:go-no-go --strict --json
+          php artisan report-export-metering:go-no-go --json
+          php artisan tenant-plan:go-no-go --json
+          php artisan tenant-lifecycle:go-no-go --json
+          php artisan subscription-renewal:go-no-go --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Backend test suite (android runtime + full regression)
+        working-directory: backend
+        run: php artisan test
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: No secret/PII leak in android runtime command output
+        working-directory: backend
+        run: |
+          ! php artisan android-runtime:go-no-go --json | grep -Ei 'password|secret|server_key=|sk_live_|private_key'
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+  android-build-test:
+    name: Android build & unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Package and SDK levels intact
+        run: |
+          grep -q "com.aishtech.poslite" android/app/build.gradle.kts
+          grep -q "minSdk = 26" android/app/build.gradle.kts
+          grep -q "targetSdk = 35" android/app/build.gradle.kts
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Unit tests
+        working-directory: android
+        run: ./gradlew testDebugUnitTest --no-daemon --stacktrace

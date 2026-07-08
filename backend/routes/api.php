@@ -11,8 +11,13 @@ use App\Http\Controllers\Api\V1\Admin\AdminPaymentGatewayIntentController;
 use App\Http\Controllers\Api\V1\Admin\AdminReportExportMeteringSummaryController;
 use App\Http\Controllers\Api\V1\Admin\AdminSubscriptionPlanController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantController;
+use App\Http\Controllers\Api\V1\Admin\AdminAndroidRuntimeController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantDeviceController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantEntitlementController;
+use App\Http\Controllers\Api\V1\Android\AndroidRuntimePolicyController;
+use App\Http\Controllers\Api\V1\Android\AndroidSyncController;
+use App\Http\Controllers\Api\V1\Android\CashierRuntimeSessionController;
+use App\Http\Controllers\Api\V1\Android\DeviceActivationController as AndroidDeviceActivationController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantLifecycleController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantLifecycleSuspensionSummaryController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantOnboardingController;
@@ -174,6 +179,32 @@ Route::prefix('v1')->group(function () {
             Route::get('/devices', [RegisteredDeviceController::class, 'index']);
             Route::post('/devices/{device}/revoke', [RegisteredDeviceController::class, 'revoke']);
 
+            // Sprint 34 — Android Offline, Sync, Device Activation & Cashier Runtime
+            // Hardening. Activation + runtime policy are NOT behind device.registered
+            // (the device is not registered yet / may be blocked, but must still read
+            // its policy). Activation is idempotent + entitlement-gated inside
+            // DeviceActivationService and never returns the raw token (ADR-R002/R003).
+            Route::prefix('android')->group(function () {
+                Route::post('/device/activate', [AndroidDeviceActivationController::class, 'activate']);
+                Route::get('/runtime/policy', [AndroidRuntimePolicyController::class, 'show']);
+
+                // Post-activation runtime. Requires an ACTIVE registered device
+                // (X-Device-UUID). Every write/sync resolves the canonical runtime
+                // gate (AndroidRuntimeAccessService) which enforces manual suspension
+                // (423), unpaid-past-grace (402), trial expired, over-limit and
+                // register/device consistency — fail closed (ADR-R007..R010/R026/R027).
+                // Sync is idempotent + duplicate-safe (ADR-R013/R014). No route here
+                // marks an invoice paid or unlocks entitlement (ADR-R023/R024).
+                Route::middleware('device.registered')->group(function () {
+                    Route::post('/device/heartbeat', [AndroidDeviceActivationController::class, 'heartbeat']);
+                    Route::get('/cashier/session', [CashierRuntimeSessionController::class, 'show']);
+                    Route::post('/cashier/session/start', [CashierRuntimeSessionController::class, 'start']);
+                    Route::post('/cashier/session/end', [CashierRuntimeSessionController::class, 'end']);
+                    Route::post('/sync/batch', [AndroidSyncController::class, 'store']);
+                    Route::get('/sync/batch/{clientBatchId}', [AndroidSyncController::class, 'show']);
+                });
+            });
+
             // Sprint 10 — protected business APIs. Beyond an active user/tenant,
             // the tenant subscription must be allowed (backend-computed) AND the
             // request must come from an ACTIVE registered device (X-Device-UUID).
@@ -301,6 +332,17 @@ Route::prefix('v1')->group(function () {
 
             Route::get('/tenants/{tenant}/devices', [AdminTenantDeviceController::class, 'index']);
             Route::post('/tenants/{tenant}/devices/{device}/revoke', [AdminTenantDeviceController::class, 'revoke']);
+
+            // Sprint 34 — Android runtime support surface. Platform-admin only,
+            // read-only except device-activation revoke (audited). Output redacted;
+            // no route unlocks billing/entitlement or marks an invoice paid.
+            Route::get('/android-runtime/devices', [AdminAndroidRuntimeController::class, 'devices']);
+            Route::get('/android-runtime/devices/{activation}', [AdminAndroidRuntimeController::class, 'deviceShow']);
+            Route::post('/android-runtime/devices/{activation}/revoke', [AdminAndroidRuntimeController::class, 'revoke']);
+            Route::get('/android-runtime/sync-batches', [AdminAndroidRuntimeController::class, 'syncBatches']);
+            Route::get('/android-runtime/sync-batches/{batch}', [AdminAndroidRuntimeController::class, 'syncBatchShow']);
+            Route::get('/android-runtime/conflicts', [AdminAndroidRuntimeController::class, 'conflicts']);
+            Route::get('/android-runtime/governance', [AdminAndroidRuntimeController::class, 'governance']);
 
             Route::get('/subscription-plans', [AdminSubscriptionPlanController::class, 'index']);
             Route::post('/subscription-plans', [AdminSubscriptionPlanController::class, 'store']);

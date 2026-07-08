@@ -1,7 +1,12 @@
 package com.aishtech.poslite.core.network
 
+import com.aishtech.poslite.data.remote.dto.ActivateDeviceRequestDto
+import com.aishtech.poslite.data.remote.dto.AndroidRuntimePolicyResponseDto
 import com.aishtech.poslite.data.remote.dto.CategorySyncResponse
 import com.aishtech.poslite.data.remote.dto.CreateDailyClosingRequestDto
+import com.aishtech.poslite.data.remote.dto.DeviceActivationResponseDto
+import com.aishtech.poslite.data.remote.dto.SyncBatchRequestDto
+import com.aishtech.poslite.data.remote.dto.SyncBatchResponseDto
 import com.aishtech.poslite.data.remote.dto.CreateQrisPaymentRequestDto
 import com.aishtech.poslite.data.remote.dto.CreateSaleRequestDto
 import com.aishtech.poslite.data.remote.dto.CurrentStockResponseDto
@@ -150,4 +155,20 @@ interface PosApiService {
 
     @POST("api/v1/devices/{device}/revoke")
     suspend fun revokeDevice(@Path("device") deviceId: Long): Response<RegisteredDeviceResponseDto>
+
+    // Sprint 34 — Android offline/sync/device-activation/cashier runtime hardening.
+    // Activation is idempotent + entitlement-gated server-side; the app never marks
+    // an invoice paid or unlocks entitlement locally. Sync is idempotent by a
+    // client-generated batch id and per-item client id.
+    @POST("api/v1/android/device/activate")
+    suspend fun activateDevice(@Body request: ActivateDeviceRequestDto): Response<DeviceActivationResponseDto>
+
+    @POST("api/v1/android/device/heartbeat")
+    suspend fun androidDeviceHeartbeat(): Response<DeviceActivationResponseDto>
+
+    @GET("api/v1/android/runtime/policy")
+    suspend fun getAndroidRuntimePolicy(): Response<AndroidRuntimePolicyResponseDto>
+
+    @POST("api/v1/android/sync/batch")
+    suspend fun submitSyncBatch(@Body request: SyncBatchRequestDto): Response<SyncBatchResponseDto>
 }
