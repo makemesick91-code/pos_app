@@ -90,15 +90,20 @@ class TenantPlanResolutionTest extends TestCase
         $this->assertTrue($decision->unlimited);
     }
 
-    public function test_deferred_limit_is_reported_explicitly_not_a_silent_zero(): void
+    public function test_report_export_meter_is_live_from_ledger_sprint_27(): void
     {
+        // Sprint 27 closed the previously deferred reports.exports.monthly meter:
+        // current usage is now derived from the usage event ledger (a real int),
+        // never a silent null. The default enterprise plan is unlimited, so an
+        // export is always allowed but still counted.
         $tenant = Tenant::factory()->create();
 
         $decision = app(TenantUsageLimitService::class)->canUse($tenant, 'reports.exports.monthly', 1);
 
         $this->assertTrue($decision->allowed);
-        $this->assertFalse($decision->meterable);
-        $this->assertNull($decision->current);
+        $this->assertTrue($decision->unlimited);
+        $this->assertNotNull($decision->current);
+        $this->assertSame(0, $decision->current);
     }
 
     public function test_constrained_plan_blocks_when_meter_reaches_cap(): void

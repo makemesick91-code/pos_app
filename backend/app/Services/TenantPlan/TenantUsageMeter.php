@@ -8,6 +8,7 @@ use App\Models\Sale;
 use App\Models\Store;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\UsageEventLedger\ReportExportMeteringService;
 
 /**
  * Sprint 26 — computes a tenant's CURRENT usage for a limit key from real DB
@@ -16,9 +17,17 @@ use App\Models\User;
  * — no fragile counters are stored. A limit that is declared but not yet
  * meterable returns null so callers can report "not meterable yet" explicitly
  * rather than a silent zero.
+ *
+ * Sprint 27 — the previously deferred `reports.exports.monthly` meter is now live:
+ * its current usage is derived from the append-only tenant usage event ledger
+ * (UEL-R006), so a report export limit can actually be enforced.
  */
 class TenantUsageMeter
 {
+    public function __construct(
+        private readonly ReportExportMeteringService $reportExportMetering,
+    ) {}
+
     /**
      * @return int|null Current usage, or null when the limit is not meterable.
      */
@@ -36,6 +45,7 @@ class TenantUsageMeter
                 ->where('tenant_id', $tenant->id)
                 ->where('created_at', '>=', now()->startOfMonth())
                 ->count(),
+            'reports.exports.monthly' => $this->reportExportMetering->currentMonthlyUsage($tenant),
             default => null,
         };
     }
