@@ -28,6 +28,9 @@ use App\Http\Controllers\Api\V1\Admin\BillingPaymentEvidenceController;
 use App\Http\Controllers\Api\V1\Admin\AdminSubscriptionPlanController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantDeviceController;
+use App\Http\Controllers\Api\V1\Admin\AdminTenantLifecycleController;
+use App\Http\Controllers\Api\V1\Admin\AdminTenantLifecycleSuspensionSummaryController;
+use App\Http\Controllers\Api\V1\Admin\AdminTenantSuspensionController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantSubscriptionController;
 use App\Http\Controllers\Api\V1\Admin\PilotDefectBurnDownController;
 use App\Http\Controllers\Api\V1\Admin\PilotDefectController;
@@ -151,7 +154,13 @@ Route::prefix('v1')->group(function () {
             // Expired/cancelled/suspended subscriptions or missing/revoked devices
             // are blocked here; auth + subscription status + device management
             // above remain reachable.
-            Route::middleware(['subscription.active', 'device.registered'])->group(function () {
+            //
+            // Sprint 25 — tenant.lifecycle blocks operational access when the
+            // tenant is manually suspended (server-side authoritative; 423 Locked
+            // with TENANT_SUSPENDED). Manual suspension has precedence over
+            // subscription renewal/dunning automation. The auth/status/device/
+            // tenant-context routes above are the explicit enforcement allowlist.
+            Route::middleware(['subscription.active', 'tenant.lifecycle', 'device.registered'])->group(function () {
                 // Sprint 2 — tenant-isolated product catalog.
                 Route::apiResource('product-categories', ProductCategoryController::class);
                 Route::apiResource('products', ProductController::class);
@@ -553,6 +562,19 @@ Route::prefix('v1')->group(function () {
             Route::get('/subscription-renewal/candidate-summary', [SubscriptionRenewalCandidateSummaryController::class, 'index']);
             Route::get('/subscription-renewal/dunning-summary', [SubscriptionDunningSummaryController::class, 'index']);
             Route::get('/subscription-renewal/go-no-go', [SubscriptionRenewalGoNoGoController::class, 'index']);
+
+            // Sprint 25 — tenant lifecycle enforcement & manual suspension
+            // governance. Platform admin only. Manual suspension/lift is the only
+            // way to set/clear a manual suspension; both are idempotent and
+            // audit-logged. Manual suspension has precedence over subscription
+            // renewal/dunning automation and is enforced server-side by the
+            // tenant.lifecycle guard on operational routes. Nothing here charges,
+            // hard-deletes a tenant, auto-suspends/reactivates, or sends a real
+            // message.
+            Route::get('/tenants/{tenant}/lifecycle', [AdminTenantLifecycleController::class, 'show']);
+            Route::post('/tenants/{tenant}/suspend', [AdminTenantSuspensionController::class, 'suspend']);
+            Route::post('/tenants/{tenant}/lift-suspension', [AdminTenantSuspensionController::class, 'lift']);
+            Route::get('/tenant-lifecycle/suspension-summary', [AdminTenantLifecycleSuspensionSummaryController::class, 'show']);
         });
     });
 

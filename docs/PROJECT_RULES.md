@@ -59,6 +59,7 @@ This project is governed by:
 24. `docs/sprints/sprint-22-lead-management-sales-pipeline-readiness-foundation.md`
 25. `docs/sprints/sprint-23-billing-collection-governance-foundation.md`
 26. `docs/sprints/sprint-24-subscription-renewal-dunning-governance-foundation.md`
+27. `docs/sprints/sprint-25-tenant-lifecycle-enforcement-manual-suspension-governance-foundation.md`
 
 No sprint may contradict these documents unless the canonical foundation is explicitly updated first.
 
@@ -784,3 +785,51 @@ Mandatory:
 43. No APK/AAB/keystore/signing key/secret may be committed.
 44. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, closing, release hardening, RC/UAT, deployment, field trial, monitoring, hypercare, stabilization, closure, handover, operations, commercial launch, public website, sales pipeline, and billing collection behavior from previous sprints must remain intact.
 45. GO/WATCH/NO-GO report must be evidence-backed.
+
+## Sprint 25 Tenant Lifecycle Enforcement & Manual Suspension Governance Foundation Runtime Rule
+
+Starting Sprint 25, tenant lifecycle status and manual suspension must be server-side authoritative, admin-governed, audit-logged, precedence-safe over automation, secret-safe, and gated before a GO tag is created.
+
+Canonical tenant lifecycle rules (locked in `config/tenant_lifecycle.php`):
+
+- `TLS-R001` — Tenant lifecycle status must have a single server-side source of truth.
+- `TLS-R002` — Manual suspension may only be created/lifted by platform admin authorization.
+- `TLS-R003` — Suspended tenants must be blocked by server-side runtime enforcement, not by client UI only.
+- `TLS-R004` — Manual suspension has precedence over subscription renewal and dunning automation.
+- `TLS-R005` — Suspension mutation must be audit-logged with redacted metadata.
+- `TLS-R006` — Suspension reason is mandatory and must not contain secrets or sensitive payment credentials.
+- `TLS-R007` — Tenant-scoped routes must use lifecycle guard or an explicitly documented allowlist.
+- `TLS-R008` — Platform/admin routes, billing callbacks, and health routes must not be accidentally locked by tenant suspension.
+- `TLS-R009` — Android/POS client must handle suspension responses gracefully but must never be the enforcement authority.
+- `TLS-R010` — Sprint 25 GO requires `tenant-lifecycle:go-no-go` green.
+
+Mandatory:
+
+1. Tenant lifecycle status must be computed only by `TenantLifecycleService`; controllers must not recompute it ad-hoc.
+2. The lifecycle status vocabulary is onboarding, active, grace, past_due, suspended, cancelled, archived.
+3. Manual suspension is the only writer of `tenant_manual_suspensions`; an ACTIVE row means the tenant is suspended.
+4. Manual suspend/lift must be platform.admin-only and protected by auth:sanctum.
+5. Manual suspend/lift must be idempotent — re-suspending or lifting an already-in-state tenant is a safe no-op.
+6. Suspension reason is mandatory; the reason is sanitized so no secret/token/payment credential is persisted.
+7. Every suspend/lift must append a `tenant_lifecycle_events` record and an `admin_audit_logs` record with redacted metadata.
+8. Suspended tenants must be blocked from operational (POS) routes by the `tenant.lifecycle` server-side guard (423 Locked, `TENANT_SUSPENDED`).
+9. The enforcement allowlist (health, auth login/logout/me, tenant-context, subscription status, device register/heartbeat/list, billing webhook) must remain reachable while suspended.
+10. Platform/admin routes must never be locked by tenant suspension.
+11. Subscription renewal and dunning automation must not auto-suspend a tenant.
+12. Subscription renewal and dunning automation must not auto-reactivate or lift a manual suspension.
+13. Manual suspension has precedence over renewal/dunning automation; only an explicit platform-admin lift clears it.
+14. The Android/POS client must handle a `TENANT_SUSPENDED` response gracefully but must never be the enforcement authority.
+15. Tenant lifecycle readiness must not be declared GO without Sprint 24 subscription renewal gates passing.
+16. Tenant lifecycle readiness must not be declared GO without all cumulative Sprint 13–24 gate commands registered.
+17. `tenant-lifecycle:enforcement-audit` must FAIL if any operational tenant route is missing the lifecycle guard.
+18. `tenant-lifecycle:readiness` and `tenant-lifecycle:go-no-go` must FAIL if any automation guardrail flag is enabled.
+19. Tenant lifecycle resources and commands must not expose secrets.
+20. Sprint 25 must not implement automatic tenant suspension or reactivation.
+21. Sprint 25 must not implement tenant hard-delete.
+22. Sprint 25 must not implement a public tenant suspension API.
+23. Sprint 25 must not send real WhatsApp/email/SMS/Slack messages.
+24. No Android POS business flow may be changed by Sprint 25.
+25. No Android tenant-lifecycle/admin UI may be introduced in Sprint 25.
+26. No APK/AAB/keystore/signing key/secret may be committed.
+27. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, closing, release hardening, RC/UAT, deployment, field trial, monitoring, hypercare, stabilization, closure, handover, operations, commercial launch, public website, sales pipeline, billing collection, and subscription renewal/dunning behavior from previous sprints must remain intact.
+28. GO/WATCH/NO-GO report must be evidence-backed.

@@ -93,9 +93,10 @@ check "CashierActivity exists" test -f "$APP_SRC/feature/cashier/CashierActivity
 check "CartRepositoryTest exists" test -f android/app/src/test/java/com/aishtech/poslite/CartRepositoryTest.kt
 check "CatalogMappingTest exists" test -f android/app/src/test/java/com/aishtech/poslite/CatalogMappingTest.kt
 
-# No-Go: forbidden Sprint 3 runtime features must be absent
-check "no QRIS runtime" bash -c '! grep -Rqsi "qris" android/app/src/main/java/com/aishtech/poslite'
-check "no printer runtime" bash -c '! grep -Rqsi "printer\|bluetoothprint" android/app/src/main/java/com/aishtech/poslite'
+# Security: payment gateway secrets must never live in the Android source. (The
+# earlier Sprint-3-scoped "no QRIS runtime" / "no printer runtime" negative
+# assertions were removed: QRIS shipped in Sprint 5 and printer/receipt in
+# Sprint 6, so those features are now legitimately present in later sprints.)
 check "no payment gateway key" bash -c '! grep -Rqsi "midtrans\|xendit\|SERVER_KEY\|CLIENT_KEY" android/app/src/main/java/com/aishtech/poslite'
 
 # Backend compatibility (routes still wired)

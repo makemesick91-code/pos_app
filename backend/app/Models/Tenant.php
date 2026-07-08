@@ -105,6 +105,28 @@ class Tenant extends Model
         return $this->hasMany(TenantOnboardingRun::class);
     }
 
+    public function manualSuspensions(): HasMany
+    {
+        return $this->hasMany(TenantManualSuspension::class);
+    }
+
+    public function lifecycleEvents(): HasMany
+    {
+        return $this->hasMany(TenantLifecycleEvent::class);
+    }
+
+    /**
+     * The tenant's currently ACTIVE manual suspension, if any. This is the
+     * authoritative manual-suspension signal read by TenantLifecycleService.
+     */
+    public function activeManualSuspension(): ?TenantManualSuspension
+    {
+        return $this->manualSuspensions()
+            ->where('status', TenantManualSuspension::STATUS_ACTIVE)
+            ->orderByDesc('id')
+            ->first();
+    }
+
     /**
      * The tenant's most recent subscription row. The authoritative allowed/
      * blocked decision is computed by SubscriptionStatusService — this is only

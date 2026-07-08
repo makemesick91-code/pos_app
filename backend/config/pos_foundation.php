@@ -147,6 +147,15 @@ return [
         'no_auto_subscription_renewal_sprint_24' => true,
         'no_real_message_sending_sprint_24' => true,
         'no_subscription_renewal_android_ui_sprint_24' => true,
+        'tenant_lifecycle_source_of_truth_required' => true,
+        'manual_suspension_platform_admin_only_sprint_25' => true,
+        'tenant_lifecycle_server_side_enforcement_required_sprint_25' => true,
+        'manual_suspension_precedence_over_automation_sprint_25' => true,
+        'tenant_lifecycle_go_no_go_required' => true,
+        'no_auto_tenant_suspension_sprint_25' => true,
+        'no_auto_tenant_reactivation_sprint_25' => true,
+        'no_client_side_tenant_enforcement_authority_sprint_25' => true,
+        'no_tenant_lifecycle_android_ui_sprint_25' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
@@ -174,5 +183,6 @@ return [
         'sprint_22' => 'Lead Management / Sales Pipeline Readiness Foundation',
         'sprint_23' => 'Billing Collection Governance Foundation',
         'sprint_24' => 'Subscription Renewal & Dunning Governance Foundation',
+        'sprint_25' => 'Tenant Lifecycle Enforcement & Manual Suspension Governance Foundation',
     ],
 ];
