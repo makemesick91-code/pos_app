@@ -1,0 +1,204 @@
+name: Sprint 29 CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  foundation-and-smoke:
+    name: Foundation & Sprint 29 smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment (sqlite)
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          mkdir -p storage/app storage/logs storage/framework/views storage/framework/cache storage/framework/cache/data storage/framework/sessions storage/framework/testing bootstrap/cache
+
+      - name: Foundation document exists
+        run: test -f docs/foundation/POS_ANDROID_SAAS_FOUNDATION.md
+
+      - name: Project rules lock intact (Sprint 0–29)
+        run: |
+          grep -q "Sprint 25 Tenant Lifecycle Enforcement & Manual Suspension Governance Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 26 Tenant Plan, Feature Entitlement & Usage Limit Governance Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 27 Report Export Metering & Usage Event Ledger Governance Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 28 Usage Ledger Anomaly Detection & Governed Repair Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 29 Multi-Export Route Metering Coverage & Export Governance Expansions Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "TLS-R004" docs/PROJECT_RULES.md
+          grep -q "TPE-R012" docs/PROJECT_RULES.md
+          grep -q "UEL-R015" docs/PROJECT_RULES.md
+          grep -q "ULR-R016" docs/PROJECT_RULES.md
+          grep -q "EGC-R003" docs/PROJECT_RULES.md
+          grep -q "EGC-R008" docs/PROJECT_RULES.md
+          grep -q "EGC-R015" docs/PROJECT_RULES.md
+
+      - name: EGC rules present in config
+        run: |
+          grep -R "EGC-R003" backend/config docs
+          grep -R "EGC-R008" backend/config docs
+          grep -R "EGC-R015" backend/config docs
+
+      - name: Sprint 29 smoke script
+        run: bash scripts/sprint29_smoke.sh
+
+      - name: No forbidden files committed
+        run: |
+          ! git ls-files | grep -E '(^|/)\.env$|\.apk$|\.aab$|(^|/)vendor/|(^|/)node_modules/|\.sqlite$|database\.sqlite|(^|/)app/build/|(^|/)\.gradle/|\.keystore$|\.jks$'
+
+  backend-tests:
+    name: Backend tests (export-governance gate + Sprint 0–28 regression)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+
+      - name: Validate composer
+        working-directory: backend
+        run: composer validate --strict
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment (sqlite + migrate)
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          mkdir -p storage/app storage/logs storage/framework/views storage/framework/cache storage/framework/cache/data storage/framework/sessions storage/framework/testing bootstrap/cache
+          touch database/database.sqlite
+          php artisan migrate --force || true
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Run tests
+        working-directory: backend
+        run: php artisan test
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+  export-governance-gate:
+    name: Export governance coverage gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment (sqlite + migrate)
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          mkdir -p storage/app storage/logs storage/framework/views storage/framework/cache storage/framework/cache/data storage/framework/sessions storage/framework/testing bootstrap/cache
+          touch database/database.sqlite
+          php artisan migrate --force || true
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Export-like route scan (strict, no unregistered routes)
+        working-directory: backend
+        run: php artisan export-governance:route-scan --strict --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Coverage summary (read-only)
+        working-directory: backend
+        run: php artisan export-governance:coverage-summary --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Metering audit (fail on any gap)
+        working-directory: backend
+        run: php artisan export-governance:metering-audit --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Export governance GO / WATCH / NO-GO (Sprint 29 gate)
+        working-directory: backend
+        run: php artisan export-governance:go-no-go --strict --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Prior sprint gates (Sprint 25–28) still green
+        working-directory: backend
+        run: |
+          php artisan usage-ledger:go-no-go --strict --json
+          php artisan report-export-metering:go-no-go --json
+          php artisan tenant-plan:go-no-go --json
+          php artisan tenant-lifecycle:go-no-go --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+  android-build-test:
+    name: Android build & unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Package and SDK levels intact
+        run: |
+          grep -q "com.aishtech.poslite" android/app/build.gradle.kts
+          grep -q "minSdk = 26" android/app/build.gradle.kts
+          grep -q "targetSdk = 35" android/app/build.gradle.kts
+
+      - name: Android release readiness
+        run: bash scripts/android_release_readiness.sh
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Run unit tests
+        working-directory: android
+        run: ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace

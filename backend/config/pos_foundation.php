@@ -182,6 +182,15 @@ return [
         'no_usage_ledger_mutation_route_sprint_28' => true,
         'effective_usage_never_negative_sprint_28' => true,
         'usage_ledger_go_no_go_required_sprint_28' => true,
+        'export_route_registry_source_of_truth_required_sprint_29' => true,
+        'export_route_discovery_server_side_required_sprint_29' => true,
+        'metered_export_lifecycle_precedes_entitlement_usage_sprint_29' => true,
+        'export_metering_idempotent_no_double_count_sprint_29' => true,
+        'blocked_or_failed_export_does_not_count_sprint_29' => true,
+        'export_exemptions_require_reason_sprint_29' => true,
+        'no_export_metering_bypass_route_sprint_29' => true,
+        'no_client_side_export_authority_sprint_29' => true,
+        'export_governance_go_no_go_required_sprint_29' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
@@ -213,5 +222,6 @@ return [
         'sprint_26' => 'Tenant Plan, Feature Entitlement & Usage Limit Governance Foundation',
         'sprint_27' => 'Report Export Metering & Usage Event Ledger Governance Foundation',
         'sprint_28' => 'Usage Ledger Anomaly Detection & Governed Repair Foundation',
+        'sprint_29' => 'Multi-Export Route Metering Coverage & Export Governance Expansions',
     ],
 ];
