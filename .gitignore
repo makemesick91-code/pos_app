@@ -52,3 +52,4 @@ android/app/build/
 android/local.properties
 android/*.apk
 android/*.aab
+graphify-out

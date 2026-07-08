@@ -979,3 +979,42 @@ Mandatory:
 11. Sprint 29 rules (`EGC-R001..R015`) must coexist with Sprint 25 `TLS-R001..R010`, Sprint 26 `TPE-R001..R012`, Sprint 27 `UEL-R001..R015`, and Sprint 28 `ULR-R001..R016` (`EGC-R015`). See `docs/sprints/sprint-29-multi-export-route-metering-coverage-export-governance-expansions.md`.
 12. Existing subscription/device, tenant lifecycle/suspension, subscription renewal/dunning, tenant plan/entitlement/usage, report export metering, usage ledger anomaly/repair, and all prior-sprint behavior must remain intact.
 13. GO/WATCH/NO-GO report must be evidence-backed.
+
+## Sprint 30 Billing Invoice Generation & Payment Collection Governance Foundation Runtime Rule
+
+Canonical foundation rules (locked in `backend/config/billing_governance.php`, mirrored here, exercised by tests/gates):
+
+- `BIL-R001` — Billing periods must be resolved by a canonical server-side billing period service.
+- `BIL-R002` — Tenant invoice generation must be idempotent per tenant and billing period.
+- `BIL-R003` — Tenant invoices must be generated from the tenant active plan pricing source of truth.
+- `BIL-R004` — Invoice status and payment collection state must use controlled lifecycle services, not ad-hoc controller strings.
+- `BIL-R005` — Duplicate active invoices for the same tenant and billing period are forbidden.
+- `BIL-R006` — Invoice and payment metadata must be redacted and must not store secrets, tokens, credentials, or excessive PII.
+- `BIL-R007` — Billing/payment mutations must be platform-admin only unless explicitly governed otherwise.
+- `BIL-R008` — Billing/payment mutations must be audit-logged with reason/actor where applicable.
+- `BIL-R009` — Payment records must be idempotent and must not overstate collected revenue.
+- `BIL-R010` — Failed or cancelled payments must not mark invoices paid.
+- `BIL-R011` — Paid invoices must not automatically lift manual tenant suspension.
+- `BIL-R012` — Subscription renewal and dunning services may read billing state but must not bypass invoice/payment lifecycle services.
+- `BIL-R013` — Plan price changes must not mutate already issued invoices without a governed adjustment flow.
+- `BIL-R014` — Billing invoice generation must not weaken tenant lifecycle, entitlement, usage-limit, usage-ledger, repair, or export-governance gates.
+- `BIL-R015` — Sprint 30 GO requires `billing:go-no-go` green.
+- `BIL-R016` — Sprint 30 rules must coexist with Sprint 25 `TLS-R001..R010`, Sprint 26 `TPE-R001..R012`, Sprint 27 `UEL-R001..R015`, Sprint 28 `ULR-R001..R016`, and Sprint 29 `EGC-R001..R015`.
+
+Mandatory:
+
+1. Every billing period is resolved by `BillingPeriodService` (`period_key` = `YYYY-MM`, civil-day-aligned `period_start`/`period_end`, `due_at` = `period_start` + configured `due_days`); no controller/command computes periods ad-hoc (`BIL-R001`).
+2. `TenantInvoiceService::generate()` is idempotent per tenant + billing period — a live (non-void, non-cancelled) invoice is returned unchanged on retry — and a `UNIQUE(tenant_id, period_key, source)` index plus a unique `idempotency_key` back it in the schema (`BIL-R002`, `BIL-R005`).
+3. Invoice amounts come from `config('billing_governance.pricing')` resolved against the tenant's active Sprint 26 plan; a tenant with no configured/active pricing is refused with a governance error (`BILLING_NO_PLAN_PRICING`), never a silent zero; only an explicitly `free` plan yields a zero total (`BIL-R003`).
+4. Invoice `status` (draft|issued|void|cancelled) and `collection_state` (not_due|pending|paid|failed|overdue|written_off|cancelled) move only through `TenantInvoiceStatusService`; illegal transitions throw, and a settled invoice cannot be void/cancelled without a governed reversal (`BIL-R004`).
+5. Invoice/payment `metadata` passes `BillingMetadataSanitizer` (drops secret/token/credential/card/KTP/NIK-like keys, truncates long strings); no secrets, gateway payloads, or raw PII are persisted (`BIL-R006`).
+6. All billing mutations (generate, void, cancel, record payment, mark failed, cancel payment) are `platform.admin` only and audit-logged via `BillingAuditService` → `AdminAuditLogger`, with a mandatory reason on payment mark-failed/cancel (`BIL-R007`, `BIL-R008`).
+7. `TenantPaymentCollectionService::record()` is idempotent, rejects non-positive amounts, and (unless explicitly configured) rejects overpayment and partial payment, so collected revenue is never overstated (`BIL-R009`).
+8. A failed or cancelled payment never counts toward `collectedAmount()`, so it never marks an invoice paid; the invoice collection state is always recomputed from the payments that still count (`BIL-R010`).
+9. Recording a payment / marking an invoice paid never touches tenant lifecycle — a manually suspended tenant stays suspended (`BIL-R011`); subscription renewal/dunning may read invoice/collection summaries but must mutate only through the invoice/payment services (`BIL-R012`).
+10. A plan price change does not mutate an already issued invoice; the stored `total_amount` is fixed at generation (`BIL-R013`).
+11. There is deliberately no tenant/public route that can create or mutate invoice/payment state; billing is platform-admin only, and no billing change weakens any Sprint 25–29 gate (`BIL-R014`).
+12. `billing:go-no-go` must FAIL if the billing governance audit is NO_GO, a Sprint 30 command is missing, a prior-sprint gate (Sprint 24–29) is not green, or a required doc is missing (`BIL-R015`).
+13. Sprint 30 rules (`BIL-R001..R016`) coexist with Sprint 25 `TLS-R001..R010`, Sprint 26 `TPE-R001..R012`, Sprint 27 `UEL-R001..R015`, Sprint 28 `ULR-R001..R016`, and Sprint 29 `EGC-R001..R015` (`BIL-R016`). See `docs/sprints/sprint-30-billing-invoice-generation-payment-collection-governance-foundation.md`.
+14. Android/UI is not a billing authority; server-side generation and collection state are authoritative.
+15. GO/WATCH/NO-GO report must be evidence-backed.
