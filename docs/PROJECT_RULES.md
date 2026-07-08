@@ -1143,3 +1143,50 @@ Mandatory:
 8. `onboarding:go-no-go` must FAIL if the onboarding governance audit is NO_GO, a hard guardrail is not locked false, a Sprint 33 command is missing, a Sprint 24–32 prior gate is not registered, the central orchestrator wiring is incomplete, or a commercial-chain service is missing (`ONB-R026`). See `docs/sprints/sprint-33-tenant-onboarding-trial-activation-first-branch-provisioning-evidence.md`.
 9. Sprint 33 rules (`ONB-R001..R026`) coexist with Sprint 25 `TLS-R001..R010`, Sprint 26 `TPE-R001..R012`, Sprint 27 `UEL-R001..R015`, Sprint 28 `ULR-R001..R016`, Sprint 29 `EGC-R001..R015`, Sprint 30 `BIL-R001..R016`, Sprint 31 `PGW-R001..R018`, and Sprint 32 `ENT-R001..R024`; the Sprint 33 `tenant_provisioning_runs`/`tenant_provisioning_steps` tables are separate from the Sprint 12 `tenant_onboarding_runs` demo-data table.
 10. GO/WATCH/NO-GO report must be evidence-backed.
+
+## Sprint 34 Android Offline, Sync, Device Activation & Cashier Runtime Hardening Foundation Runtime Rule
+
+Sprint 34 hardens the Android POS runtime for real UMKM field use: governed, idempotent device/register activation; a stable cashier runtime session; a bounded, deterministic offline queue; and idempotent sync that never double-creates a sale/order. It is additive and does not change Sprint 23–33 semantics. The commercial SaaS chain is now Plan → Invoice → Payment Intent → Gateway Settlement → Collection → Entitlement Runtime Access → Tenant Onboarding → **Android Runtime**.
+
+- `ADR-R001` — Android runtime access must resolve tenant/register/device through the canonical backend `AndroidRuntimeAccessService`.
+- `ADR-R002` — Device activation must use `DeviceActivationService`.
+- `ADR-R003` — The activation token must be hashed/non-reversible and never returned after creation.
+- `ADR-R004` — Activation must be idempotent per tenant/register/device fingerprint.
+- `ADR-R005` — Activation must respect the Sprint 32 device/register limits.
+- `ADR-R006` — Activation must fail closed for an unknown tenant/register/plan.
+- `ADR-R007` — Manual suspension blocks Android writes regardless of billing/payment state.
+- `ADR-R008` — Unpaid past grace blocks Android writes or forces read-only per governance.
+- `ADR-R009` — Trial expired blocks Android writes or forces read-only per governance.
+- `ADR-R010` — Cashier login/session must validate tenant, branch, register, device, role, and entitlement.
+- `ADR-R011` — Cashier runtime decisions must be audit-logged when denied/degraded.
+- `ADR-R012` — Offline sales/orders must carry a client UUID/idempotency key.
+- `ADR-R013` — The server must reject a duplicate client UUID without a duplicate mutation.
+- `ADR-R014` — A sync batch must be idempotent and retry-safe.
+- `ADR-R015` — A failed sync item must be retryable without duplicating a sale/order.
+- `ADR-R016` — The conflict policy must be deterministic and explainable.
+- `ADR-R017` — Catalog/settings sync must be tenant-isolated.
+- `ADR-R018` — Stock/price/customer/payment-method snapshots must not leak other tenants.
+- `ADR-R019` — The offline queue must have a bounded size and age.
+- `ADR-R020` — Android local storage must avoid raw secrets/PII where possible.
+- `ADR-R021` — Android logs must not leak tokens/passwords/PII.
+- `ADR-R022` — Sync API output must be redacted and safe.
+- `ADR-R023` — Payment settlement state must only come from the Sprint 30/31 trusted services.
+- `ADR-R024` — Android must not mark an invoice paid or unlock entitlement locally.
+- `ADR-R025` — Entitlement state refresh must fail safe when stale.
+- `ADR-R026` — Device revoke/disable must block future sync/write.
+- `ADR-R027` — A register/device mismatch must be denied and audited.
+- `ADR-R028` — A platform-admin/device-support bypass must be explicit and audited.
+- `ADR-R029` — Prior Sprint 24–33 gates must remain green.
+- `ADR-R030` — Go/no-go must verify activation, offline queue, sync idempotency, cashier runtime, entitlement, and redaction.
+
+Mandatory:
+
+1. The single Android runtime gate is `App\Services\AndroidRuntime\AndroidRuntimeAccessService`; it delegates the billing/subscription/lifecycle write dimension to the Sprint 32 `EntitlementAccessService` and never re-implements it (`ADR-R001`, `runtime_bypasses_entitlement_service_allowed=false`). Manual suspension always wins (423), unpaid-past-grace fails closed (402/blocked), trial expired fails closed to read-only, unknown plan fails closed — for activation, cashier session and sync alike (`ADR-R006..R009`).
+2. Device activation flows only through `DeviceActivationService`. The activation token is stored as a sha256 hash, never persisted raw, never logged, never returned after `prepare()` (`ADR-R002`, `ADR-R003`, `raw_activation_token_stored_allowed=false`, `raw_activation_token_returned_after_creation_allowed=false`). Activation is idempotent per tenant+fingerprint (one `RegisteredDevice`) and runs the Sprint 32 `canRegisterDevice` limit gate (`ADR-R004`, `ADR-R005`).
+3. Offline sales/orders carry a client UUID/idempotency key; the server rejects a duplicate client UUID without a second mutation at two levels — a replayed `client_batch_id`/`idempotency_key` resumes the stored batch, and a `client_item_id` already accepted for the tenant is recorded a duplicate. Sale items additionally reuse the Sprint 7 `SaleService` `client_reference` idempotency, so the POS domain service is never bypassed (`ADR-R012..R015`, `sync_bypasses_pos_domain_service_allowed=false`, `duplicate_client_uuid_double_mutation_allowed=false`).
+4. A revoked/expired device activation blocks all future sync/write (`AndroidRuntimeAccessService::authorizeSync` denies it and the paired `RegisteredDevice` is moved to `REVOKED`) (`ADR-R026`, `revoked_device_can_sync_allowed=false`). A register/device or tenant mismatch is denied and recorded as a deterministic conflict (`ADR-R027`). Conflicts use stable codes from `config/android_runtime_governance.php` (`ADR-R016`).
+5. Android may not invent settlement: a payment sync item is recorded `skipped` (server-only), and no Android route marks an invoice paid or unlocks entitlement locally (`ADR-R023`, `ADR-R024`, `android_marks_invoice_paid_allowed=false`, `android_unlocks_entitlement_locally_allowed=false`). The offline queue is bounded by size and age (`ADR-R019`).
+6. Every denied/blocked runtime action is auditable — cashier denials to `admin_audit_logs`, entitlement denials to `tenant_entitlement_decisions` (via the Sprint 32 audit), and sync rejections/conflicts to the `tenant_android_sync_batches`/`tenant_android_sync_items` ledger — all with redacted metadata; no command/API/admin/log output leaks a token hash, fingerprint, raw payload or PII (`ADR-R011`, `ADR-R020..R022`, `raw_credential_in_output_allowed=false`). Platform-admin device revoke/support bypass is explicit and audited (`ADR-R028`).
+7. `android-runtime:go-no-go` must FAIL if the governance audit is NO_GO, a hard guardrail is not locked false, a Sprint 34 command is missing, a Sprint 24–33 prior gate is not registered, a runtime service is missing, or a commercial-chain service is missing (`ADR-R030`). See `docs/sprints/sprint-34-android-runtime-hardening-evidence.md`.
+8. Sprint 34 rules (`ADR-R001..R030`) coexist with Sprint 25 `TLS-R001..R010`, Sprint 26 `TPE-R001..R012`, Sprint 27 `UEL-R001..R015`, Sprint 28 `ULR-R001..R016`, Sprint 29 `EGC-R001..R015`, Sprint 30 `BIL-R001..R016`, Sprint 31 `PGW-R001..R018`, Sprint 32 `ENT-R001..R024`, and Sprint 33 `ONB-R001..R026`; the Sprint 34 `tenant_device_activations`/`tenant_android_sync_batches`/`tenant_android_sync_items` tables are additive and separate from the Sprint 10 `registered_devices` table they bridge.
+9. GO/WATCH/NO-GO report must be evidence-backed.
