@@ -129,6 +129,14 @@ return [
         'no_real_crm_integration_sprint_22' => true,
         'no_real_message_sending_sprint_22' => true,
         'no_real_billing_collection_sprint_22' => true,
+        'billing_collection_governance_required' => true,
+        'billing_collection_go_no_go_required' => true,
+        'manual_payment_evidence_required_sprint_23' => true,
+        'no_real_payment_gateway_for_billing_sprint_23' => true,
+        'no_auto_charge_sprint_23' => true,
+        'no_auto_tenant_suspension_sprint_23' => true,
+        'no_real_message_sending_sprint_23' => true,
+        'no_billing_android_ui_sprint_23' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
@@ -154,5 +162,6 @@ return [
         'sprint_20' => 'Commercial Launch Readiness & SaaS Packaging Foundation',
         'sprint_21' => 'Public Website / Landing Page Readiness Foundation',
         'sprint_22' => 'Lead Management / Sales Pipeline Readiness Foundation',
+        'sprint_23' => 'Billing Collection Governance Foundation',
     ],
 ];
