@@ -175,6 +175,13 @@ return [
         'report_export_metering_go_no_go_required' => true,
         'no_client_side_report_export_authority_sprint_27' => true,
         'no_cross_tenant_usage_events_in_runtime_sprint_27' => true,
+        'usage_ledger_anomaly_detection_read_only_sprint_28' => true,
+        'usage_ledger_governed_repair_dry_run_default_sprint_28' => true,
+        'usage_ledger_repair_requires_reason_actor_audit_sprint_28' => true,
+        'usage_ledger_append_only_preserved_by_repair_sprint_28' => true,
+        'no_usage_ledger_mutation_route_sprint_28' => true,
+        'effective_usage_never_negative_sprint_28' => true,
+        'usage_ledger_go_no_go_required_sprint_28' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
@@ -205,5 +212,6 @@ return [
         'sprint_25' => 'Tenant Lifecycle Enforcement & Manual Suspension Governance Foundation',
         'sprint_26' => 'Tenant Plan, Feature Entitlement & Usage Limit Governance Foundation',
         'sprint_27' => 'Report Export Metering & Usage Event Ledger Governance Foundation',
+        'sprint_28' => 'Usage Ledger Anomaly Detection & Governed Repair Foundation',
     ],
 ];

@@ -4,6 +4,7 @@ namespace App\Services\UsageEventLedger;
 
 use App\Models\Tenant;
 use App\Models\TenantUsageEvent;
+use App\Models\TenantUsageLedgerRepair;
 
 /**
  * Sprint 27 — the high-level, read/append API over the usage event ledger.
@@ -13,6 +14,11 @@ use App\Models\TenantUsageEvent;
  * events for a meter_key within the current server-side period key (UEL-R005,
  * UEL-R006). Appends are delegated to the idempotent UsageEventRecorder
  * (UEL-R004). The service never mutates or deletes an existing event (UEL-R002).
+ *
+ * Sprint 28 — EFFECTIVE usage is the append-only ledger count PLUS any governed
+ * repair records (correction deltas) for the same (tenant, meter, period),
+ * clamped so it can never go negative (ULR-R010, ULR-R013). The raw ledger is
+ * still never mutated; corrections live only in tenant_usage_ledger_repairs.
  */
 class UsageEventLedgerService
 {
@@ -66,13 +72,35 @@ class UsageEventLedgerService
         return $this->meterCount($tenant, $meterKey, $this->periods->monthlyPeriodKey());
     }
 
+    /**
+     * EFFECTIVE usage: append-only ledger count + governed repair deltas, clamped
+     * at zero (ULR-R010, ULR-R013). This is the authoritative read used by the
+     * usage meter and enforcement.
+     */
     public function meterCount(Tenant $tenant, string $meterKey, string $periodKey): int
+    {
+        return max(0, $this->rawMeterCount($tenant, $meterKey, $periodKey)
+            + $this->repairDelta($tenant, $meterKey, $periodKey));
+    }
+
+    /** Ledger-only count for a meter/period (never includes repair deltas). */
+    public function rawMeterCount(Tenant $tenant, string $meterKey, string $periodKey): int
     {
         return (int) TenantUsageEvent::query()
             ->forTenant((int) $tenant->id)
             ->forMeter($meterKey)
             ->forPeriod($periodKey)
             ->sum('quantity');
+    }
+
+    /** Sum of governed repair corrections for a meter/period (may be negative). */
+    public function repairDelta(Tenant $tenant, string $meterKey, string $periodKey): int
+    {
+        return (int) TenantUsageLedgerRepair::query()
+            ->forTenant((int) $tenant->id)
+            ->forMeter($meterKey)
+            ->forPeriod($periodKey)
+            ->sum('quantity_delta');
     }
 
     /**

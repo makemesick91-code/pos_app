@@ -166,6 +166,10 @@ class AdminAuditLog extends Model
     public const ACTION_RENEWAL_RISK_CLOSED = 'RENEWAL_RISK_CLOSED';
     public const ACTION_RENEWAL_SIGNOFF_ADDED = 'RENEWAL_SIGNOFF_ADDED';
 
+    // Sprint 28 — usage ledger anomaly detection & governed repair.
+    public const ACTION_USAGE_LEDGER_REPAIR_APPLIED = 'USAGE_LEDGER_REPAIR_APPLIED';
+    public const TARGET_TENANT_USAGE_LEDGER_REPAIR = 'tenant_usage_ledger_repair';
+
     public const TARGET_TENANT = 'tenant';
     public const TARGET_SUBSCRIPTION = 'tenant_subscription';
     public const TARGET_DEVICE = 'registered_device';
