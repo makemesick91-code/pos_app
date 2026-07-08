@@ -1,0 +1,186 @@
+name: Sprint 27 CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  foundation-and-smoke:
+    name: Foundation & Sprint 27 smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Foundation document exists
+        run: test -f docs/foundation/POS_ANDROID_SAAS_FOUNDATION.md
+
+      - name: Project rules lock intact (Sprint 0–27)
+        run: |
+          grep -q "Sprint 25 Tenant Lifecycle Enforcement & Manual Suspension Governance Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 26 Tenant Plan, Feature Entitlement & Usage Limit Governance Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 27 Report Export Metering & Usage Event Ledger Governance Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "TLS-R004" docs/PROJECT_RULES.md
+          grep -q "TPE-R012" docs/PROJECT_RULES.md
+          grep -q "UEL-R004" docs/PROJECT_RULES.md
+          grep -q "UEL-R008" docs/PROJECT_RULES.md
+          grep -q "UEL-R015" docs/PROJECT_RULES.md
+
+      - name: UEL rules present in config
+        run: |
+          grep -R "UEL-R004" backend/config docs
+          grep -R "UEL-R008" backend/config docs
+          grep -R "UEL-R015" backend/config docs
+
+      - name: Sprint 27 smoke script
+        run: bash scripts/sprint27_smoke.sh
+
+      - name: Android release readiness script
+        run: bash scripts/android_release_readiness.sh
+
+      - name: No forbidden files committed
+        run: |
+          ! git ls-files | grep -E '(^|/)\.env$|\.apk$|\.aab$|(^|/)vendor/|(^|/)node_modules/|\.sqlite$|database\.sqlite|(^|/)app/build/|(^|/)\.gradle/|\.keystore$|\.jks$'
+
+  backend-tests:
+    name: Backend tests (report export metering gate + Sprint 0–26 regression)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+
+      - name: Validate composer
+        working-directory: backend
+        run: composer validate --strict
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment (sqlite + migrate)
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          mkdir -p storage/app storage/logs storage/framework/views storage/framework/cache storage/framework/cache/data storage/framework/sessions storage/framework/testing bootstrap/cache
+          touch database/database.sqlite
+          php artisan migrate --force || true
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Run tests
+        working-directory: backend
+        run: php artisan test
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+  report-export-metering-gate:
+    name: Report export metering & usage event ledger gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment (sqlite + migrate)
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          mkdir -p storage/app storage/logs storage/framework/views storage/framework/cache storage/framework/cache/data storage/framework/sessions storage/framework/testing bootstrap/cache
+          touch database/database.sqlite
+          php artisan migrate --force || true
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Usage event ledger readiness (strict)
+        working-directory: backend
+        run: php artisan usage-event-ledger:readiness --json --strict
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Report export metering enforcement audit (strict)
+        working-directory: backend
+        run: php artisan report-export-metering:enforcement-audit --json --strict
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Usage event ledger + report export summaries (secret-safe)
+        working-directory: backend
+        run: |
+          php artisan usage-event-ledger:summary --json
+          php artisan report-export-metering:summary --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Report export metering GO / WATCH / NO-GO
+        working-directory: backend
+        run: php artisan report-export-metering:go-no-go --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Prior sprint gates (Sprint 24–26) still green
+        working-directory: backend
+        run: |
+          php artisan subscription-renewal:go-no-go --json || true
+          php artisan tenant-lifecycle:go-no-go --json
+          php artisan tenant-plan:go-no-go --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+  android-build-test:
+    name: Android build & unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Package and SDK levels intact
+        run: |
+          grep -q "com.aishtech.poslite" android/app/build.gradle.kts
+          grep -q "minSdk = 26" android/app/build.gradle.kts
+          grep -q "targetSdk = 35" android/app/build.gradle.kts
+
+      - name: Android release readiness
+        run: bash scripts/android_release_readiness.sh
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Run unit tests
+        working-directory: android
+        run: ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace

@@ -60,7 +60,8 @@ return [
         'devices.max' => ['label' => 'Maximum active registered devices', 'period' => 'lifetime', 'meterable' => true],
         'products.max' => ['label' => 'Maximum products', 'period' => 'lifetime', 'meterable' => true],
         'transactions.monthly' => ['label' => 'Sales transactions per month', 'period' => 'monthly', 'meterable' => true],
-        'reports.exports.monthly' => ['label' => 'Report exports per month', 'period' => 'monthly', 'meterable' => false],
+        // Sprint 27 — now live: metered from the tenant usage event ledger (UEL-R006).
+        'reports.exports.monthly' => ['label' => 'Report exports per month', 'period' => 'monthly', 'meterable' => true],
     ],
 
     // The plan matrix — canonical entitlement flags and usage limits per plan.
@@ -215,6 +216,8 @@ return [
     'usage_guarded_routes' => [
         'products.max' => 'POST api/v1/products',
         'transactions.monthly' => 'POST api/v1/sales',
+        // Sprint 27 — report export metering (reports.exports.monthly, UEL-R006/R009).
+        'reports.exports.monthly' => 'GET api/v1/reports/daily-sales/export.csv',
     ],
 
     // Hard Sprint 26 guardrails. Every flag MUST stay false; a true value forces

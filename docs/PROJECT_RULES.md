@@ -870,3 +870,39 @@ Mandatory:
 15. Tenant plan resources and commands must not expose secrets.
 16. Existing subscription/device, tenant lifecycle/suspension, subscription renewal/dunning, and all prior-sprint behavior must remain intact. See `docs/sprints/sprint-26-tenant-plan-feature-entitlement-usage-limit-governance-foundation.md`.
 17. GO/WATCH/NO-GO report must be evidence-backed.
+
+## Sprint 27 Report Export Metering & Usage Event Ledger Governance Foundation Runtime Rule
+
+Canonical foundation rules (locked in `backend/config/usage_event_ledger.php`, mirrored here, exercised by tests/gates):
+
+- `UEL-R001` — Tenant usage events must be recorded in a server-side usage event ledger.
+- `UEL-R002` — Usage event ledger entries must be append-only by default and must not be mutated by normal runtime flows.
+- `UEL-R003` — Usage event metadata must be sanitized and must not store secrets, credentials, tokens, or excessive PII.
+- `UEL-R004` — Usage event recording must be idempotent to prevent double counting during retries.
+- `UEL-R005` — Monthly usage meters must use a stable server-side period key.
+- `UEL-R006` — Report export metering must use `reports.exports.monthly` as the canonical meter key.
+- `UEL-R007` — Successful report exports must record exactly one usage event unless an idempotent duplicate is detected.
+- `UEL-R008` — Blocked or failed report exports must not increment usage.
+- `UEL-R009` — Report export routes must run tenant lifecycle enforcement before entitlement and usage limit enforcement.
+- `UEL-R010` — Report export routes must require report entitlement before usage limit consumption.
+- `UEL-R011` — Report export usage limit exceeded responses must use stable code `USAGE_LIMIT_EXCEEDED`.
+- `UEL-R012` — Android may present report export limit UX, but server-side enforcement remains authoritative.
+- `UEL-R013` — Platform admin may inspect usage event summaries, but normal runtime must not expose cross-tenant usage events.
+- `UEL-R014` — Sprint 27 GO requires `report-export-metering:go-no-go` green.
+- `UEL-R015` — Sprint 27 rules must coexist with Sprint 25 `TLS-R001..R010` and Sprint 26 `TPE-R001..R012`.
+
+Mandatory:
+
+1. Every tenant usage event must be appended to `tenant_usage_events` only through `UsageEventRecorder`/`UsageEventLedgerService`; the ledger is append-only and no normal runtime route updates or deletes an event (`UEL-R001`, `UEL-R002`).
+2. Usage event metadata must pass `SanitizesUsageEventMetadata` before persistence; no secret, token, payment credential, or raw PII is stored (`UEL-R003`).
+3. Report export metering must record exactly one `report.exported` event per successful export, deduplicated by a per-tenant unique idempotency key (explicit `Idempotency-Key` header or a deterministic tenant+route+user+report+filter+minute fingerprint), so a retry never double counts (`UEL-R004`, `UEL-R007`).
+4. A blocked (suspended/unentitled/over-quota) or failed export must never reach the recorder and must never increment usage (`UEL-R008`).
+5. Monthly meters (`reports.exports.monthly`) must be derived by counting the ledger for a stable server-side period key (`Y-m`), never a fragile stored counter (`UEL-R005`, `UEL-R006`); the meter is now `meterable: true`.
+6. The report export route must carry `tenant.lifecycle` before `tenant.entitled:reports.basic` before `tenant.usage.limit:reports.exports.monthly`; a suspended tenant returns `TENANT_SUSPENDED`, an unentitled tenant `FEATURE_NOT_ENTITLED`, an over-quota tenant `429 USAGE_LIMIT_EXCEEDED` (`UEL-R009`, `UEL-R010`, `UEL-R011`).
+7. Platform admin may inspect tenant/global usage event summaries (`platform.admin` only, read-only, redacted); normal runtime never exposes cross-tenant usage events and there is no runtime update/delete ledger route (`UEL-R013`).
+8. The Android/POS client may present report export limit UX but is never the enforcement authority (`UEL-R012`).
+9. `report-export-metering:enforcement-audit` must FAIL if the export route is missing the lifecycle, entitlement, or usage guard, or if the meter is not meterable.
+10. `usage-event-ledger:readiness` and `report-export-metering:go-no-go` must FAIL if any Sprint 27 guardrail flag is enabled, a required doc is missing, or a prior-sprint gate (Sprint 24/25/26) is not green.
+11. Sprint 27 rules (`UEL-R001..R015`) must coexist with Sprint 25 `TLS-R001..R010` and Sprint 26 `TPE-R001..R012`; suspended must remain a blocked lifecycle status (`UEL-R015`).
+12. Existing subscription/device, tenant lifecycle/suspension, subscription renewal/dunning, tenant plan/entitlement/usage, and all prior-sprint behavior must remain intact. See `docs/sprints/sprint-27-report-export-metering-usage-event-ledger-governance-foundation.md`.
+13. GO/WATCH/NO-GO report must be evidence-backed.

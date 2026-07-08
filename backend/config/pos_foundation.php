@@ -166,6 +166,15 @@ return [
         'tenant_plan_go_no_go_required' => true,
         'no_client_side_entitlement_authority_sprint_26' => true,
         'no_real_billing_charge_on_plan_change_sprint_26' => true,
+        'usage_event_ledger_source_of_truth_required' => true,
+        'usage_event_ledger_append_only_sprint_27' => true,
+        'report_export_metering_required_sprint_27' => true,
+        'report_export_metering_idempotent_sprint_27' => true,
+        'failed_export_does_not_count_sprint_27' => true,
+        'tenant_lifecycle_precedes_report_export_metering_sprint_27' => true,
+        'report_export_metering_go_no_go_required' => true,
+        'no_client_side_report_export_authority_sprint_27' => true,
+        'no_cross_tenant_usage_events_in_runtime_sprint_27' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
@@ -195,5 +204,6 @@ return [
         'sprint_24' => 'Subscription Renewal & Dunning Governance Foundation',
         'sprint_25' => 'Tenant Lifecycle Enforcement & Manual Suspension Governance Foundation',
         'sprint_26' => 'Tenant Plan, Feature Entitlement & Usage Limit Governance Foundation',
+        'sprint_27' => 'Report Export Metering & Usage Event Ledger Governance Foundation',
     ],
 ];

@@ -34,8 +34,11 @@ use App\Http\Controllers\Api\V1\Admin\AdminTenantSuspensionController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantEntitlementController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantPlanAssignmentController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantPlanController;
+use App\Http\Controllers\Api\V1\Admin\AdminReportExportMeteringSummaryController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantPlanGovernanceSummaryController;
+use App\Http\Controllers\Api\V1\Admin\AdminTenantUsageEventController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantUsageLimitController;
+use App\Http\Controllers\Api\V1\Admin\AdminUsageEventLedgerSummaryController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantSubscriptionController;
 use App\Http\Controllers\Api\V1\Admin\PilotDefectBurnDownController;
 use App\Http\Controllers\Api\V1\Admin\PilotDefectController;
@@ -232,7 +235,13 @@ Route::prefix('v1')->group(function () {
                     // tenant-isolated, and store-scoped. PAID sales only count as
                     // revenue; pending QRIS/cancelled sales are excluded.
                     Route::get('/reports/daily-sales', [DailySalesReportController::class, 'index']);
-                    Route::get('/reports/daily-sales/export.csv', [DailySalesCsvExportController::class, 'index']);
+                    // Sprint 27 — report export is metered against the plan
+                    // reports.exports.monthly limit. The usage guard runs AFTER
+                    // tenant.lifecycle (group) and tenant.entitled:reports.basic
+                    // (group) so a suspended tenant is TENANT_SUSPENDED and an
+                    // unentitled tenant is FEATURE_NOT_ENTITLED first (UEL-R009/R010).
+                    Route::get('/reports/daily-sales/export.csv', [DailySalesCsvExportController::class, 'index'])
+                        ->middleware('tenant.usage.limit:reports.exports.monthly');
                     Route::get('/reports/payment-summary', [PaymentSummaryReportController::class, 'index']);
                     Route::get('/reports/inventory-movements-summary', [InventoryMovementSummaryController::class, 'index']);
 
@@ -628,6 +637,16 @@ Route::prefix('v1')->group(function () {
             Route::get('/tenants/{tenant}/usage-limits', [AdminTenantUsageLimitController::class, 'show']);
 
             Route::get('/tenant-plan-governance/summary', [AdminTenantPlanGovernanceSummaryController::class, 'show']);
+
+            // Sprint 27 — report export metering & usage event ledger governance.
+            // Platform admin only, READ-ONLY. The usage event ledger is append-only
+            // (UEL-R002); there is deliberately no runtime update/delete route.
+            // Summaries are counts only, redacted, and never leak cross-tenant PII
+            // to normal runtime (UEL-R013).
+            Route::get('/tenants/{tenant}/usage-events', [AdminTenantUsageEventController::class, 'index']);
+            Route::get('/tenants/{tenant}/usage-events/summary', [AdminTenantUsageEventController::class, 'summary']);
+            Route::get('/usage-event-ledger/summary', [AdminUsageEventLedgerSummaryController::class, 'show']);
+            Route::get('/report-export-metering/summary', [AdminReportExportMeteringSummaryController::class, 'show']);
         });
     });
 
