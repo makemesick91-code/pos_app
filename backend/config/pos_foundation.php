@@ -137,6 +137,16 @@ return [
         'no_auto_tenant_suspension_sprint_23' => true,
         'no_real_message_sending_sprint_23' => true,
         'no_billing_android_ui_sprint_23' => true,
+        'subscription_renewal_governance_required' => true,
+        'subscription_dunning_governance_required' => true,
+        'subscription_renewal_go_no_go_required' => true,
+        'manual_dunning_notice_required_sprint_24' => true,
+        'no_real_payment_gateway_for_renewal_sprint_24' => true,
+        'no_auto_charge_sprint_24' => true,
+        'no_auto_tenant_suspension_sprint_24' => true,
+        'no_auto_subscription_renewal_sprint_24' => true,
+        'no_real_message_sending_sprint_24' => true,
+        'no_subscription_renewal_android_ui_sprint_24' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
@@ -163,5 +173,6 @@ return [
         'sprint_21' => 'Public Website / Landing Page Readiness Foundation',
         'sprint_22' => 'Lead Management / Sales Pipeline Readiness Foundation',
         'sprint_23' => 'Billing Collection Governance Foundation',
+        'sprint_24' => 'Subscription Renewal & Dunning Governance Foundation',
     ],
 ];

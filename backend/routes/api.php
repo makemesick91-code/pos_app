@@ -2,6 +2,18 @@
 
 use App\Http\Controllers\Api\V1\Admin\AdminAuditLogController;
 use App\Http\Controllers\Api\V1\Admin\BillingAccountController;
+use App\Http\Controllers\Api\V1\Admin\SubscriptionDunningNoticeController;
+use App\Http\Controllers\Api\V1\Admin\SubscriptionDunningSummaryController;
+use App\Http\Controllers\Api\V1\Admin\SubscriptionRenewalActivityController;
+use App\Http\Controllers\Api\V1\Admin\SubscriptionRenewalCandidateController;
+use App\Http\Controllers\Api\V1\Admin\SubscriptionRenewalCandidateSummaryController;
+use App\Http\Controllers\Api\V1\Admin\SubscriptionRenewalDecisionController;
+use App\Http\Controllers\Api\V1\Admin\SubscriptionRenewalGoNoGoController;
+use App\Http\Controllers\Api\V1\Admin\SubscriptionRenewalPolicyController;
+use App\Http\Controllers\Api\V1\Admin\SubscriptionRenewalReadinessController;
+use App\Http\Controllers\Api\V1\Admin\SubscriptionRenewalRiskController;
+use App\Http\Controllers\Api\V1\Admin\SubscriptionRenewalRunController;
+use App\Http\Controllers\Api\V1\Admin\SubscriptionRenewalSignoffController;
 use App\Http\Controllers\Api\V1\Admin\BillingCollectionActivityController;
 use App\Http\Controllers\Api\V1\Admin\BillingCollectionGoNoGoController;
 use App\Http\Controllers\Api\V1\Admin\BillingCollectionReadinessController;
@@ -479,6 +491,68 @@ Route::prefix('v1')->group(function () {
             Route::get('/billing/invoice-summary', [BillingInvoiceSummaryController::class, 'index']);
             Route::get('/billing/collection-summary', [BillingCollectionSummaryController::class, 'index']);
             Route::get('/billing/go-no-go', [BillingCollectionGoNoGoController::class, 'index']);
+
+            // Sprint 24 — subscription renewal & dunning governance. Platform admin
+            // only. Subscription renewal/dunning is lifecycle governance over
+            // TenantSubscription; it is NEVER mixed with tenant POS cashier/customer
+            // payments and is distinct from Sprint 23 billing collection. Nothing here
+            // calls a payment gateway, auto-charges, auto-suspends/reactivates a
+            // tenant, auto-renews a subscription, changes a plan/device limit, or
+            // sends a real email/WhatsApp/SMS/Slack. Dunning notices are a MANUAL
+            // reminder queue only. The only subscription-mutating path is the explicit
+            // apply-manual-renewal action; it is audit-logged and never automatic.
+            Route::get('/subscription-renewal/policies', [SubscriptionRenewalPolicyController::class, 'index']);
+            Route::post('/subscription-renewal/policies', [SubscriptionRenewalPolicyController::class, 'store']);
+            Route::post('/subscription-renewal/policies/ensure-default', [SubscriptionRenewalPolicyController::class, 'ensureDefault']);
+            Route::get('/subscription-renewal/policies/{policy}', [SubscriptionRenewalPolicyController::class, 'show']);
+            Route::patch('/subscription-renewal/policies/{policy}', [SubscriptionRenewalPolicyController::class, 'update']);
+
+            Route::get('/subscription-renewal/runs', [SubscriptionRenewalRunController::class, 'index']);
+            Route::post('/subscription-renewal/runs', [SubscriptionRenewalRunController::class, 'store']);
+            Route::get('/subscription-renewal/runs/{run}', [SubscriptionRenewalRunController::class, 'show']);
+            Route::post('/subscription-renewal/runs/{run}/evaluate', [SubscriptionRenewalRunController::class, 'evaluate']);
+            Route::post('/subscription-renewal/runs/{run}/complete', [SubscriptionRenewalRunController::class, 'complete']);
+
+            Route::get('/subscription-renewal/candidates', [SubscriptionRenewalCandidateController::class, 'index']);
+            Route::get('/subscription-renewal/candidates/{candidate}', [SubscriptionRenewalCandidateController::class, 'show']);
+            Route::patch('/subscription-renewal/candidates/{candidate}', [SubscriptionRenewalCandidateController::class, 'update']);
+            Route::post('/subscription-renewal/candidates/{candidate}/ready-for-manual-renewal', [SubscriptionRenewalCandidateController::class, 'readyForManualRenewal']);
+            Route::post('/subscription-renewal/candidates/{candidate}/grace-review', [SubscriptionRenewalCandidateController::class, 'graceReview']);
+            Route::post('/subscription-renewal/candidates/{candidate}/overdue-review', [SubscriptionRenewalCandidateController::class, 'overdueReview']);
+            Route::post('/subscription-renewal/candidates/{candidate}/do-not-renew', [SubscriptionRenewalCandidateController::class, 'doNotRenew']);
+
+            Route::get('/subscription-renewal/candidates/{candidate}/dunning-notices', [SubscriptionDunningNoticeController::class, 'index']);
+            Route::post('/subscription-renewal/candidates/{candidate}/dunning-notices', [SubscriptionDunningNoticeController::class, 'store']);
+            Route::post('/subscription-renewal/dunning-notices/{notice}/prepare', [SubscriptionDunningNoticeController::class, 'prepare']);
+            Route::post('/subscription-renewal/dunning-notices/{notice}/mark-sent-manually', [SubscriptionDunningNoticeController::class, 'markSentManually']);
+            Route::post('/subscription-renewal/dunning-notices/{notice}/complete', [SubscriptionDunningNoticeController::class, 'complete']);
+            Route::post('/subscription-renewal/dunning-notices/{notice}/cancel', [SubscriptionDunningNoticeController::class, 'cancel']);
+            Route::post('/subscription-renewal/dunning-notices/{notice}/skip', [SubscriptionDunningNoticeController::class, 'skip']);
+
+            Route::get('/subscription-renewal/candidates/{candidate}/decisions', [SubscriptionRenewalDecisionController::class, 'index']);
+            Route::post('/subscription-renewal/candidates/{candidate}/decisions', [SubscriptionRenewalDecisionController::class, 'store']);
+            Route::post('/subscription-renewal/decisions/{decision}/void', [SubscriptionRenewalDecisionController::class, 'void']);
+            Route::post('/subscription-renewal/decisions/{decision}/apply-manual-renewal', [SubscriptionRenewalDecisionController::class, 'applyManualRenewal']);
+
+            Route::get('/subscription-renewal/activities', [SubscriptionRenewalActivityController::class, 'index']);
+            Route::post('/subscription-renewal/activities', [SubscriptionRenewalActivityController::class, 'store']);
+            Route::post('/subscription-renewal/activities/{activity}/complete', [SubscriptionRenewalActivityController::class, 'complete']);
+            Route::post('/subscription-renewal/activities/{activity}/cancel', [SubscriptionRenewalActivityController::class, 'cancel']);
+
+            Route::get('/subscription-renewal/risks', [SubscriptionRenewalRiskController::class, 'index']);
+            Route::post('/subscription-renewal/risks', [SubscriptionRenewalRiskController::class, 'store']);
+            Route::get('/subscription-renewal/risks/{risk}', [SubscriptionRenewalRiskController::class, 'show']);
+            Route::patch('/subscription-renewal/risks/{risk}', [SubscriptionRenewalRiskController::class, 'update']);
+            Route::post('/subscription-renewal/risks/{risk}/accept-risk', [SubscriptionRenewalRiskController::class, 'acceptRisk']);
+            Route::post('/subscription-renewal/risks/{risk}/close', [SubscriptionRenewalRiskController::class, 'close']);
+
+            Route::get('/subscription-renewal/signoffs', [SubscriptionRenewalSignoffController::class, 'index']);
+            Route::post('/subscription-renewal/signoffs', [SubscriptionRenewalSignoffController::class, 'store']);
+
+            Route::get('/subscription-renewal/readiness', [SubscriptionRenewalReadinessController::class, 'index']);
+            Route::get('/subscription-renewal/candidate-summary', [SubscriptionRenewalCandidateSummaryController::class, 'index']);
+            Route::get('/subscription-renewal/dunning-summary', [SubscriptionDunningSummaryController::class, 'index']);
+            Route::get('/subscription-renewal/go-no-go', [SubscriptionRenewalGoNoGoController::class, 'index']);
         });
     });
 

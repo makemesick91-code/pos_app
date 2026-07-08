@@ -361,6 +361,33 @@ penagihan langganan nyata. Cash (Sprint 4), QRIS (Sprint 5), struk/printer
 (Sprint 9) tetap utuh. Android build CI menjalankan assembleDebug +
 testDebugUnitTest.
 
+## Sprint 24 — Subscription Renewal & Dunning Governance Foundation
+
+Sprint 24 establishes manual subscription renewal and dunning governance after billing collection readiness:
+
+- subscription renewal policies
+- subscription renewal runs
+- subscription renewal candidates
+- manual dunning notices
+- subscription renewal decisions
+- renewal activities
+- renewal risks
+- renewal signoffs
+- admin renewal/dunning APIs behind platform.admin
+- subscription-renewal:readiness
+- subscription-renewal:candidate-summary
+- subscription-renewal:dunning-summary
+- subscription-renewal:go-no-go
+- no payment gateway automation
+- no auto-charge
+- no auto tenant suspension
+- no auto tenant reactivation
+- no auto subscription renewal without manual decision
+- no auto plan/device limit changes
+- no real email/WhatsApp/SMS sending
+- no public renewal portal
+- no Android POS business flow change
+
 ## Sprint 23 — Billing Collection Governance Foundation
 
 Sprint 23 establishes SaaS billing collection governance after commercial launch, public website, and sales pipeline readiness:

@@ -58,6 +58,7 @@ This project is governed by:
 23. `docs/sprints/sprint-21-public-website-landing-page-readiness-foundation.md`
 24. `docs/sprints/sprint-22-lead-management-sales-pipeline-readiness-foundation.md`
 25. `docs/sprints/sprint-23-billing-collection-governance-foundation.md`
+26. `docs/sprints/sprint-24-subscription-renewal-dunning-governance-foundation.md`
 
 No sprint may contradict these documents unless the canonical foundation is explicitly updated first.
 
@@ -731,3 +732,55 @@ Mandatory:
 41. No APK/AAB/keystore/signing key/secret may be committed.
 42. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, closing, release hardening, RC/UAT, deployment, field trial, monitoring, hypercare, stabilization, closure, handover, operations, commercial launch, public website, and sales pipeline behavior from previous sprints must remain intact.
 43. GO/WATCH/NO-GO report must be evidence-backed.
+
+## Sprint 24 Subscription Renewal & Dunning Governance Foundation Runtime Rule
+
+Starting Sprint 24, subscription renewal and dunning governance must be admin-governed, audit-logged, evidence-backed, manual-review-first, secret-safe, and gated before a GO tag is created.
+
+Mandatory:
+
+1. Subscription renewal readiness must not be declared GO without backend tests passing.
+2. Subscription renewal readiness must not be declared GO without Android CI assembleDebug passing.
+3. Subscription renewal readiness must not be declared GO without Android CI testDebugUnitTest passing.
+4. Subscription renewal readiness must not be declared GO without Sprint 13 release gates passing.
+5. Subscription renewal readiness must not be declared GO without Sprint 14 RC/UAT gates passing.
+6. Subscription renewal readiness must not be declared GO without Sprint 15 deployment/field gates passing.
+7. Subscription renewal readiness must not be declared GO without Sprint 16 monitoring/hypercare gates passing.
+8. Subscription renewal readiness must not be declared GO without Sprint 17 stabilization/defect gates passing.
+9. Subscription renewal readiness must not be declared GO without Sprint 18 closure/handover gates passing.
+10. Subscription renewal readiness must not be declared GO without Sprint 19 production operations gates passing.
+11. Subscription renewal readiness must not be declared GO without Sprint 20 commercial launch gates passing.
+12. Subscription renewal readiness must not be declared GO without Sprint 21 public website gates passing.
+13. Subscription renewal readiness must not be declared GO without Sprint 22 sales pipeline gates passing.
+14. Subscription renewal readiness must not be declared GO without Sprint 23 billing collection gates passing.
+15. Subscription renewal and dunning must not be mixed with POS QRIS/cash customer payments.
+16. Subscription renewal and dunning must not call payment gateway APIs in Sprint 24.
+17. Subscription renewal and dunning must not auto-charge tenants.
+18. Subscription renewal and dunning must not automate subscription payment collection.
+19. Subscription renewal and dunning must not generate public payment links.
+20. Subscription renewal and dunning must not expose a public renewal portal.
+21. Subscription renewal and dunning must not auto-suspend tenant access.
+22. Subscription renewal and dunning must not auto-reactivate tenant access.
+23. Subscription renewal and dunning must not auto-renew subscriptions without explicit manual admin decision.
+24. Subscription renewal and dunning must not auto-change subscription plans.
+25. Subscription renewal and dunning must not auto-change device limits.
+26. Dunning notices are manual queue records only.
+27. Dunning notices marked WhatsApp/email/SMS/call are manual action records only.
+28. Subscription renewal and dunning must not send real WhatsApp/email/SMS/Slack/Telegram messages.
+29. Subscription renewal and dunning must not integrate with real CRM or accounting APIs in Sprint 24.
+30. Admin renewal/dunning APIs must be protected by auth:sanctum and platform.admin.
+31. Tenant users must not access renewal/dunning admin APIs.
+32. Subscription renewal/dunning mutations must be audit-logged when audit logging exists.
+33. Subscription renewal/dunning resources and commands must not expose secrets.
+34. Subscription renewal risks with open CRITICAL/HIGH severity must force NO-GO unless a valid accepted risk is documented.
+35. Subscription renewal risks with open MEDIUM severity must force WATCH unless mitigated.
+36. Rejected subscription renewal signoff must force NO-GO.
+37. Approved-with-risk subscription renewal signoff must force WATCH.
+38. Payment evidence from billing collection must not auto-renew a subscription.
+39. Ready-for-manual-renewal means admin review is required, not automatic subscription mutation.
+40. Any manual apply renewal endpoint must be explicit, platform.admin-only, audit-logged, tested, and never triggered automatically.
+41. No Android POS business flow may be changed by Sprint 24.
+42. No Android renewal/dunning/admin UI may be introduced in Sprint 24.
+43. No APK/AAB/keystore/signing key/secret may be committed.
+44. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, closing, release hardening, RC/UAT, deployment, field trial, monitoring, hypercare, stabilization, closure, handover, operations, commercial launch, public website, sales pipeline, and billing collection behavior from previous sprints must remain intact.
+45. GO/WATCH/NO-GO report must be evidence-backed.
