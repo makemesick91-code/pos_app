@@ -52,7 +52,12 @@ class TenantUsageMeter
 
     public function isMeterable(string $limitKey): bool
     {
-        $meta = (array) config('tenant_plan.usage_limits.'.$limitKey, []);
+        // Look the key up literally: usage-limit keys contain dots
+        // (e.g. reports.exports.monthly), so config() dot-notation would wrongly
+        // treat them as nested paths and always return false (Sprint 27 latent bug,
+        // fixed Sprint 28 with a regression test).
+        $registry = (array) config('tenant_plan.usage_limits', []);
+        $meta = (array) ($registry[$limitKey] ?? []);
 
         return (bool) ($meta['meterable'] ?? false);
     }

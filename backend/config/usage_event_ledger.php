@@ -87,4 +87,11 @@ return [
         'docs/architecture/report-export-metering-usage-event-ledger-governance.md',
         'docs/sprints/sprint-27-report-export-metering-usage-event-ledger-governance-foundation.md',
     ],
+
+    // Sprint 28 — anomaly detection & governed repair build directly on this
+    // append-only ledger. Detection is read-only and repair never mutates/deletes
+    // an event: corrections live in tenant_usage_ledger_repairs and effective usage
+    // is ledger count + repair deltas (clamped >= 0). See config/usage_ledger_anomaly.php
+    // (ULR-R001..R016) and docs/architecture/usage-ledger-anomaly-detection-governed-repair-governance.md.
+    'sprint_28_governed_repair_config' => 'usage_ledger_anomaly',
 ];

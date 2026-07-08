@@ -906,3 +906,40 @@ Mandatory:
 11. Sprint 27 rules (`UEL-R001..R015`) must coexist with Sprint 25 `TLS-R001..R010` and Sprint 26 `TPE-R001..R012`; suspended must remain a blocked lifecycle status (`UEL-R015`).
 12. Existing subscription/device, tenant lifecycle/suspension, subscription renewal/dunning, tenant plan/entitlement/usage, and all prior-sprint behavior must remain intact. See `docs/sprints/sprint-27-report-export-metering-usage-event-ledger-governance-foundation.md`.
 13. GO/WATCH/NO-GO report must be evidence-backed.
+
+## Sprint 28 Usage Ledger Anomaly Detection & Governed Repair Foundation Runtime Rule
+
+Canonical foundation rules (locked in `backend/config/usage_ledger_anomaly.php`, mirrored here, exercised by tests/gates):
+
+- `ULR-R001` — Usage ledger anomaly detection must be server-side and must read from the canonical usage event ledger.
+- `ULR-R002` — Anomaly detection must be read-only and must not mutate ledger data.
+- `ULR-R003` — Duplicate idempotency anomalies must be detected to protect usage counts from retry/double-count drift.
+- `ULR-R004` — Missing required ledger fields and invalid period keys must be detected by governance checks.
+- `ULR-R005` — Unknown meter keys must be detected against the canonical usage limit registry.
+- `ULR-R006` — Metadata anomaly checks must be redacted and must never print secret values.
+- `ULR-R007` — Governed repair must default to dry-run and require explicit apply intent.
+- `ULR-R008` — Governed repair apply requires reason, actor, audit log, and redacted metadata.
+- `ULR-R009` — Normal runtime must not expose update/delete routes for usage ledger events.
+- `ULR-R010` — Ledger repair must preserve append-only behavior by using correction events or governed repair records instead of mutating original runtime events.
+- `ULR-R011` — Repair operations must be idempotent and must not create duplicate correction drift.
+- `ULR-R012` — Admin anomaly visibility must be platform-admin only and must not leak cross-tenant usage data to normal tenants.
+- `ULR-R013` — Effective usage after repair must not become negative.
+- `ULR-R014` — `reports.exports.monthly` must remain meterable from the usage event ledger after Sprint 28.
+- `ULR-R015` — Sprint 28 GO requires `usage-ledger:go-no-go` green.
+- `ULR-R016` — Sprint 28 rules must coexist with Sprint 25 `TLS-R001..R010`, Sprint 26 `TPE-R001..R012`, and Sprint 27 `UEL-R001..R015`.
+
+Mandatory:
+
+1. Anomaly detection runs only through `UsageLedgerAnomalyDetector`/`UsageLedgerAnomalyRepository`, reading the append-only `tenant_usage_events` ledger; it never updates, deletes, or appends a ledger event (`ULR-R001`, `ULR-R002`).
+2. The detector must catch duplicate double-count drift, missing required fields, invalid quantities, invalid monthly period keys, unknown meter keys, and secret-looking metadata keys — reporting the offending key names only, never their values (`ULR-R003`, `ULR-R004`, `ULR-R005`, `ULR-R006`).
+3. Governed repair is CLI-only via `usage-ledger:repair-apply`; there is deliberately no runtime API route that creates, updates, or deletes ledger events or repair records (`ULR-R009`).
+4. `usage-ledger:repair-apply` refuses to run without an explicit `--apply` or `--dry-run`, always requires `--reason` and `--actor`, and audit-logs every applied repair with redacted metadata (`ULR-R007`, `ULR-R008`).
+5. Repair never mutates or deletes an append-only ledger event; it appends a signed governed correction record (`tenant_usage_ledger_repairs`) and effective usage is derived as ledger count + repair deltas (`ULR-R010`).
+6. Repair is idempotent via a per-tenant unique deterministic `repair_key`; re-applying the same plan creates no correction drift (`ULR-R011`).
+7. Effective usage after repair is clamped so it can never become negative (`ULR-R013`).
+8. Only duplicate double-count drift is auto-repairable; missing-field, invalid-quantity/period, unknown-meter, and suspicious-metadata anomalies are reported for manual review and never auto-mutated (`ULR-R010`).
+9. Platform admin may inspect anomaly and repair summaries (`platform.admin` only, read-only, redacted); normal runtime never leaks cross-tenant usage/anomaly data (`ULR-R012`).
+10. `reports.exports.monthly` remains `meterable: true` and metered from the ledger after Sprint 28 (`ULR-R014`).
+11. `usage-ledger:go-no-go` must FAIL if the detector/planner are not wired, repair apply is not governed, a runtime ledger mutation route exists, a guardrail flag is enabled, redaction is off, the report export meter is not meterable, a required doc is missing, or a prior-sprint gate (Sprint 25/26/27) is not green (`ULR-R015`).
+12. Sprint 28 rules (`ULR-R001..R016`) must coexist with Sprint 25 `TLS-R001..R010`, Sprint 26 `TPE-R001..R012`, and Sprint 27 `UEL-R001..R015` (`ULR-R016`). See `docs/sprints/sprint-28-usage-ledger-anomaly-detection-governed-repair-foundation.md`.
+13. GO/WATCH/NO-GO report must be evidence-backed.

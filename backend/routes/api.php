@@ -39,6 +39,8 @@ use App\Http\Controllers\Api\V1\Admin\AdminTenantPlanGovernanceSummaryController
 use App\Http\Controllers\Api\V1\Admin\AdminTenantUsageEventController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantUsageLimitController;
 use App\Http\Controllers\Api\V1\Admin\AdminUsageEventLedgerSummaryController;
+use App\Http\Controllers\Api\V1\Admin\AdminUsageLedgerAnomalyController;
+use App\Http\Controllers\Api\V1\Admin\AdminUsageLedgerRepairSummaryController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantSubscriptionController;
 use App\Http\Controllers\Api\V1\Admin\PilotDefectBurnDownController;
 use App\Http\Controllers\Api\V1\Admin\PilotDefectController;
@@ -647,6 +649,15 @@ Route::prefix('v1')->group(function () {
             Route::get('/tenants/{tenant}/usage-events/summary', [AdminTenantUsageEventController::class, 'summary']);
             Route::get('/usage-event-ledger/summary', [AdminUsageEventLedgerSummaryController::class, 'show']);
             Route::get('/report-export-metering/summary', [AdminReportExportMeteringSummaryController::class, 'show']);
+
+            // Sprint 28 — usage ledger anomaly detection & governed repair.
+            // Platform admin only, READ-ONLY (ULR-R012). There is deliberately NO
+            // repair-apply route and NO usage ledger update/delete route in runtime
+            // (ULR-R009); governed repair is CLI-only via usage-ledger:repair-apply.
+            // All output is redacted and never leaks secret values (ULR-R006).
+            Route::get('/usage-ledger/anomalies', [AdminUsageLedgerAnomalyController::class, 'index']);
+            Route::get('/tenants/{tenant}/usage-ledger/anomalies', [AdminUsageLedgerAnomalyController::class, 'forTenant']);
+            Route::get('/usage-ledger/repair-summary', [AdminUsageLedgerRepairSummaryController::class, 'show']);
         });
     });
 

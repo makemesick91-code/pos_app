@@ -1,0 +1,219 @@
+name: Sprint 28 CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  foundation-and-smoke:
+    name: Foundation & Sprint 28 smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment (sqlite)
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          mkdir -p storage/app storage/logs storage/framework/views storage/framework/cache storage/framework/cache/data storage/framework/sessions storage/framework/testing bootstrap/cache
+
+      - name: Foundation document exists
+        run: test -f docs/foundation/POS_ANDROID_SAAS_FOUNDATION.md
+
+      - name: Project rules lock intact (Sprint 0–28)
+        run: |
+          grep -q "Sprint 25 Tenant Lifecycle Enforcement & Manual Suspension Governance Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 26 Tenant Plan, Feature Entitlement & Usage Limit Governance Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 27 Report Export Metering & Usage Event Ledger Governance Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 28 Usage Ledger Anomaly Detection & Governed Repair Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "TLS-R004" docs/PROJECT_RULES.md
+          grep -q "TPE-R012" docs/PROJECT_RULES.md
+          grep -q "UEL-R015" docs/PROJECT_RULES.md
+          grep -q "ULR-R007" docs/PROJECT_RULES.md
+          grep -q "ULR-R010" docs/PROJECT_RULES.md
+          grep -q "ULR-R016" docs/PROJECT_RULES.md
+
+      - name: ULR rules present in config
+        run: |
+          grep -R "ULR-R007" backend/config docs
+          grep -R "ULR-R010" backend/config docs
+          grep -R "ULR-R016" backend/config docs
+
+      - name: Sprint 28 smoke script
+        run: bash scripts/sprint28_smoke.sh
+
+      - name: No forbidden files committed
+        run: |
+          ! git ls-files | grep -E '(^|/)\.env$|\.apk$|\.aab$|(^|/)vendor/|(^|/)node_modules/|\.sqlite$|database\.sqlite|(^|/)app/build/|(^|/)\.gradle/|\.keystore$|\.jks$'
+
+  backend-tests:
+    name: Backend tests (usage-ledger anomaly/repair gate + Sprint 0–27 regression)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+
+      - name: Validate composer
+        working-directory: backend
+        run: composer validate --strict
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment (sqlite + migrate)
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          mkdir -p storage/app storage/logs storage/framework/views storage/framework/cache storage/framework/cache/data storage/framework/sessions storage/framework/testing bootstrap/cache
+          touch database/database.sqlite
+          php artisan migrate --force || true
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Run tests
+        working-directory: backend
+        run: php artisan test
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+  usage-ledger-anomaly-repair-gate:
+    name: Usage ledger anomaly & governed repair gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment (sqlite + migrate)
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          mkdir -p storage/app storage/logs storage/framework/views storage/framework/cache storage/framework/cache/data storage/framework/sessions storage/framework/testing bootstrap/cache
+          touch database/database.sqlite
+          php artisan migrate --force || true
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Anomaly scan (clean baseline, secret-safe)
+        working-directory: backend
+        run: php artisan usage-ledger:anomaly-scan --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Repair plan (dry-run, read-only)
+        working-directory: backend
+        run: php artisan usage-ledger:repair-plan --reason=ci-dry-run --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Repair apply refuses without explicit flags
+        working-directory: backend
+        run: |
+          if php artisan usage-ledger:repair-apply; then
+            echo "repair-apply must refuse to run without --apply/--dry-run" >&2
+            exit 1
+          fi
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Repair apply dry-run (governed, no writes)
+        working-directory: backend
+        run: php artisan usage-ledger:repair-apply --dry-run --reason=ci-dry-run --actor=system --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Repair summary (read-only)
+        working-directory: backend
+        run: php artisan usage-ledger:repair-summary --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Usage ledger GO / WATCH / NO-GO (Sprint 28 gate)
+        working-directory: backend
+        run: php artisan usage-ledger:go-no-go --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Prior sprint gates (Sprint 25–27) still green
+        working-directory: backend
+        run: |
+          php artisan report-export-metering:go-no-go --json
+          php artisan tenant-plan:go-no-go --json
+          php artisan tenant-lifecycle:go-no-go --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+  android-build-test:
+    name: Android build & unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Package and SDK levels intact
+        run: |
+          grep -q "com.aishtech.poslite" android/app/build.gradle.kts
+          grep -q "minSdk = 26" android/app/build.gradle.kts
+          grep -q "targetSdk = 35" android/app/build.gradle.kts
+
+      - name: Android release readiness
+        run: bash scripts/android_release_readiness.sh
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Run unit tests
+        working-directory: android
+        run: ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace
