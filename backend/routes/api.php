@@ -36,6 +36,16 @@ use App\Http\Controllers\Api\V1\Admin\PublicWebsiteLeadSummaryController;
 use App\Http\Controllers\Api\V1\Admin\PublicWebsiteReadinessController;
 use App\Http\Controllers\Api\V1\Admin\PublicWebsiteRiskController;
 use App\Http\Controllers\Api\V1\Admin\PublicWebsiteSignoffController;
+use App\Http\Controllers\Api\V1\Admin\SalesLeadActivityController;
+use App\Http\Controllers\Api\V1\Admin\SalesLeadAssignmentController;
+use App\Http\Controllers\Api\V1\Admin\SalesLeadController;
+use App\Http\Controllers\Api\V1\Admin\SalesPipelineActivitySummaryController;
+use App\Http\Controllers\Api\V1\Admin\SalesPipelineGoNoGoController;
+use App\Http\Controllers\Api\V1\Admin\SalesPipelineLeadSummaryController;
+use App\Http\Controllers\Api\V1\Admin\SalesPipelineReadinessController;
+use App\Http\Controllers\Api\V1\Admin\SalesPipelineRiskController;
+use App\Http\Controllers\Api\V1\Admin\SalesPipelineSignoffController;
+use App\Http\Controllers\Api\V1\Admin\SalesPipelineStageController;
 use App\Http\Controllers\Api\V1\Admin\TenantDemoDataController;
 use App\Http\Controllers\Api\V1\Admin\TenantOnboardingController;
 use App\Http\Controllers\Api\V1\Admin\TenantOnboardingStatusController;
@@ -355,6 +365,50 @@ Route::prefix('v1')->group(function () {
             Route::get('/public-website-content-summary', [PublicWebsiteContentSummaryController::class, 'index']);
             Route::get('/public-website-lead-summary', [PublicWebsiteLeadSummaryController::class, 'index']);
             Route::get('/public-website-go-no-go', [PublicWebsiteGoNoGoController::class, 'index']);
+
+            // Sprint 22 — lead management / sales pipeline readiness. Platform
+            // admin only. Sales leads may be imported from public-website lead
+            // interest submissions but NEVER auto-create a tenant/user/
+            // subscription/device, NEVER bill, NEVER integrate a real CRM, and
+            // NEVER send real WhatsApp/email/Slack. ready-for-onboarding means a
+            // manual onboarding review only. No secrets exposed.
+            Route::get('/sales-pipeline/stages', [SalesPipelineStageController::class, 'index']);
+            Route::post('/sales-pipeline/stages', [SalesPipelineStageController::class, 'store']);
+            Route::post('/sales-pipeline/stages/ensure-defaults', [SalesPipelineStageController::class, 'ensureDefaults']);
+            Route::patch('/sales-pipeline/stages/{stage}', [SalesPipelineStageController::class, 'update']);
+
+            Route::get('/sales-leads', [SalesLeadController::class, 'index']);
+            Route::post('/sales-leads', [SalesLeadController::class, 'store']);
+            Route::post('/sales-leads/import-interest/{leadInterestSubmission}', [SalesLeadController::class, 'importInterest']);
+            Route::get('/sales-leads/{lead}', [SalesLeadController::class, 'show']);
+            Route::patch('/sales-leads/{lead}', [SalesLeadController::class, 'update']);
+            Route::post('/sales-leads/{lead}/transition', [SalesLeadController::class, 'transition']);
+            Route::post('/sales-leads/{lead}/qualify', [SalesLeadController::class, 'qualify']);
+            Route::post('/sales-leads/{lead}/mark-lost', [SalesLeadController::class, 'markLost']);
+            Route::post('/sales-leads/{lead}/ready-for-onboarding', [SalesLeadController::class, 'readyForOnboarding']);
+
+            Route::get('/sales-leads/{lead}/activities', [SalesLeadActivityController::class, 'index']);
+            Route::post('/sales-leads/{lead}/activities', [SalesLeadActivityController::class, 'store']);
+            Route::post('/sales-leads/{lead}/activities/{activity}/complete', [SalesLeadActivityController::class, 'complete']);
+            Route::post('/sales-leads/{lead}/activities/{activity}/cancel', [SalesLeadActivityController::class, 'cancel']);
+
+            Route::post('/sales-leads/{lead}/assign', [SalesLeadAssignmentController::class, 'assign']);
+            Route::post('/sales-leads/{lead}/unassign', [SalesLeadAssignmentController::class, 'unassign']);
+
+            Route::get('/sales-pipeline/risks', [SalesPipelineRiskController::class, 'index']);
+            Route::post('/sales-pipeline/risks', [SalesPipelineRiskController::class, 'store']);
+            Route::get('/sales-pipeline/risks/{risk}', [SalesPipelineRiskController::class, 'show']);
+            Route::patch('/sales-pipeline/risks/{risk}', [SalesPipelineRiskController::class, 'update']);
+            Route::post('/sales-pipeline/risks/{risk}/accept-risk', [SalesPipelineRiskController::class, 'acceptRisk']);
+            Route::post('/sales-pipeline/risks/{risk}/close', [SalesPipelineRiskController::class, 'close']);
+
+            Route::get('/sales-pipeline/signoffs', [SalesPipelineSignoffController::class, 'index']);
+            Route::post('/sales-pipeline/signoffs', [SalesPipelineSignoffController::class, 'store']);
+
+            Route::get('/sales-pipeline/readiness', [SalesPipelineReadinessController::class, 'index']);
+            Route::get('/sales-pipeline/lead-summary', [SalesPipelineLeadSummaryController::class, 'index']);
+            Route::get('/sales-pipeline/activity-summary', [SalesPipelineActivitySummaryController::class, 'index']);
+            Route::get('/sales-pipeline/go-no-go', [SalesPipelineGoNoGoController::class, 'index']);
         });
     });
 

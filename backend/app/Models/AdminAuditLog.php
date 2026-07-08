@@ -86,6 +86,28 @@ class AdminAuditLog extends Model
     public const ACTION_WEBSITE_RISK_CLOSED = 'WEBSITE_RISK_CLOSED';
     public const ACTION_WEBSITE_SIGNOFF_ADDED = 'WEBSITE_SIGNOFF_ADDED';
 
+    // Sprint 22 — lead management / sales pipeline readiness.
+    public const ACTION_SALES_STAGE_CREATED = 'SALES_STAGE_CREATED';
+    public const ACTION_SALES_STAGE_UPDATED = 'SALES_STAGE_UPDATED';
+    public const ACTION_SALES_STAGES_ENSURED = 'SALES_STAGES_ENSURED';
+    public const ACTION_SALES_LEAD_CREATED = 'SALES_LEAD_CREATED';
+    public const ACTION_SALES_LEAD_UPDATED = 'SALES_LEAD_UPDATED';
+    public const ACTION_SALES_LEAD_IMPORTED = 'SALES_LEAD_IMPORTED';
+    public const ACTION_SALES_LEAD_TRANSITIONED = 'SALES_LEAD_TRANSITIONED';
+    public const ACTION_SALES_LEAD_QUALIFIED = 'SALES_LEAD_QUALIFIED';
+    public const ACTION_SALES_LEAD_LOST = 'SALES_LEAD_LOST';
+    public const ACTION_SALES_LEAD_READY_FOR_ONBOARDING = 'SALES_LEAD_READY_FOR_ONBOARDING';
+    public const ACTION_SALES_ACTIVITY_CREATED = 'SALES_ACTIVITY_CREATED';
+    public const ACTION_SALES_ACTIVITY_COMPLETED = 'SALES_ACTIVITY_COMPLETED';
+    public const ACTION_SALES_ACTIVITY_CANCELLED = 'SALES_ACTIVITY_CANCELLED';
+    public const ACTION_SALES_LEAD_ASSIGNED = 'SALES_LEAD_ASSIGNED';
+    public const ACTION_SALES_LEAD_UNASSIGNED = 'SALES_LEAD_UNASSIGNED';
+    public const ACTION_SALES_RISK_CREATED = 'SALES_RISK_CREATED';
+    public const ACTION_SALES_RISK_UPDATED = 'SALES_RISK_UPDATED';
+    public const ACTION_SALES_RISK_ACCEPTED = 'SALES_RISK_ACCEPTED';
+    public const ACTION_SALES_RISK_CLOSED = 'SALES_RISK_CLOSED';
+    public const ACTION_SALES_SIGNOFF_ADDED = 'SALES_SIGNOFF_ADDED';
+
     public const TARGET_TENANT = 'tenant';
     public const TARGET_SUBSCRIPTION = 'tenant_subscription';
     public const TARGET_DEVICE = 'registered_device';
@@ -107,6 +129,12 @@ class AdminAuditLog extends Model
     public const TARGET_LEAD_INTEREST_SUBMISSION = 'lead_interest_submission';
     public const TARGET_PUBLIC_WEBSITE_RISK = 'public_website_risk';
     public const TARGET_PUBLIC_WEBSITE_SIGNOFF = 'public_website_signoff';
+    public const TARGET_SALES_PIPELINE_STAGE = 'sales_pipeline_stage';
+    public const TARGET_SALES_LEAD = 'sales_lead';
+    public const TARGET_SALES_LEAD_ACTIVITY = 'sales_lead_activity';
+    public const TARGET_SALES_LEAD_ASSIGNMENT = 'sales_lead_assignment';
+    public const TARGET_SALES_PIPELINE_RISK = 'sales_pipeline_risk';
+    public const TARGET_SALES_PIPELINE_SIGNOFF = 'sales_pipeline_signoff';
 
     protected $fillable = [
         'actor_user_id',
