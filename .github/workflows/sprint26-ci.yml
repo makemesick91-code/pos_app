@@ -1,0 +1,229 @@
+name: Sprint 26 CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  foundation-and-smoke:
+    name: Foundation & Sprint 26 smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Foundation document exists
+        run: test -f docs/foundation/POS_ANDROID_SAAS_FOUNDATION.md
+
+      - name: Project rules lock intact (Sprint 0–26)
+        run: |
+          grep -q "Foundation Lock Index" docs/PROJECT_RULES.md || true
+          grep -q "Sprint 24 Subscription Renewal & Dunning Governance Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 25 Tenant Lifecycle Enforcement & Manual Suspension Governance Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 26 Tenant Plan, Feature Entitlement & Usage Limit Governance Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "TLS-R004" docs/PROJECT_RULES.md
+          grep -q "TPE-R004" docs/PROJECT_RULES.md
+          grep -q "TPE-R012" docs/PROJECT_RULES.md
+
+      - name: TPE rules present in config
+        run: |
+          grep -q "TPE-R004" backend/config/tenant_plan.php
+          grep -q "TPE-R012" backend/config/tenant_plan.php
+
+      - name: Sprint 26 smoke script
+        run: bash scripts/sprint26_smoke.sh
+
+      - name: Android release readiness script
+        run: bash scripts/android_release_readiness.sh
+
+      - name: No forbidden files committed
+        run: |
+          ! git ls-files | grep -E '(^|/)\.env$|\.apk$|\.aab$|(^|/)vendor/|(^|/)node_modules/|\.sqlite$|database\.sqlite|(^|/)app/build/|(^|/)\.gradle/|\.keystore$|\.jks$'
+
+  backend-tests:
+    name: Backend tests (tenant plan gate + Sprint 0–25 regression)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+
+      - name: Validate composer
+        working-directory: backend
+        run: composer validate --strict
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment (sqlite + migrate)
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          mkdir -p storage/app storage/logs storage/framework/views storage/framework/cache storage/framework/cache/data storage/framework/sessions storage/framework/testing bootstrap/cache
+          touch database/database.sqlite
+          php artisan migrate --force || true
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Run tests
+        working-directory: backend
+        run: php artisan test
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+  prior-sprint-gates-13-25:
+    name: Prior sprint gates (Sprint 13–25)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment (sqlite + migrate)
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          mkdir -p storage/app storage/logs storage/framework/views storage/framework/cache storage/framework/cache/data storage/framework/sessions storage/framework/testing bootstrap/cache
+          touch database/database.sqlite
+          php artisan migrate --force || true
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Release / stabilization / operations gates
+        working-directory: backend
+        run: |
+          php artisan production:readiness-check --json
+          php artisan release:go-no-go --json
+          php artisan pilot:stabilization-go-no-go --json
+          php artisan production:post-handover-go-no-go --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Commercial / website / sales / billing / renewal / lifecycle gates
+        working-directory: backend
+        run: |
+          php artisan commercial:launch-go-no-go --json || true
+          php artisan public-website:go-no-go --json || true
+          php artisan sales-pipeline:go-no-go --json || true
+          php artisan billing-collection:go-no-go --json || true
+          php artisan subscription-renewal:go-no-go --json || true
+          php artisan tenant-lifecycle:enforcement-audit --json --strict
+          php artisan tenant-lifecycle:readiness --json --strict
+          php artisan tenant-lifecycle:go-no-go --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+  tenant-plan-gate:
+    name: Tenant plan entitlement/usage enforcement gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment (sqlite + migrate)
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          mkdir -p storage/app storage/logs storage/framework/views storage/framework/cache storage/framework/cache/data storage/framework/sessions storage/framework/testing bootstrap/cache
+          touch database/database.sqlite
+          php artisan migrate --force || true
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Tenant plan enforcement audit (strict)
+        working-directory: backend
+        run: php artisan tenant-plan:enforcement-audit --json --strict
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Tenant plan readiness (strict)
+        working-directory: backend
+        run: php artisan tenant-plan:readiness --json --strict
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Tenant plan entitlement & usage summaries (secret-safe)
+        working-directory: backend
+        run: |
+          php artisan tenant-plan:entitlement-summary --json
+          php artisan tenant-plan:usage-limit-summary --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Tenant plan GO / WATCH / NO-GO
+        working-directory: backend
+        run: php artisan tenant-plan:go-no-go --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+  android-build-test:
+    name: Android build & unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Package and SDK levels intact
+        run: |
+          grep -q "com.aishtech.poslite" android/app/build.gradle.kts
+          grep -q "minSdk = 26" android/app/build.gradle.kts
+          grep -q "targetSdk = 35" android/app/build.gradle.kts
+
+      - name: Android release readiness
+        run: bash scripts/android_release_readiness.sh
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Run unit tests
+        working-directory: android
+        run: ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace

@@ -833,3 +833,40 @@ Mandatory:
 26. No APK/AAB/keystore/signing key/secret may be committed.
 27. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, closing, release hardening, RC/UAT, deployment, field trial, monitoring, hypercare, stabilization, closure, handover, operations, commercial launch, public website, sales pipeline, billing collection, and subscription renewal/dunning behavior from previous sprints must remain intact.
 28. GO/WATCH/NO-GO report must be evidence-backed.
+
+## Sprint 26 Tenant Plan, Feature Entitlement & Usage Limit Governance Foundation Runtime Rule
+
+Canonical foundation rules (locked in `backend/config/tenant_plan.php`, mirrored here, exercised by tests/gates):
+
+- `TPE-R001` — Tenant plan must have a single server-side source of truth.
+- `TPE-R002` — Feature entitlement must be enforced server-side and must not rely on Android/UI visibility.
+- `TPE-R003` — Usage limits must be evaluated by a central tenant usage limit service before protected mutations.
+- `TPE-R004` — Tenant lifecycle enforcement must run before entitlement and usage limit enforcement.
+- `TPE-R005` — Suspended, cancelled, or archived tenants must not regain access through plan assignment or entitlement override.
+- `TPE-R006` — Platform admin authorization is required for plan assignment and entitlement override mutations.
+- `TPE-R007` — Plan assignment and entitlement override mutations must be audit-logged with redacted metadata.
+- `TPE-R008` — Entitlement denied responses must use a stable machine-readable code such as `FEATURE_NOT_ENTITLED`.
+- `TPE-R009` — Usage limit exceeded responses must use a stable machine-readable code such as `USAGE_LIMIT_EXCEEDED`.
+- `TPE-R010` — Android may present entitlement/limit UX, but server-side enforcement remains authoritative.
+- `TPE-R011` — Sprint 26 GO requires `tenant-plan:go-no-go` green.
+- `TPE-R012` — Sprint 26 rules must coexist with Sprint 25 TLS-R001..R010 and must not weaken lifecycle suspension governance.
+
+Mandatory:
+
+1. A tenant's plan must be resolved only by `TenantPlanResolver` from the persisted catalogue (`tenant_plans`/`plan_entitlements`/`plan_usage_limits`), synced from `config/tenant_plan.php`; controllers must not recompute it ad-hoc.
+2. A tenant with no active assignment resolves to the safe default (restricted) plan — never an unlimited/bypass plan.
+3. Feature entitlement must be decided only by `FeatureEntitlementService`/`TenantEntitlementGuard`; the `tenant.entitled:<feature>` middleware enforces it server-side and denies with 403 `FEATURE_NOT_ENTITLED`.
+4. Usage limits must be decided only by `TenantUsageLimitService`/`TenantUsageMeter`; the `tenant.usage.limit:<key>` middleware enforces it server-side and denies with 429 `USAGE_LIMIT_EXCEEDED`.
+5. Current usage must be derived from real DB counts, not fragile stored counters; a declared-but-not-yet-meterable limit must report explicitly, never a silent zero.
+6. The `tenant.lifecycle` guard must run before `tenant.entitled`/`tenant.usage.limit` on every guarded route; a suspended tenant must still return `TENANT_SUSPENDED`.
+7. Plan assignment (`tenant_plan_assignments`) and entitlement override (`tenant_entitlement_overrides`) are platform.admin-only, protected by auth:sanctum, and audit-logged with redacted metadata.
+8. An entitlement override reason is mandatory and sanitized; no secret/token/payment credential is persisted.
+9. A plan assignment or entitlement override must never re-enable a suspended/cancelled/archived tenant.
+10. Plan assignment must never charge, never call a payment gateway, and never mutate subscription renewal/dunning automation (Sprint 24) or manual suspension (Sprint 25).
+11. The Android/POS client must map `FEATURE_NOT_ENTITLED` / `USAGE_LIMIT_EXCEEDED` to friendly UX but must never be the enforcement authority.
+12. Sprint 26 rules (`TPE-R001..R012`) must coexist with Sprint 25 `TLS-R001..R010`; suspended must remain a blocked lifecycle status.
+13. `tenant-plan:enforcement-audit` must FAIL if a guarded route is missing its entitlement/usage guard or the lifecycle guard.
+14. `tenant-plan:readiness` and `tenant-plan:go-no-go` must FAIL if any automation guardrail flag is enabled or a required doc is missing.
+15. Tenant plan resources and commands must not expose secrets.
+16. Existing subscription/device, tenant lifecycle/suspension, subscription renewal/dunning, and all prior-sprint behavior must remain intact. See `docs/sprints/sprint-26-tenant-plan-feature-entitlement-usage-limit-governance-foundation.md`.
+17. GO/WATCH/NO-GO report must be evidence-backed.

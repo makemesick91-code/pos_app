@@ -31,6 +31,11 @@ use App\Http\Controllers\Api\V1\Admin\AdminTenantDeviceController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantLifecycleController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantLifecycleSuspensionSummaryController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantSuspensionController;
+use App\Http\Controllers\Api\V1\Admin\AdminTenantEntitlementController;
+use App\Http\Controllers\Api\V1\Admin\AdminTenantPlanAssignmentController;
+use App\Http\Controllers\Api\V1\Admin\AdminTenantPlanController;
+use App\Http\Controllers\Api\V1\Admin\AdminTenantPlanGovernanceSummaryController;
+use App\Http\Controllers\Api\V1\Admin\AdminTenantUsageLimitController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantSubscriptionController;
 use App\Http\Controllers\Api\V1\Admin\PilotDefectBurnDownController;
 use App\Http\Controllers\Api\V1\Admin\PilotDefectController;
@@ -160,55 +165,83 @@ Route::prefix('v1')->group(function () {
             // with TENANT_SUSPENDED). Manual suspension has precedence over
             // subscription renewal/dunning automation. The auth/status/device/
             // tenant-context routes above are the explicit enforcement allowlist.
+            // Sprint 26 — tenant plan / feature entitlement / usage limit
+            // enforcement. tenant.entitled:<feature> denies (403,
+            // FEATURE_NOT_ENTITLED) when the tenant plan (with overrides) does not
+            // grant a feature; tenant.usage.limit:<key> denies (429,
+            // USAGE_LIMIT_EXCEEDED) when a plan usage cap is reached. Both run
+            // AFTER tenant.lifecycle so a suspended tenant is still blocked with
+            // TENANT_SUSPENDED first (TPE-R004/R005) and can never be re-enabled by
+            // plan/override. Enforcement is server-side authoritative; Android is
+            // UX only (TPE-R002/R010).
             Route::middleware(['subscription.active', 'tenant.lifecycle', 'device.registered'])->group(function () {
-                // Sprint 2 — tenant-isolated product catalog.
-                Route::apiResource('product-categories', ProductCategoryController::class);
-                Route::apiResource('products', ProductController::class);
-                Route::apiResource('product-store-prices', ProductStorePriceController::class);
+                // Catalog + inventory operations require the inventory.basic feature.
+                Route::middleware('tenant.entitled:inventory.basic')->group(function () {
+                    // Sprint 2 — tenant-isolated product catalog.
+                    Route::apiResource('product-categories', ProductCategoryController::class);
 
-                // Android incremental product/category sync.
-                Route::get('/sync/products', [ProductSyncController::class, 'products']);
-                Route::get('/sync/categories', [ProductSyncController::class, 'categories']);
+                    Route::get('/products', [ProductController::class, 'index']);
+                    // Creating a product is metered against the plan products.max limit.
+                    Route::post('/products', [ProductController::class, 'store'])
+                        ->middleware('tenant.usage.limit:products.max');
+                    Route::get('/products/{product}', [ProductController::class, 'show']);
+                    Route::match(['put', 'patch'], '/products/{product}', [ProductController::class, 'update']);
+                    Route::delete('/products/{product}', [ProductController::class, 'destroy']);
 
-                // Sprint 4 — tenant-isolated sales + online CASH checkout.
-                Route::get('/sales', [SaleController::class, 'index']);
-                Route::post('/sales', [SaleController::class, 'store']);
-                Route::get('/sales/{sale}', [SaleController::class, 'show']);
-                Route::post('/sales/{sale}/cancel', [SaleController::class, 'cancel']);
-                Route::post('/sales/{sale}/payments/cash', [SaleCashPaymentController::class, 'store']);
+                    Route::apiResource('product-store-prices', ProductStorePriceController::class);
 
-                // Sprint 6 — tenant-isolated receipt preview. Backend is the sole
-                // authority for receipt data and print eligibility; Android only
-                // formats an approved payload for ESC/POS printing.
-                Route::get('/sales/{sale}/receipt', [ReceiptController::class, 'show']);
+                    // Android incremental product/category sync.
+                    Route::get('/sync/products', [ProductSyncController::class, 'products']);
+                    Route::get('/sync/categories', [ProductSyncController::class, 'categories']);
 
-                // Sprint 5 — backend-driven QRIS: create a QRIS payment for a sale
-                // and poll its status. Android never calls a payment gateway directly.
-                Route::post('/sales/{sale}/payments/qris', [QrisPaymentController::class, 'store']);
-                Route::get('/payments/{payment}/status', [PaymentStatusController::class, 'show']);
+                    // Sprint 8 — ledger-based simple inventory. Stock is derived from
+                    // inventory_movements (never a mutable column); SALE_OUT is created
+                    // by sales only. All endpoints are tenant/store isolated.
+                    Route::get('/inventory/current-stock', [InventoryCurrentStockController::class, 'index']);
+                    Route::get('/inventory/products/{product}/stock', [InventoryCurrentStockController::class, 'show']);
+                    Route::get('/inventory/movements', [InventoryMovementController::class, 'index']);
+                    Route::post('/inventory/adjustments', [InventoryAdjustmentController::class, 'store']);
+                });
 
-                // Sprint 8 — ledger-based simple inventory. Stock is derived from
-                // inventory_movements (never a mutable column); SALE_OUT is created
-                // by sales only. All endpoints are tenant/store isolated.
-                Route::get('/inventory/current-stock', [InventoryCurrentStockController::class, 'index']);
-                Route::get('/inventory/products/{product}/stock', [InventoryCurrentStockController::class, 'show']);
-                Route::get('/inventory/movements', [InventoryMovementController::class, 'index']);
-                Route::post('/inventory/adjustments', [InventoryAdjustmentController::class, 'store']);
+                // Sales / checkout / receipts require the pos.sales feature.
+                Route::middleware('tenant.entitled:pos.sales')->group(function () {
+                    // Sprint 4 — tenant-isolated sales + online CASH checkout.
+                    Route::get('/sales', [SaleController::class, 'index']);
+                    // Creating a sale is metered against the plan transactions.monthly limit.
+                    Route::post('/sales', [SaleController::class, 'store'])
+                        ->middleware('tenant.usage.limit:transactions.monthly');
+                    Route::get('/sales/{sale}', [SaleController::class, 'show']);
+                    Route::post('/sales/{sale}/cancel', [SaleController::class, 'cancel']);
+                    Route::post('/sales/{sale}/payments/cash', [SaleCashPaymentController::class, 'store']);
 
-                // Sprint 9 — reports & closing foundation. All figures are computed
-                // by the backend report services (never trusted from the client),
-                // tenant-isolated, and store-scoped. PAID sales only count as
-                // revenue; pending QRIS/cancelled sales are excluded.
-                Route::get('/reports/daily-sales', [DailySalesReportController::class, 'index']);
-                Route::get('/reports/daily-sales/export.csv', [DailySalesCsvExportController::class, 'index']);
-                Route::get('/reports/payment-summary', [PaymentSummaryReportController::class, 'index']);
-                Route::get('/reports/inventory-movements-summary', [InventoryMovementSummaryController::class, 'index']);
+                    // Sprint 6 — tenant-isolated receipt preview. Backend is the sole
+                    // authority for receipt data and print eligibility; Android only
+                    // formats an approved payload for ESC/POS printing.
+                    Route::get('/sales/{sale}/receipt', [ReceiptController::class, 'show']);
 
-                // Daily closing snapshot: one closing per tenant/store/business_date,
-                // duplicate close replays the existing snapshot.
-                Route::post('/closings/daily', [DailyClosingController::class, 'store']);
-                Route::get('/closings/daily', [DailyClosingController::class, 'index']);
-                Route::get('/closings/daily/{dailyClosing}', [DailyClosingController::class, 'show']);
+                    // Sprint 5 — backend-driven QRIS: create a QRIS payment for a sale
+                    // and poll its status. Android never calls a payment gateway directly.
+                    Route::post('/sales/{sale}/payments/qris', [QrisPaymentController::class, 'store']);
+                    Route::get('/payments/{payment}/status', [PaymentStatusController::class, 'show']);
+                });
+
+                // Reports & daily closing require the reports.basic feature.
+                Route::middleware('tenant.entitled:reports.basic')->group(function () {
+                    // Sprint 9 — reports & closing foundation. All figures are computed
+                    // by the backend report services (never trusted from the client),
+                    // tenant-isolated, and store-scoped. PAID sales only count as
+                    // revenue; pending QRIS/cancelled sales are excluded.
+                    Route::get('/reports/daily-sales', [DailySalesReportController::class, 'index']);
+                    Route::get('/reports/daily-sales/export.csv', [DailySalesCsvExportController::class, 'index']);
+                    Route::get('/reports/payment-summary', [PaymentSummaryReportController::class, 'index']);
+                    Route::get('/reports/inventory-movements-summary', [InventoryMovementSummaryController::class, 'index']);
+
+                    // Daily closing snapshot: one closing per tenant/store/business_date,
+                    // duplicate close replays the existing snapshot.
+                    Route::post('/closings/daily', [DailyClosingController::class, 'store']);
+                    Route::get('/closings/daily', [DailyClosingController::class, 'index']);
+                    Route::get('/closings/daily/{dailyClosing}', [DailyClosingController::class, 'show']);
+                });
             });
         });
 
@@ -575,6 +608,26 @@ Route::prefix('v1')->group(function () {
             Route::post('/tenants/{tenant}/suspend', [AdminTenantSuspensionController::class, 'suspend']);
             Route::post('/tenants/{tenant}/lift-suspension', [AdminTenantSuspensionController::class, 'lift']);
             Route::get('/tenant-lifecycle/suspension-summary', [AdminTenantLifecycleSuspensionSummaryController::class, 'show']);
+
+            // Sprint 26 — tenant plan, feature entitlement & usage limit
+            // governance. Platform admin only. Plans are the server-side source of
+            // truth (TPE-R001). Plan assignment and entitlement override are
+            // platform-admin only and audit-logged (TPE-R006/R007) and NEVER bypass
+            // tenant lifecycle enforcement — a suspended tenant stays suspended
+            // (TPE-R004/R005). Nothing here charges or calls a payment gateway.
+            Route::get('/tenant-plans', [AdminTenantPlanController::class, 'index']);
+            Route::post('/tenant-plans', [AdminTenantPlanController::class, 'store']);
+            Route::patch('/tenant-plans/{plan}', [AdminTenantPlanController::class, 'update']);
+
+            Route::get('/tenants/{tenant}/plan', [AdminTenantPlanAssignmentController::class, 'show']);
+            Route::post('/tenants/{tenant}/plan', [AdminTenantPlanAssignmentController::class, 'assign']);
+
+            Route::get('/tenants/{tenant}/entitlements', [AdminTenantEntitlementController::class, 'show']);
+            Route::post('/tenants/{tenant}/entitlement-overrides', [AdminTenantEntitlementController::class, 'storeOverride']);
+
+            Route::get('/tenants/{tenant}/usage-limits', [AdminTenantUsageLimitController::class, 'show']);
+
+            Route::get('/tenant-plan-governance/summary', [AdminTenantPlanGovernanceSummaryController::class, 'show']);
         });
     });
 

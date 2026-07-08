@@ -5,7 +5,10 @@ namespace Database\Factories;
 use App\Models\RegisteredDevice;
 use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
+use App\Models\TenantPlan;
+use App\Models\TenantPlanAssignment;
 use App\Models\TenantSubscription;
+use App\Services\TenantPlan\TenantPlanRegistrar;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -63,6 +66,27 @@ class TenantFactory extends Factory
                 'registered_at' => now(),
                 'status' => RegisteredDevice::STATUS_ACTIVE,
             ]);
+
+            // Sprint 26 — auto-assign the test default plan (enterprise: all
+            // features entitled, unlimited usage) so the cumulative Sprint 2–25
+            // operational suites stay green under the new entitlement/usage guards
+            // (mirrors the Sprint 10 subscription/device auto-provision convention).
+            // Sprint 26 tests that exercise denials assign a constrained plan or an
+            // override explicitly.
+            app(TenantPlanRegistrar::class)->ensure();
+            $planKey = (string) config('tenant_plan.test_default_plan', 'enterprise');
+            $plan = TenantPlan::query()->where('key', $planKey)->first();
+
+            if ($plan !== null) {
+                TenantPlanAssignment::query()->create([
+                    'tenant_id' => $tenant->id,
+                    'tenant_plan_id' => $plan->id,
+                    'status' => TenantPlanAssignment::STATUS_ACTIVE,
+                    'effective_from' => now()->subDay(),
+                    'effective_until' => null,
+                    'source' => TenantPlanAssignment::SOURCE_TEST,
+                ]);
+            }
         });
     }
 
