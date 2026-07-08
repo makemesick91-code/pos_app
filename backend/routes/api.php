@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\V1\Admin\AdminTenantDeviceController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantEntitlementController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantLifecycleController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantLifecycleSuspensionSummaryController;
+use App\Http\Controllers\Api\V1\Admin\AdminTenantOnboardingController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantPlanAssignmentController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantPlanController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantPlanGovernanceSummaryController;
@@ -758,6 +759,26 @@ Route::prefix('v1')->group(function () {
             Route::get('/tenant-billing/entitlements/decisions', [AdminEntitlementDecisionController::class, 'index']);
             Route::get('/tenant-billing/entitlements/decisions/{decision}', [AdminEntitlementDecisionController::class, 'show']);
             Route::get('/tenant-billing/entitlements/decision-summary', [AdminEntitlementDecisionController::class, 'summary']);
+
+            // Sprint 33 — tenant onboarding, trial activation & first-branch
+            // provisioning. Platform admin only (ONB-R018/R025). Every mutation
+            // goes through TenantOnboardingService (ONB-R001), requires an
+            // idempotency key (ONB-R005) and is audited (ONB-R006/R023). There is
+            // deliberately NO public/self-signup mutation route and NO tenant
+            // route that mutates the onboarding lifecycle (ONB-R018/R019), and no
+            // route marks an invoice paid or lifts a suspension. Responses are
+            // redacted — no secrets/PII (ONB-R024). Prefixed `tenant-billing/
+            // onboarding` — no collision with the Sprint 12 `/admin/onboarding`
+            // demo-data surface.
+            Route::get('/tenant-billing/onboarding', [AdminTenantOnboardingController::class, 'index']);
+            Route::get('/tenant-billing/onboarding/governance', [AdminTenantOnboardingController::class, 'governance']);
+            Route::post('/tenant-billing/onboarding', [AdminTenantOnboardingController::class, 'store']);
+            Route::get('/tenant-billing/onboarding/{run}', [AdminTenantOnboardingController::class, 'show']);
+            Route::get('/tenant-billing/onboarding/{run}/checklist', [AdminTenantOnboardingController::class, 'checklist']);
+            Route::post('/tenant-billing/onboarding/{run}/retry', [AdminTenantOnboardingController::class, 'retry']);
+            Route::post('/tenant-billing/onboarding/{run}/cancel', [AdminTenantOnboardingController::class, 'cancel']);
+            Route::post('/tenant-billing/onboarding/{run}/invoice', [AdminTenantOnboardingController::class, 'invoice']);
+            Route::post('/tenant-billing/onboarding/{run}/payment-intent', [AdminTenantOnboardingController::class, 'paymentIntent']);
         });
     });
 

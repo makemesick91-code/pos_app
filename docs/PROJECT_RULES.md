@@ -1097,3 +1097,49 @@ Mandatory:
 8. `entitlement:go-no-go` must FAIL if the entitlement governance audit is NO_GO, a core limit is unwired, an enforcement middleware is unregistered, a Sprint 32 command is missing, a Sprint 24–31 prior gate is not registered, or a required doc is missing (`ENT-R024`). See `docs/sprints/sprint-32-plan-entitlement-runtime-enforcement-evidence.md`.
 9. Sprint 32 rules (`ENT-R001..R024`) coexist with Sprint 25 `TLS-R001..R010`, Sprint 26 `TPE-R001..R012`, Sprint 27 `UEL-R001..R015`, Sprint 28 `ULR-R001..R016`, Sprint 29 `EGC-R001..R015`, Sprint 30 `BIL-R001..R016`, and Sprint 31 `PGW-R001..R018`; suspended must remain a blocked lifecycle status.
 10. GO/WATCH/NO-GO report must be evidence-backed.
+
+## Sprint 33 Tenant Onboarding, Trial Activation & First-Branch Provisioning Foundation Runtime Rule
+
+Sprint 33 turns the commercial SaaS foundation into a real, governed onboarding flow for a new UMKM/tenant from zero: create tenant → select/resolve plan → activate trial → provision first branch → owner/admin → first cashier → device/register setup → seed safe defaults → trial-to-paid readiness → deterministic checklist. It is additive and does not change Sprint 23–32 semantics.
+
+Canonical foundation rules (locked in `backend/config/onboarding_governance.php`, mirrored in `backend/config/pos_foundation.php` and here, exercised by tests/gates):
+
+- `ONB-R001` — Tenant onboarding must use the canonical `TenantOnboardingService` orchestrator.
+- `ONB-R002` — Tenant plan must resolve through the canonical `TenantPlanResolver`.
+- `ONB-R003` — A missing/unknown plan must fail closed, never fall back to unlimited/free.
+- `ONB-R004` — Onboarding must be transactional and idempotent.
+- `ONB-R005` — An onboarding mutation request must carry a unique idempotency key.
+- `ONB-R006` — Tenant creation must be audit-logged with redacted metadata.
+- `ONB-R007` — Trial activation must be time-bounded and audit-logged.
+- `ONB-R008` — First branch (store) provisioning is required unless disabled by governance.
+- `ONB-R009` — Owner/admin user provisioning is required.
+- `ONB-R010` — Cashier provisioning must respect the Sprint 32 user/cashier limit.
+- `ONB-R011` — Device/register setup must respect the Sprint 32 device/register limit.
+- `ONB-R012` — Default seed data must be safe, deterministic, and tenant-isolated.
+- `ONB-R013` — No onboarding step may bypass `EntitlementAccessService`.
+- `ONB-R014` — Trial-to-paid transition must use the Sprint 30 invoice/collection services.
+- `ONB-R015` — QRIS/payment-intent creation must use the Sprint 31 payment-gateway services.
+- `ONB-R016` — A failed/cancelled/expired payment event never activates paid entitlement.
+- `ONB-R017` — Manual suspension always wins over onboarding/payment state.
+- `ONB-R018` — Public self-signup mutation is disabled unless a signed approval/token flow governs it.
+- `ONB-R019` — No tenant/public route may mutate onboarding lifecycle after provisioning without a service guard.
+- `ONB-R020` — A provisioning failure must leave an auditable failed state.
+- `ONB-R021` — A retry must be idempotent and never duplicate tenant/branch/users/register/device.
+- `ONB-R022` — The onboarding checklist must be deterministic and explainable.
+- `ONB-R023` — A denied/blocked provisioning step must be audit-logged with redacted metadata.
+- `ONB-R024` — Command/API/admin output must not leak secrets or PII.
+- `ONB-R025` — Platform-admin bypass must be explicit and audited.
+- `ONB-R026` — Go/no-go must verify full Plan → Invoice → Payment Intent → Gateway Settlement → Collection → Entitlement Runtime Access compatibility.
+
+Mandatory:
+
+1. The single mutation path is `App\Services\TenantOnboarding\TenantOnboardingService`; controllers/commands never re-implement provisioning (`ONB-R001`, `ONB-R013`). Resource mutations run inside one DB transaction that rolls back on any failure (no half-created tenant), while the run row and a single failed-step row are written OUTSIDE the transaction so a failure always leaves an auditable failed state (`ONB-R004`, `ONB-R020`). A run is idempotent by `idempotency_key`: a replayed key resumes/returns the run and never duplicates a tenant/branch/user/register/device (`ONB-R005`, `ONB-R021`).
+2. The plan resolves through the Sprint 26 `TenantPlanResolver`; an unknown plan fails CLOSED with reason `UNKNOWN_PLAN` and there is no unlimited/free fallback (`ONB-R002`, `ONB-R003`, `unknown_plan_grants_unlimited_allowed=false`). Trial activation is time-bounded (`default_duration_days` ≤ `max_duration_days`) and only for trial-eligible plans (`ONB-R007`).
+3. Each provisioning step enforces the Sprint 32 `EntitlementAccessService` before it creates a resource — `canCreateBranch` (first store), `canCreateUser` (owner/admin), `canCreateCashier` (first cashier), `canRegisterDevice` (device/register setup) — and a denied step is audit-logged to the provisioning trace and the `tenant_entitlement_decisions` trail with redacted metadata (`ONB-R008..R013`, `ONB-R023`).
+4. The device/register step mints only a ONE-TIME setup token: it is hashed and never persisted, returned, or logged; only a short non-reversible fingerprint reaches the trace (`ONB-R011`, `ONB-R024`, `device_setup_token_hashed_only=true`). Default seed data is a small deterministic, tenant-isolated set of product categories; no fake production transactions by default (`ONB-R012`).
+5. Trial-to-paid readiness generates the first invoice through the Sprint 30 `TenantInvoiceService` and the QRIS/mock payment intent through the Sprint 31 `PaymentGatewayIntentService`; onboarding NEVER marks an invoice paid or unlocks paid entitlement directly. Paid access only ever follows the trusted Sprint 30 collection state consumed by the Sprint 32 `EntitlementBillingStateService`, so a failed/cancelled/expired payment event can never activate paid access (`ONB-R014..R016`, `onboarding_marks_invoice_paid_directly_allowed=false`, `failed_payment_activates_paid_access_allowed=false`).
+6. Manual suspension (Sprint 25) always wins over onboarding/payment state and a paid invoice never lifts it (`ONB-R017`, `paid_invoice_lifts_manual_suspension_allowed=false`). The admin surface (`tenant-billing/onboarding/*`) is `platform.admin` only; there is deliberately NO public/self-signup mutation route (`public_self_signup_mutation_enabled=false`) and NO tenant/public route that mutates onboarding lifecycle (`ONB-R018`, `ONB-R019`).
+7. The checklist is deterministic and explainable — every item is derived from a DB existence query or the run's own columns with a stable reason code, and its output is safe (`ONB-R022`, `ONB-R024`).
+8. `onboarding:go-no-go` must FAIL if the onboarding governance audit is NO_GO, a hard guardrail is not locked false, a Sprint 33 command is missing, a Sprint 24–32 prior gate is not registered, the central orchestrator wiring is incomplete, or a commercial-chain service is missing (`ONB-R026`). See `docs/sprints/sprint-33-tenant-onboarding-trial-activation-first-branch-provisioning-evidence.md`.
+9. Sprint 33 rules (`ONB-R001..R026`) coexist with Sprint 25 `TLS-R001..R010`, Sprint 26 `TPE-R001..R012`, Sprint 27 `UEL-R001..R015`, Sprint 28 `ULR-R001..R016`, Sprint 29 `EGC-R001..R015`, Sprint 30 `BIL-R001..R016`, Sprint 31 `PGW-R001..R018`, and Sprint 32 `ENT-R001..R024`; the Sprint 33 `tenant_provisioning_runs`/`tenant_provisioning_steps` tables are separate from the Sprint 12 `tenant_onboarding_runs` demo-data table.
+10. GO/WATCH/NO-GO report must be evidence-backed.
