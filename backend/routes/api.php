@@ -12,6 +12,10 @@ use App\Http\Controllers\Api\V1\Admin\AdminReportExportMeteringSummaryController
 use App\Http\Controllers\Api\V1\Admin\AdminSubscriptionPlanController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantController;
 use App\Http\Controllers\Api\V1\Admin\AdminAndroidRuntimeController;
+use App\Http\Controllers\Api\V1\Admin\AdminSupportConsoleController;
+use App\Http\Controllers\Api\V1\Admin\AdminSupportDeviceController;
+use App\Http\Controllers\Api\V1\Admin\AdminSupportIncidentController;
+use App\Http\Controllers\Api\V1\Admin\AdminSupportSessionController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantDeviceController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantEntitlementController;
 use App\Http\Controllers\Api\V1\Android\AndroidRuntimePolicyController;
@@ -343,6 +347,40 @@ Route::prefix('v1')->group(function () {
             Route::get('/android-runtime/sync-batches/{batch}', [AdminAndroidRuntimeController::class, 'syncBatchShow']);
             Route::get('/android-runtime/conflicts', [AdminAndroidRuntimeController::class, 'conflicts']);
             Route::get('/android-runtime/governance', [AdminAndroidRuntimeController::class, 'governance']);
+
+            // Sprint 35 — Support Console, Tenant Operations & Incident
+            // Diagnostics. Platform-admin only (SUP-R001), read-only by default
+            // (SUP-R004). The only mutations are governed device revoke/reactivate
+            // (Sprint 34 services), incident create/update/note, and read-only
+            // support context start/end — each requires a reason_code (SUP-R005)
+            // and is audited (SUP-R006). No route marks an invoice paid, unlocks
+            // entitlement, lifts a suspension, or mutates state without a governed
+            // service. Impersonation is disabled by default (SUP-R018).
+            Route::prefix('support-ops')->group(function () {
+                Route::get('/tenants', [AdminSupportConsoleController::class, 'tenants']);
+                Route::get('/tenants/{tenant}/health', [AdminSupportConsoleController::class, 'health']);
+                Route::get('/tenants/{tenant}/timeline', [AdminSupportConsoleController::class, 'timeline']);
+                Route::get('/tenants/{tenant}/billing', [AdminSupportConsoleController::class, 'billing']);
+                Route::get('/tenants/{tenant}/payments', [AdminSupportConsoleController::class, 'payments']);
+                Route::get('/tenants/{tenant}/entitlements', [AdminSupportConsoleController::class, 'entitlements']);
+                Route::get('/tenants/{tenant}/onboarding', [AdminSupportConsoleController::class, 'onboarding']);
+                Route::get('/tenants/{tenant}/android-runtime', [AdminSupportConsoleController::class, 'androidRuntime']);
+
+                Route::post('/tenants/{tenant}/devices/{activation}/revoke', [AdminSupportDeviceController::class, 'revoke']);
+                Route::post('/tenants/{tenant}/devices/{activation}/reactivate', [AdminSupportDeviceController::class, 'reactivate']);
+
+                Route::get('/incidents', [AdminSupportIncidentController::class, 'index']);
+                Route::post('/incidents', [AdminSupportIncidentController::class, 'store']);
+                Route::get('/incidents/{incident}', [AdminSupportIncidentController::class, 'show']);
+                Route::patch('/incidents/{incident}', [AdminSupportIncidentController::class, 'update']);
+                Route::post('/incidents/{incident}/notes', [AdminSupportIncidentController::class, 'addNote']);
+
+                Route::post('/tenants/{tenant}/read-only-context/start', [AdminSupportSessionController::class, 'startReadOnlyContext']);
+                Route::post('/sessions/{session}/end', [AdminSupportSessionController::class, 'end']);
+                Route::post('/tenants/{tenant}/impersonation/start', [AdminSupportSessionController::class, 'startImpersonation']);
+
+                Route::get('/governance', [AdminSupportConsoleController::class, 'governance']);
+            });
 
             Route::get('/subscription-plans', [AdminSubscriptionPlanController::class, 'index']);
             Route::post('/subscription-plans', [AdminSubscriptionPlanController::class, 'store']);
