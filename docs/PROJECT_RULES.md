@@ -56,6 +56,7 @@ This project is governed by:
 21. `docs/sprints/sprint-19-production-operations-post-handover-governance-foundation.md`
 22. `docs/sprints/sprint-20-commercial-launch-readiness-saas-packaging-foundation.md`
 23. `docs/sprints/sprint-21-public-website-landing-page-readiness-foundation.md`
+24. `docs/sprints/sprint-22-lead-management-sales-pipeline-readiness-foundation.md`
 
 No sprint may contradict these documents unless the canonical foundation is explicitly updated first.
 
@@ -637,3 +638,45 @@ Mandatory:
 30. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, closing, release hardening, RC/UAT, deployment, field trial, monitoring, hypercare, stabilization, closure, handover, operations, and commercial launch behavior from previous sprints must remain intact.
 31. Android CI remains the authoritative build gate if local Android build cannot run.
 32. Public website GO/WATCH/NO-GO report must be evidence-backed.
+
+## Sprint 22 Lead Management / Sales Pipeline Readiness Foundation Runtime Rule
+
+Starting Sprint 22, lead management and sales pipeline readiness must be admin-governed, audit-logged, secret-safe, manual-review-first, and gated before a GO tag is created.
+
+Mandatory:
+
+1. Sales pipeline readiness must not be declared GO without backend tests passing.
+2. Sales pipeline readiness must not be declared GO without Android CI assembleDebug passing.
+3. Sales pipeline readiness must not be declared GO without Android CI testDebugUnitTest passing.
+4. Sales pipeline readiness must not be declared GO without Sprint 13 release gates passing.
+5. Sales pipeline readiness must not be declared GO without Sprint 14 RC/UAT gates passing.
+6. Sales pipeline readiness must not be declared GO without Sprint 15 deployment/field gates passing.
+7. Sales pipeline readiness must not be declared GO without Sprint 16 monitoring/hypercare gates passing.
+8. Sales pipeline readiness must not be declared GO without Sprint 17 stabilization/defect gates passing.
+9. Sales pipeline readiness must not be declared GO without Sprint 18 closure/handover gates passing.
+10. Sales pipeline readiness must not be declared GO without Sprint 19 production operations gates passing.
+11. Sales pipeline readiness must not be declared GO without Sprint 20 commercial launch gates passing.
+12. Sales pipeline readiness must not be declared GO without Sprint 21 public website gates passing.
+13. Sales leads may be imported from public website lead interest submissions, but must not automatically create tenant records.
+14. Sales leads must not automatically create users.
+15. Sales leads must not automatically create subscriptions.
+16. Sales leads must not automatically register devices.
+17. Sales pipeline must not perform real billing collection.
+18. Sales pipeline must not perform subscription payment automation.
+19. Sales pipeline must not send real WhatsApp/email/Slack alerts.
+20. Sales pipeline must not call external CRM APIs in Sprint 22.
+21. Sales pipeline activities marked WhatsApp/email are manual notes only.
+22. Ready-for-onboarding means manual onboarding review, not automatic provisioning.
+23. Admin sales pipeline APIs must be protected by auth:sanctum and platform.admin.
+24. Tenant users must not access sales pipeline admin APIs.
+25. Sales pipeline mutations must be audit-logged when audit logging exists.
+26. Sales pipeline resources and commands must not expose secrets.
+27. Sales pipeline risks with open CRITICAL/HIGH severity must force NO-GO unless a valid accepted risk is documented.
+28. Sales pipeline risks with open MEDIUM severity must force WATCH unless mitigated.
+29. Rejected sales pipeline signoff must force NO-GO.
+30. Approved-with-risk sales pipeline signoff must force WATCH.
+31. No Android POS business flow may be changed by Sprint 22.
+32. No Android sales/admin pipeline UI may be introduced in Sprint 22.
+33. No APK/AAB/keystore/signing key/secret may be committed.
+34. Existing platform admin, onboarding, subscription/device, cash, QRIS, receipt, printer, offline sync, inventory, reports, closing, release hardening, RC/UAT, deployment, field trial, monitoring, hypercare, stabilization, closure, handover, operations, commercial launch, and public website behavior from previous sprints must remain intact.
+35. GO/WATCH/NO-GO report must be evidence-backed.

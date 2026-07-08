@@ -361,6 +361,30 @@ penagihan langganan nyata. Cash (Sprint 4), QRIS (Sprint 5), struk/printer
 (Sprint 9) tetap utuh. Android build CI menjalankan assembleDebug +
 testDebugUnitTest.
 
+## Sprint 22 — Lead Management / Sales Pipeline Readiness Foundation
+
+Sprint 22 establishes sales pipeline readiness after public website lead interest:
+
+- sales lead persistence
+- sales pipeline stages
+- sales lead activities
+- sales lead assignments
+- sales pipeline risks
+- sales pipeline signoffs
+- admin sales pipeline APIs behind platform.admin
+- import from public website lead interest submissions
+- manual qualification readiness
+- manual onboarding handover readiness
+- sales-pipeline:readiness
+- sales-pipeline:lead-summary
+- sales-pipeline:activity-summary
+- sales-pipeline:go-no-go
+- no automatic tenant/user/subscription/device creation from leads
+- no real billing collection
+- no real CRM integration
+- no real WhatsApp/email/Slack sending
+- no Android POS business flow change
+
 ## Sprint 21 — Public Website / Landing Page Readiness Foundation
 
 Sprint 21 establishes the public website and landing page readiness foundation:

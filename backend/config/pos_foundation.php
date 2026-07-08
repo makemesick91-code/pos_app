@@ -122,6 +122,13 @@ return [
         'no_public_self_service_signup_sprint_21' => true,
         'no_real_billing_collection_sprint_21' => true,
         'no_live_analytics_or_ad_pixel_sprint_21' => true,
+        'sales_pipeline_readiness_required' => true,
+        'lead_management_governance_required' => true,
+        'sales_pipeline_go_no_go_required' => true,
+        'no_auto_tenant_creation_from_lead_sprint_22' => true,
+        'no_real_crm_integration_sprint_22' => true,
+        'no_real_message_sending_sprint_22' => true,
+        'no_real_billing_collection_sprint_22' => true,
     ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
@@ -146,5 +153,6 @@ return [
         'sprint_19' => 'Production Operations Baseline & Post-Handover Governance Foundation',
         'sprint_20' => 'Commercial Launch Readiness & SaaS Packaging Foundation',
         'sprint_21' => 'Public Website / Landing Page Readiness Foundation',
+        'sprint_22' => 'Lead Management / Sales Pipeline Readiness Foundation',
     ],
 ];
