@@ -80,6 +80,31 @@ class Tenant extends Model
         return $this->hasMany(InventoryMovement::class);
     }
 
+    public function dataImportRuns(): HasMany
+    {
+        return $this->hasMany(TenantDataImportRun::class);
+    }
+
+    public function suppliers(): HasMany
+    {
+        return $this->hasMany(TenantSupplier::class);
+    }
+
+    public function customers(): HasMany
+    {
+        return $this->hasMany(TenantCustomer::class);
+    }
+
+    public function paymentMethods(): HasMany
+    {
+        return $this->hasMany(TenantPaymentMethod::class);
+    }
+
+    public function defaultSettings(): HasMany
+    {
+        return $this->hasMany(TenantDefaultSetting::class);
+    }
+
     public function tenantSubscriptions(): HasMany
     {
         return $this->hasMany(TenantSubscription::class);

@@ -55,8 +55,8 @@ class AdminTenantApiTest extends TestCase
 
     public function test_tenant_list_filter_by_query_matches_name(): void
     {
-        Tenant::factory()->create(['name' => 'Unique Coffee House']);
-        Tenant::factory()->create(['name' => 'Other Business']);
+        Tenant::factory()->create(['name' => 'Unique Coffee House', 'owner_name' => 'Coffee Owner']);
+        Tenant::factory()->create(['name' => 'Other Business', 'owner_name' => 'Plain Owner']);
 
         $response = $this->actingAs($this->admin, 'sanctum')
             ->getJson('/api/v1/admin/tenants?q=Unique')
