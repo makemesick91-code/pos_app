@@ -1191,6 +1191,59 @@ Mandatory:
 8. Sprint 34 rules (`ADR-R001..R030`) coexist with Sprint 25 `TLS-R001..R010`, Sprint 26 `TPE-R001..R012`, Sprint 27 `UEL-R001..R015`, Sprint 28 `ULR-R001..R016`, Sprint 29 `EGC-R001..R015`, Sprint 30 `BIL-R001..R016`, Sprint 31 `PGW-R001..R018`, Sprint 32 `ENT-R001..R024`, and Sprint 33 `ONB-R001..R026`; the Sprint 34 `tenant_device_activations`/`tenant_android_sync_batches`/`tenant_android_sync_items` tables are additive and separate from the Sprint 10 `registered_devices` table they bridge.
 9. GO/WATCH/NO-GO report must be evidence-backed.
 
+## Sprint 37 Data Import, Migration & First Tenant Bootstrap Pack Runtime Rule
+
+Sprint 37 makes new-tenant onboarding operationally practical without direct database work. Platform admins can dry-run and execute CSV imports for categories, products, suppliers, customers, initial stock, prices, payment methods, default settings, and first-tenant bootstrap packs. XLSX is governed/deferred because no safe lightweight parser is installed. The sprint is additive and extends the commercial chain:
+Plan → Invoice → Payment Intent → Gateway Settlement → Collection → Entitlement Runtime Access → Tenant Onboarding → Android Runtime → Support Operations → Observability → Data Import/Bootstrap.
+
+Canonical rules (mirrored in `backend/config/import_governance.php`, `backend/config/pos_foundation.php`, architecture docs, tests and CI grep):
+
+- `IMP-R001` — Import mutations must use TenantDataImportService.
+- `IMP-R002` — Import must be tenant-isolated.
+- `IMP-R003` — Import must be dry-run by default.
+- `IMP-R004` — Execute import must require explicit execute flag and authorization.
+- `IMP-R005` — Import run must have unique idempotency key.
+- `IMP-R006` — Row processing must be idempotent through row fingerprint.
+- `IMP-R007` — Retry must not duplicate records.
+- `IMP-R008` — CSV import must be supported.
+- `IMP-R009` — XLSX import must be safe, formula-safe, macro-safe, or explicitly governed/deferred.
+- `IMP-R010` — Import validation must happen before mutation.
+- `IMP-R011` — Validation errors must be row-addressable and redacted.
+- `IMP-R012` — Failed import must leave auditable failed state.
+- `IMP-R013` — Import rollback must be safe and limited to records created by the import run.
+- `IMP-R014` — Product import must not bypass product/domain service if one exists.
+- `IMP-R015` — Category import must be deterministic and tenant-isolated.
+- `IMP-R016` — Supplier import must redact PII in output/audit.
+- `IMP-R017` — Customer import must redact PII in output/audit.
+- `IMP-R018` — Initial stock import must use inventory movement/ledger service where available.
+- `IMP-R019` — Initial stock import must never directly corrupt stock balances.
+- `IMP-R020` — Price import must use existing pricing/product price service where available.
+- `IMP-R021` — Payment method/default settings import must be tenant-scoped.
+- `IMP-R022` — Bootstrap pack must integrate with Sprint 33 onboarding state.
+- `IMP-R023` — Import denied/blocked actions must be audit-logged.
+- `IMP-R024` — Support console must be able to inspect import runs safely.
+- `IMP-R025` — Observability must detect failed/stuck imports.
+- `IMP-R026` — Import output must not leak secrets/PII/raw file contents.
+- `IMP-R027` — Import must not mark invoices paid.
+- `IMP-R028` — Import must not unlock entitlement.
+- `IMP-R029` — Import must not bypass manual suspension.
+- `IMP-R030` — Import must respect Sprint 32 entitlement write state where applicable.
+- `IMP-R031` — Import must not reactivate device/tenant.
+- `IMP-R032` — Platform-admin bypass must be explicit and audited.
+- `IMP-R033` — Prior Sprint 24–36 gates must remain green.
+- `IMP-R034` — Go/no-go must verify product/category/supplier/customer/stock/price/payment/default-settings import, dry-run, idempotency, rollback, audit, support, observability, and redaction.
+
+Mandatory:
+
+1. Admin import routes live only under `api/v1/admin/imports/*` behind `platform.admin`; there is no tenant/public import mutation route.
+2. Dry-run validation is the default. Execute requires `execute`, `reason_code`, an idempotency key, and the Sprint 32 entitlement write state.
+3. CSV is supported. XLSX/XLS/Macro formats are rejected with the governed Sprint 37 deferred reason; formulas are never evaluated.
+4. Initial stock writes use the existing inventory movement ledger service. Rollback is limited to import-created records and stock rollback uses a reversal movement.
+5. Import run and row state are auditable, tenant-scoped, idempotent, and redacted. Raw file contents and raw paths are never returned.
+6. Import cannot mark invoices paid, unlock entitlement, lift manual suspension, reactivate tenants/devices, or mutate gateway settlement state.
+7. Support and observability bridges expose safe summaries/signals only.
+8. `import:governance-audit`, `import:go-no-go`, and `scripts/sprint37_smoke.sh` must pass before GO.
+
 ## Sprint 35 Support Console, Tenant Operations & Incident Diagnostics Foundation Runtime Rule
 
 Sprint 35 makes the SaaS operationally supportable for real tenants WITHOUT opening the database directly: a platform-admin support console for tenant health, a deterministic diagnostic timeline, read-only billing/payment/entitlement/onboarding/device/sync viewers, a blocked/denied-action explorer, sync failure inspection, a governed device revoke/reactivate support flow, tenant-isolated incident notes, a support audit trail, and a time-bound read-only support context. It is additive and does not change Sprint 23–34 semantics.

@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\Admin\AdminSupportConsoleController;
 use App\Http\Controllers\Api\V1\Admin\AdminSupportDeviceController;
 use App\Http\Controllers\Api\V1\Admin\AdminSupportIncidentController;
 use App\Http\Controllers\Api\V1\Admin\AdminSupportSessionController;
+use App\Http\Controllers\Api\V1\Admin\AdminTenantDataImportController;
 use App\Http\Controllers\Api\V1\Admin\AdminObservabilityController;
 use App\Http\Controllers\Api\V1\Admin\AdminObservabilityAlertController;
 use App\Http\Controllers\Api\V1\Admin\AdminObservabilityAnomalyController;
@@ -424,6 +425,23 @@ Route::prefix('v1')->group(function () {
 
             Route::get('/audit-logs', [AdminAuditLogController::class, 'index']);
             Route::get('/audit-logs/{auditLog}', [AdminAuditLogController::class, 'show']);
+
+            // Sprint 37 — Data Import, Migration & First Tenant Bootstrap Pack.
+            // Platform-admin only. Dry-run is default; execute/retry/rollback
+            // require explicit idempotency/reason where applicable and call
+            // TenantDataImportService. No tenant/public mutation routes exist.
+            Route::prefix('imports')->group(function () {
+                Route::get('/templates', [AdminTenantDataImportController::class, 'templates']);
+                Route::get('/templates/{type}', [AdminTenantDataImportController::class, 'template']);
+                Route::get('/', [AdminTenantDataImportController::class, 'index']);
+                Route::get('/governance', [AdminTenantDataImportController::class, 'governance']);
+                Route::post('/validate', [AdminTenantDataImportController::class, 'validateImport']);
+                Route::post('/execute', [AdminTenantDataImportController::class, 'executeImport']);
+                Route::get('/{run}', [AdminTenantDataImportController::class, 'show']);
+                Route::get('/{run}/rows', [AdminTenantDataImportController::class, 'rows']);
+                Route::post('/{run}/retry', [AdminTenantDataImportController::class, 'retry']);
+                Route::post('/{run}/rollback', [AdminTenantDataImportController::class, 'rollback']);
+            });
 
             // Sprint 12 — Tenant Onboarding & Demo Data Foundation. Platform-admin
             // controlled: create a tenant + default store + owner user +
