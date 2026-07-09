@@ -1,0 +1,1 @@
+<?php namespace App\Http\Resources\Api\V1\Admin; use Illuminate\Http\Request; use Illuminate\Http\Resources\Json\JsonResource; class PerformanceGovernanceResource extends JsonResource { public function toArray(Request $request): array { return ['rules' => config('performance_governance.rules'), 'signals' => $this->resource['signals'] ?? [], 'redacted' => true]; } }

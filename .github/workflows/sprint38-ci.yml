@@ -1,0 +1,109 @@
+name: Sprint 38 CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  sprint38:
+    name: Backend, performance smoke, governance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare sqlite environment
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          mkdir -p storage/app storage/logs storage/framework/views storage/framework/cache storage/framework/cache/data storage/framework/sessions storage/framework/testing bootstrap/cache
+          touch database/database.sqlite
+          php artisan migrate --force
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: PERF rules present
+        run: |
+          for i in $(seq -w 1 36); do
+            grep -q "PERF-R0$i" backend/config/performance_governance.php
+            grep -q "PERF-R0$i" backend/config/pos_foundation.php
+            grep -q "PERF-R0$i" docs/PROJECT_RULES.md
+            grep -q "PERF-R0$i" docs/architecture/sprint-38-multi-tenant-performance-benchmark-load-gate-scale-readiness.md
+          done
+
+      - name: Sprint 38 governance audit
+        working-directory: backend
+        run: php artisan performance:governance-audit --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Sprint 38 smoke script
+        run: bash scripts/sprint38_smoke.sh
+
+      - name: Targeted Sprint 38 tests
+        working-directory: backend
+        run: php artisan test --filter=PerformanceGovernanceTest
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Prior Sprint 24-37 gates
+        working-directory: backend
+        run: |
+          php artisan import:go-no-go --json
+          php artisan observability:go-no-go --strict --json
+          php artisan support-ops:go-no-go --strict --json
+          php artisan android-runtime:go-no-go --strict --json
+          php artisan onboarding:go-no-go --json
+          php artisan entitlement:go-no-go --json
+          php artisan payment-gateway:go-no-go --json
+          php artisan billing:go-no-go --json
+          php artisan export-governance:go-no-go --strict --json
+          php artisan usage-ledger:go-no-go --strict --json
+          php artisan report-export-metering:go-no-go --json
+          php artisan tenant-plan:go-no-go --json
+          php artisan tenant-lifecycle:go-no-go --json
+          php artisan subscription-renewal:go-no-go --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Backend full test suite
+        working-directory: backend
+        run: php artisan test
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+  android:
+    name: Android build and unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Android unit tests
+        working-directory: android
+        run: ./gradlew testDebugUnitTest
+
+      - name: Android assemble debug
+        working-directory: android
+        run: ./gradlew assembleDebug
