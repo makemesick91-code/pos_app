@@ -1239,3 +1239,54 @@ Mandatory:
 7. `support-ops:go-no-go` must FAIL if the governance audit is NO_GO, a hard guardrail is not locked false, a Sprint 35 command is missing, a Sprint 24–34 prior gate is not registered, a support service is missing, or a commercial-chain service is missing (`SUP-R030`). See `docs/sprints/sprint-35-support-console-tenant-operations-incident-diagnostics-evidence.md`.
 8. Sprint 35 rules (`SUP-R001..R030`) coexist with Sprint 25 `TLS-R001..R010`, Sprint 26 `TPE-R001..R012`, Sprint 27 `UEL-R001..R015`, Sprint 28 `ULR-R001..R016`, Sprint 29 `EGC-R001..R015`, Sprint 30 `BIL-R001..R016`, Sprint 31 `PGW-R001..R018`, Sprint 32 `ENT-R001..R024`, Sprint 33 `ONB-R001..R026`, and Sprint 34 `ADR-R001..R030`; the Sprint 35 `tenant_support_incidents`/`tenant_support_incident_notes`/`tenant_support_actions`/`tenant_support_sessions` tables are additive and read every prior ledger without altering it.
 9. GO/WATCH/NO-GO report must be evidence-backed.
+
+## Sprint 36 Observability, Health Monitoring, Queue & Production Diagnostics Foundation Runtime Rule
+
+Sprint 36 makes the SaaS production-observable so operational issues are detected before tenants complain: public minimal liveness/readiness endpoints, a platform-admin observability console (application health, database/cache/storage/config diagnostics, queue + failed-job diagnostics, scheduler health, tenant runtime probes), read-only anomaly detection over the Sprint 30–35 ledgers (Android sync, billing/payment webhook, entitlement, onboarding, export/report), safe operational dashboard metrics, a vendor-neutral alert/incident suggestion foundation, and a full go/no-go gate. It is additive and does not change Sprint 23–35 semantics.
+
+Canonical rules (mirrored in `backend/config/observability_governance.php`, `backend/config/pos_foundation.php` and enforced by tests + `observability:governance-audit`/`observability:go-no-go`):
+
+- `OBS-R001` — Public health endpoints must expose minimal non-tenant liveness/readiness only.
+- `OBS-R002` — Admin observability routes must require platform.admin.
+- `OBS-R003` — Observability diagnostics must be read-only by default.
+- `OBS-R004` — Observability output must not leak secrets/PII.
+- `OBS-R005` — Database health check must not expose credentials/query payloads.
+- `OBS-R006` — Cache health check must not expose keys/values.
+- `OBS-R007` — Storage health check must not expose file paths containing tenant/PII unless redacted.
+- `OBS-R008` — Queue health must track pending, failed, stale, and long-running risk safely.
+- `OBS-R009` — Failed job diagnostics must redact payloads/exceptions.
+- `OBS-R010` — Queue retry/replay must be disabled by default or strictly governed, audited, reason-required, and idempotency-aware.
+- `OBS-R011` — Scheduler health must detect stale/missed schedules safely.
+- `OBS-R012` — Tenant runtime health probes must be tenant-isolated.
+- `OBS-R013` — Android sync anomaly detection must source from Sprint 34 ledgers.
+- `OBS-R014` — Billing anomaly detection must source from Sprint 30 invoice/collection state.
+- `OBS-R015` — Payment webhook anomaly detection must source from Sprint 31 gateway events/intents.
+- `OBS-R016` — Entitlement anomaly detection must source from Sprint 32 decision logs/state.
+- `OBS-R017` — Onboarding anomaly detection must source from Sprint 33 provisioning runs/steps.
+- `OBS-R018` — Support incident suggestion must integrate with Sprint 35 support incidents without auto-mutating tenant state silently.
+- `OBS-R019` — Export/report anomaly detection must preserve Sprint 27–29 metering/governance.
+- `OBS-R020` — Health summary must be deterministic and explainable with reason codes.
+- `OBS-R021` — Alert readiness must be vendor-neutral and CI-safe.
+- `OBS-R022` — No external monitoring service required in CI.
+- `OBS-R023` — Metrics endpoints must be admin-only unless explicitly safe/minimal.
+- `OBS-R024` — Diagnostics must not mark an invoice paid.
+- `OBS-R025` — Diagnostics must not unlock entitlement.
+- `OBS-R026` — Diagnostics must not reactivate tenant/device.
+- `OBS-R027` — Diagnostics must not bypass manual suspension.
+- `OBS-R028` — Platform-admin diagnostic actions must be audited.
+- `OBS-R029` — Anomaly thresholds must be config-driven.
+- `OBS-R030` — Prior Sprint 24–35 gates must remain green.
+- `OBS-R031` — No direct DB repair mutation without a governed service.
+- `OBS-R032` — Go/no-go must verify health, queue, scheduler, tenant probes, anomaly detection, incident suggestions, audit, and redaction.
+
+Mandatory:
+
+1. Public health lives at `/health/live` and `/health/ready` and returns only `{ status, timestamp }` — no tenant data, no environment secret, no DB credential, no PII (`OBS-R001`, `observability_public_endpoint_exposes_tenant_or_secret_allowed=false`). The whole admin console lives under `api/v1/admin/observability/*` behind `platform.admin` (`OBS-R002`, `OBS-R023`).
+2. The console is read-only by default; the only mutations are anomaly acknowledge/resolve, alert-suggestion dismiss/accept and a governed (default-disabled) failed-job retry, each requiring an enumerable `reason_code` and written to `admin_audit_logs` redacted (`OBS-R003`, `OBS-R005`, `OBS-R028`). No route/command marks an invoice paid, unlocks entitlement, reactivates a tenant/device or bypasses a manual suspension (`OBS-R024..R027`, `diagnostics_*_allowed=false`).
+3. Infrastructure diagnostics report only driver/store/disk NAMES + booleans — never a DB credential/DSN, cache key/value, or absolute path (`OBS-R005`, `OBS-R006`, `OBS-R007`). Failed-job diagnostics group by a redacted job label and never return the raw payload, exception message or stack trace (`OBS-R009`).
+4. Queue retry is disabled by default and returns a governed not-supported (409) response; when ever enabled it is reason-required, audited, and idempotency-safe only (`OBS-R010`, `queue_retry_without_governance_allowed=false`). Scheduler health detects stale/stuck/failed/long-running commands from config thresholds (`OBS-R011`, `OBS-R029`).
+5. Anomaly detection is read-only and sources exclusively from the Sprint 34 sync ledgers (`OBS-R013`), Sprint 30 invoice/collection state (`OBS-R014`), Sprint 31 gateway events/intents (`OBS-R015`), Sprint 32 decision ledger (`OBS-R016`), Sprint 33 provisioning runs (`OBS-R017`), and Sprint 27–29 export/report decisions (`OBS-R019`). A scan is dry-run by default; `--execute` persists observability anomaly events ONLY (dedup by tenant + `anomaly_key`, incrementing `occurrence_count`) and never mutates any domain state.
+6. Incident suggestion creates SUGGESTIONS only; it never auto-creates a support incident on scan and never mutates tenant state (`OBS-R018`, `incident_suggestion_auto_mutates_tenant_allowed=false`). Accepting a suggestion may create a Sprint 35 support incident ONLY through `SupportIncidentService`, audited. Tenant runtime probes reuse `SupportTenantHealthService` and stay tenant-isolated (`OBS-R012`, `OBS-R020`).
+7. Alert readiness is vendor-neutral and CI-safe: no external monitoring vendor, network, or payment credential is required (`OBS-R021`, `OBS-R022`, `external_monitoring_vendor_required_in_ci_allowed=false`). `observability:go-no-go` must FAIL if the governance audit is NO_GO, a hard guardrail is not locked false, a Sprint 36 command is missing, a Sprint 24–35 prior gate is not registered, an observability service is missing, or a commercial-chain service is missing (`OBS-R032`). See `docs/sprints/sprint-36-observability-health-monitoring-queue-production-diagnostics-evidence.md`.
+8. Sprint 36 rules (`OBS-R001..R032`) coexist with Sprint 25 `TLS-R001..R010`, Sprint 26 `TPE-R001..R012`, Sprint 27 `UEL-R001..R015`, Sprint 28 `ULR-R001..R016`, Sprint 29 `EGC-R001..R015`, Sprint 30 `BIL-R001..R016`, Sprint 31 `PGW-R001..R018`, Sprint 32 `ENT-R001..R024`, Sprint 33 `ONB-R001..R026`, Sprint 34 `ADR-R001..R030`, and Sprint 35 `SUP-R001..R030`; the Sprint 36 `observability_health_snapshots`/`observability_anomaly_events`/`observability_scheduler_runs`/`observability_alert_suggestions` tables are additive and read every prior ledger without altering it.
+9. GO/WATCH/NO-GO report must be evidence-backed.
