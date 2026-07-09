@@ -412,6 +412,45 @@ return [
         'SUP-R029' => 'Prior Sprint 24–34 gates must remain green.',
         'SUP-R030' => 'Go/no-go must verify tenant health, timeline, incident notes, support audit, device support flow, sync diagnostics, billing/payment/entitlement/onboarding visibility, and redaction.',
     ],
+
+    // Sprint 36 — Observability, Health Monitoring, Queue & Production
+    // Diagnostics canonical rule registry (mirrors
+    // config/observability_governance.php and docs/PROJECT_RULES.md). Locked by
+    // tests/CI grep.
+    'observability_rules_sprint_36' => [
+        'OBS-R001' => 'Public health endpoints must expose minimal non-tenant liveness/readiness only.',
+        'OBS-R002' => 'Admin observability routes must require platform.admin.',
+        'OBS-R003' => 'Observability diagnostics must be read-only by default.',
+        'OBS-R004' => 'Observability output must not leak secrets/PII.',
+        'OBS-R005' => 'Database health check must not expose credentials/query payloads.',
+        'OBS-R006' => 'Cache health check must not expose keys/values.',
+        'OBS-R007' => 'Storage health check must not expose file paths containing tenant/PII unless redacted.',
+        'OBS-R008' => 'Queue health must track pending, failed, stale, and long-running risk safely.',
+        'OBS-R009' => 'Failed job diagnostics must redact payloads/exceptions.',
+        'OBS-R010' => 'Queue retry/replay must be disabled by default or strictly governed, audited, reason-required, and idempotency-aware.',
+        'OBS-R011' => 'Scheduler health must detect stale/missed schedules safely.',
+        'OBS-R012' => 'Tenant runtime health probes must be tenant-isolated.',
+        'OBS-R013' => 'Android sync anomaly detection must source from Sprint 34 ledgers.',
+        'OBS-R014' => 'Billing anomaly detection must source from Sprint 30 invoice/collection state.',
+        'OBS-R015' => 'Payment webhook anomaly detection must source from Sprint 31 gateway events/intents.',
+        'OBS-R016' => 'Entitlement anomaly detection must source from Sprint 32 decision logs/state.',
+        'OBS-R017' => 'Onboarding anomaly detection must source from Sprint 33 provisioning runs/steps.',
+        'OBS-R018' => 'Support incident suggestion must integrate with Sprint 35 support incidents without auto-mutating tenant state silently.',
+        'OBS-R019' => 'Export/report anomaly detection must preserve Sprint 27–29 metering/governance.',
+        'OBS-R020' => 'Health summary must be deterministic and explainable with reason codes.',
+        'OBS-R021' => 'Alert readiness must be vendor-neutral and CI-safe.',
+        'OBS-R022' => 'No external monitoring service required in CI.',
+        'OBS-R023' => 'Metrics endpoints must be admin-only unless explicitly safe/minimal.',
+        'OBS-R024' => 'Diagnostics must not mark an invoice paid.',
+        'OBS-R025' => 'Diagnostics must not unlock entitlement.',
+        'OBS-R026' => 'Diagnostics must not reactivate tenant/device.',
+        'OBS-R027' => 'Diagnostics must not bypass manual suspension.',
+        'OBS-R028' => 'Platform-admin diagnostic actions must be audited.',
+        'OBS-R029' => 'Anomaly thresholds must be config-driven.',
+        'OBS-R030' => 'Prior Sprint 24–35 gates must remain green.',
+        'OBS-R031' => 'No direct DB repair mutation without a governed service.',
+        'OBS-R032' => 'Go/no-go must verify health, queue, scheduler, tenant probes, anomaly detection, incident suggestions, audit, and redaction.',
+    ],
     'sprints' => [
         'sprint_0' => 'Project Setup',
         'sprint_1' => 'SaaS Tenant Foundation',
@@ -449,5 +488,6 @@ return [
         'sprint_33' => 'Tenant Onboarding, Trial Activation & First-Branch Provisioning',
         'sprint_34' => 'Android Offline, Sync, Device Activation & Cashier Runtime Hardening Foundation',
         'sprint_35' => 'Support Console, Tenant Operations & Incident Diagnostics Foundation',
+        'sprint_36' => 'Observability, Health Monitoring, Queue & Production Diagnostics Foundation',
     ],
 ];

@@ -1,0 +1,178 @@
+name: Sprint 36 CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  foundation-and-smoke:
+    name: Foundation & Sprint 36 smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment (sqlite)
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/' .env
+          sed -i 's#^DB_DATABASE=.*#DB_DATABASE=database/database.sqlite#' .env
+          php artisan key:generate
+          mkdir -p storage/app storage/logs storage/framework/views storage/framework/cache storage/framework/cache/data storage/framework/sessions storage/framework/testing bootstrap/cache
+          touch database/database.sqlite
+          php artisan migrate --force || true
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Foundation document exists
+        run: test -f docs/foundation/POS_ANDROID_SAAS_FOUNDATION.md
+
+      - name: Project rules lock intact (Sprint 35–36)
+        run: |
+          grep -q "Sprint 35 Support Console, Tenant Operations & Incident Diagnostics Foundation Runtime Rule" docs/PROJECT_RULES.md
+          grep -q "Sprint 36 Observability, Health Monitoring, Queue & Production Diagnostics Foundation Runtime Rule" docs/PROJECT_RULES.md
+
+      - name: OBS rules present in config, foundation, and docs
+        run: |
+          grep -R "OBS-R001" backend/config/observability_governance.php backend/config/pos_foundation.php docs/PROJECT_RULES.md
+          grep -R "OBS-R010" backend/config/observability_governance.php docs/PROJECT_RULES.md
+          grep -R "OBS-R018" backend/config/observability_governance.php docs/PROJECT_RULES.md
+          grep -R "OBS-R032" backend/config/observability_governance.php docs/PROJECT_RULES.md
+          for i in $(seq -w 1 32); do grep -q "OBS-R0$i" backend/config/observability_governance.php || { echo "missing OBS-R0$i"; exit 1; }; done
+
+      - name: Sprint 36 architecture + evidence docs exist
+        run: |
+          test -f docs/architecture/sprint-36-observability-health-monitoring-queue-production-diagnostics.md
+          test -f docs/sprints/sprint-36-observability-health-monitoring-queue-production-diagnostics-evidence.md
+
+      - name: Sprint 36 smoke script
+        run: bash scripts/sprint36_smoke.sh
+
+      - name: No forbidden files committed
+        run: |
+          ! git ls-files | grep -E '(^|/)\.env$|\.apk$|\.aab$|(^|/)vendor/|(^|/)node_modules/|\.sqlite$|database\.sqlite|(^|/)app/build/|(^|/)\.gradle/|\.keystore$|\.jks$'
+
+  backend-tests:
+    name: Backend tests (observability + Sprint 0–35 regression)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+
+      - name: Validate composer
+        working-directory: backend
+        run: composer validate --strict
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare environment (sqlite + migrate)
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          mkdir -p storage/app storage/logs storage/framework/views storage/framework/cache storage/framework/cache/data storage/framework/sessions storage/framework/testing bootstrap/cache
+          touch database/database.sqlite
+          php artisan migrate --force || true
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Observability governance audit
+        working-directory: backend
+        run: php artisan observability:governance-audit
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Observability GO / WATCH / NO-GO (Sprint 36 gate)
+        working-directory: backend
+        run: php artisan observability:go-no-go --strict --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Prior sprint gates (Sprint 24–35) still green
+        working-directory: backend
+        run: |
+          php artisan support-ops:go-no-go --strict --json
+          php artisan android-runtime:go-no-go --strict --json
+          php artisan onboarding:go-no-go --json
+          php artisan entitlement:go-no-go --json
+          php artisan payment-gateway:go-no-go --json
+          php artisan billing:go-no-go --json
+          php artisan export-governance:go-no-go --strict --json
+          php artisan usage-ledger:go-no-go --strict --json
+          php artisan report-export-metering:go-no-go --json
+          php artisan tenant-plan:go-no-go --json
+          php artisan tenant-lifecycle:go-no-go --json
+          php artisan subscription-renewal:go-no-go --json
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Backend test suite (observability + full regression)
+        working-directory: backend
+        run: php artisan test
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: No secret/PII leak in observability command output
+        working-directory: backend
+        run: |
+          ! php artisan observability:go-no-go --json | grep -Ei 'password|secret|server_key=|sk_live_|private_key'
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+  android-build-test:
+    name: Android build & unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Package and SDK levels intact
+        run: |
+          grep -q "com.aishtech.poslite" android/app/build.gradle.kts
+          grep -q "minSdk = 26" android/app/build.gradle.kts
+          grep -q "targetSdk = 35" android/app/build.gradle.kts
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Unit tests
+        working-directory: android
+        run: ./gradlew testDebugUnitTest --no-daemon --stacktrace

@@ -16,6 +16,10 @@ use App\Http\Controllers\Api\V1\Admin\AdminSupportConsoleController;
 use App\Http\Controllers\Api\V1\Admin\AdminSupportDeviceController;
 use App\Http\Controllers\Api\V1\Admin\AdminSupportIncidentController;
 use App\Http\Controllers\Api\V1\Admin\AdminSupportSessionController;
+use App\Http\Controllers\Api\V1\Admin\AdminObservabilityController;
+use App\Http\Controllers\Api\V1\Admin\AdminObservabilityAlertController;
+use App\Http\Controllers\Api\V1\Admin\AdminObservabilityAnomalyController;
+use App\Http\Controllers\Api\V1\Admin\AdminObservabilityFailedJobController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantDeviceController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantEntitlementController;
 use App\Http\Controllers\Api\V1\Android\AndroidRuntimePolicyController;
@@ -380,6 +384,37 @@ Route::prefix('v1')->group(function () {
                 Route::post('/tenants/{tenant}/impersonation/start', [AdminSupportSessionController::class, 'startImpersonation']);
 
                 Route::get('/governance', [AdminSupportConsoleController::class, 'governance']);
+            });
+
+            // Sprint 36 — Observability, Health Monitoring, Queue & Production
+            // Diagnostics. Platform-admin only (OBS-R002), read-only by default
+            // (OBS-R003). The only mutations are anomaly acknowledge/resolve,
+            // alert-suggestion dismiss/accept, and a governed (default-disabled)
+            // failed-job retry — each requires a reason_code (OBS-R005) and is
+            // audited (OBS-R028). No route marks an invoice paid, unlocks
+            // entitlement, reactivates a tenant/device, or bypasses a manual
+            // suspension. All output is redacted (OBS-R004).
+            Route::prefix('observability')->group(function () {
+                Route::get('/health', [AdminObservabilityController::class, 'health']);
+                Route::get('/health/infrastructure', [AdminObservabilityController::class, 'infrastructure']);
+                Route::get('/health/tenants', [AdminObservabilityController::class, 'tenants']);
+                Route::get('/health/tenants/{tenant}', [AdminObservabilityController::class, 'tenant']);
+                Route::get('/queues', [AdminObservabilityController::class, 'queues']);
+                Route::get('/scheduler', [AdminObservabilityController::class, 'scheduler']);
+                Route::get('/metrics', [AdminObservabilityController::class, 'metrics']);
+                Route::get('/governance', [AdminObservabilityController::class, 'governance']);
+
+                Route::get('/failed-jobs', [AdminObservabilityFailedJobController::class, 'index']);
+                Route::post('/failed-jobs/{job}/retry', [AdminObservabilityFailedJobController::class, 'retry']);
+
+                Route::get('/anomalies', [AdminObservabilityAnomalyController::class, 'index']);
+                Route::get('/anomalies/{anomaly}', [AdminObservabilityAnomalyController::class, 'show']);
+                Route::post('/anomalies/{anomaly}/acknowledge', [AdminObservabilityAnomalyController::class, 'acknowledge']);
+                Route::post('/anomalies/{anomaly}/resolve', [AdminObservabilityAnomalyController::class, 'resolve']);
+
+                Route::get('/alerts/suggestions', [AdminObservabilityAlertController::class, 'index']);
+                Route::post('/alerts/suggestions/{suggestion}/dismiss', [AdminObservabilityAlertController::class, 'dismiss']);
+                Route::post('/alerts/suggestions/{suggestion}/accept', [AdminObservabilityAlertController::class, 'accept']);
             });
 
             Route::get('/subscription-plans', [AdminSubscriptionPlanController::class, 'index']);
