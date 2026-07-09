@@ -1191,6 +1191,57 @@ Mandatory:
 8. Sprint 34 rules (`ADR-R001..R030`) coexist with Sprint 25 `TLS-R001..R010`, Sprint 26 `TPE-R001..R012`, Sprint 27 `UEL-R001..R015`, Sprint 28 `ULR-R001..R016`, Sprint 29 `EGC-R001..R015`, Sprint 30 `BIL-R001..R016`, Sprint 31 `PGW-R001..R018`, Sprint 32 `ENT-R001..R024`, and Sprint 33 `ONB-R001..R026`; the Sprint 34 `tenant_device_activations`/`tenant_android_sync_batches`/`tenant_android_sync_items` tables are additive and separate from the Sprint 10 `registered_devices` table they bridge.
 9. GO/WATCH/NO-GO report must be evidence-backed.
 
+## Sprint 38 Multi-Tenant Performance Benchmark, Load Gate & Scale Readiness Runtime Rule
+
+Sprint 38 proves the SaaS can handle realistic production-like load across many tenants and operational flows without weakening correctness, tenant isolation, billing, entitlement, import, Android sync, support, or observability. It extends the commercial chain: Plan -> Invoice -> Payment Intent -> Gateway Settlement -> Collection -> Entitlement Runtime Access -> Tenant Onboarding -> Android Runtime -> Support Operations -> Observability -> Data Import/Bootstrap -> Performance/Scale Readiness.
+
+Canonical rules (mirrored in `backend/config/performance_governance.php` and `backend/config/pos_foundation.php`):
+
+- `PERF-R001` — Performance benchmarks must use PerformanceBenchmarkService.
+- `PERF-R002` — Benchmark fixtures must be deterministic.
+- `PERF-R003` — Benchmark data must be tenant-isolated.
+- `PERF-R004` — CI profile must be bounded and non-flaky.
+- `PERF-R005` — Heavy profile must not run by default in CI.
+- `PERF-R006` — Performance commands must require explicit profile.
+- `PERF-R007` — Destructive cleanup must be limited to benchmark-created data.
+- `PERF-R008` — Benchmark output must not leak PII/secrets/raw payloads.
+- `PERF-R009` — Many-tenant benchmark must verify tenant isolation.
+- `PERF-R010` — Product benchmark must verify product/category lookup performance.
+- `PERF-R011` — POS transaction benchmark must use existing SaleService/domain service.
+- `PERF-R012` — POS benchmark must not double-create transactions.
+- `PERF-R013` — Android sync benchmark must use Sprint 34 sync service and idempotency.
+- `PERF-R014` — Import benchmark must use Sprint 37 DataImport services.
+- `PERF-R015` — Export/report benchmark must preserve Sprint 27-29 metering/governance.
+- `PERF-R016` — Billing benchmark must use Sprint 30 invoice/collection services.
+- `PERF-R017` — Payment webhook benchmark must use Sprint 31 mock/safe gateway events.
+- `PERF-R018` — Entitlement benchmark must use Sprint 32 EntitlementAccessService.
+- `PERF-R019` — Onboarding benchmark must preserve Sprint 33 provisioning semantics.
+- `PERF-R020` — Support diagnostics benchmark must preserve Sprint 35 read-only support semantics.
+- `PERF-R021` — Observability benchmark must integrate Sprint 36 metrics/anomaly services.
+- `PERF-R022` — Queue pressure benchmark must not require external queue infra in CI.
+- `PERF-R023` — Failed job diagnostics must remain redacted under load.
+- `PERF-R024` — Index additions must be justified by query pattern evidence.
+- `PERF-R025` — Index review must not remove prior indexes without explicit proof.
+- `PERF-R026` — Threshold gate must fail closed on regression.
+- `PERF-R027` — Threshold gate must produce explainable reason codes.
+- `PERF-R028` — Benchmark snapshots must be auditable and redacted.
+- `PERF-R029` — Performance smoke must run in CI.
+- `PERF-R030` — Deploy performance smoke must run after pilot/VPS deployment.
+- `PERF-R031` — No benchmark may mark invoice paid outside trusted billing/payment services.
+- `PERF-R032` — No benchmark may unlock entitlement outside trusted collection state.
+- `PERF-R033` — No benchmark may bypass manual suspension.
+- `PERF-R034` — No benchmark may reactivate tenant/device.
+- `PERF-R035` — Prior Sprint 24-37 gates must remain green.
+- `PERF-R036` — Go/no-go must verify multi-tenant, product, POS, Android sync, import, export/report, billing/payment, queue, index/query, observability, smoke-performance, and deploy evidence.
+
+Mandatory:
+
+1. `ci_smoke` must be bounded and CI-safe; `manual_heavy` must never be the default.
+2. Benchmark commands must redact PII, secrets, raw sync/import/payment payloads, and raw file contents.
+3. The admin performance surface must live under `api/v1/admin/performance/*` behind `platform.admin`; mutation routes require `reason_code`.
+4. Query/index review must record evidence before schema changes and must not remove prior indexes without proof.
+5. Pilot/VPS deployment and post-deploy smoke/performance evidence are mandatory before Sprint 38 GO. Missing credentials/config means DEPLOY BLOCKED.
+
 ## Sprint 37 Data Import, Migration & First Tenant Bootstrap Pack Runtime Rule
 
 Sprint 37 makes new-tenant onboarding operationally practical without direct database work. Platform admins can dry-run and execute CSV imports for categories, products, suppliers, customers, initial stock, prices, payment methods, default settings, and first-tenant bootstrap packs. XLSX is governed/deferred because no safe lightweight parser is installed. The sprint is additive and extends the commercial chain:

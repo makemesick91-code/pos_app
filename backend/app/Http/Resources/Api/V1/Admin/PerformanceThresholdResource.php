@@ -1,0 +1,1 @@
+<?php namespace App\Http\Resources\Api\V1\Admin; use Illuminate\Http\Request; use Illuminate\Http\Resources\Json\JsonResource; class PerformanceThresholdResource extends JsonResource { public function toArray(Request $request): array { return ['status' => $this->resource['status'], 'reason_codes' => $this->resource['reason_codes'], 'profile' => $this->resource['profile']]; } }

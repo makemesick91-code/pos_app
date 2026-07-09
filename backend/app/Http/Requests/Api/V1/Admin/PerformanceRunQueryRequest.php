@@ -1,0 +1,1 @@
+<?php namespace App\Http\Requests\Api\V1\Admin; use Illuminate\Foundation\Http\FormRequest; class PerformanceRunQueryRequest extends FormRequest { public function authorize(): bool { return true; } public function rules(): array { return ['profile' => ['nullable','string','max:32'], 'status' => ['nullable','string','max:24']]; } }

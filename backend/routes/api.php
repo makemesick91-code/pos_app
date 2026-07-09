@@ -8,6 +8,9 @@ use App\Http\Controllers\Api\V1\Admin\AdminExportGovernanceController;
 use App\Http\Controllers\Api\V1\Admin\AdminPaymentGatewayEventController;
 use App\Http\Controllers\Api\V1\Admin\AdminPaymentGatewayGovernanceController;
 use App\Http\Controllers\Api\V1\Admin\AdminPaymentGatewayIntentController;
+use App\Http\Controllers\Api\V1\Admin\AdminPerformanceController;
+use App\Http\Controllers\Api\V1\Admin\AdminPerformanceDeployCheckController;
+use App\Http\Controllers\Api\V1\Admin\AdminPerformanceQueryReviewController;
 use App\Http\Controllers\Api\V1\Admin\AdminReportExportMeteringSummaryController;
 use App\Http\Controllers\Api\V1\Admin\AdminSubscriptionPlanController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantController;
@@ -441,6 +444,23 @@ Route::prefix('v1')->group(function () {
                 Route::get('/{run}/rows', [AdminTenantDataImportController::class, 'rows']);
                 Route::post('/{run}/retry', [AdminTenantDataImportController::class, 'retry']);
                 Route::post('/{run}/rollback', [AdminTenantDataImportController::class, 'rollback']);
+            });
+
+            // Sprint 38 — Multi-Tenant Performance Benchmark, Load Gate &
+            // Scale Readiness. Platform-admin only; benchmark mutations require
+            // a reason_code and route through PerformanceBenchmarkService. Output
+            // is redacted, dry-run/safe by default, and no tenant/public mutation
+            // route exists.
+            Route::prefix('performance')->group(function () {
+                Route::get('/profiles', [AdminPerformanceController::class, 'profiles']);
+                Route::get('/runs', [AdminPerformanceController::class, 'runs']);
+                Route::post('/runs', [AdminPerformanceController::class, 'store']);
+                Route::get('/runs/{run}', [AdminPerformanceController::class, 'show']);
+                Route::get('/runs/{run}/steps', [AdminPerformanceController::class, 'steps']);
+                Route::post('/runs/{run}/threshold-check', [AdminPerformanceController::class, 'threshold']);
+                Route::get('/query-reviews', [AdminPerformanceQueryReviewController::class, 'index']);
+                Route::get('/deploy-checks', [AdminPerformanceDeployCheckController::class, 'index']);
+                Route::get('/governance', [AdminPerformanceController::class, 'governance']);
             });
 
             // Sprint 12 — Tenant Onboarding & Demo Data Foundation. Platform-admin
