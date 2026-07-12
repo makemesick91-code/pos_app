@@ -3,6 +3,20 @@
 Real command output captured during the deployment on **2026-07-12** (UTC).
 Secrets are redacted; no password, `APP_KEY`, or token appears here.
 
+> **Commit terminology (authoritative).** The evidence below was captured while the
+> deployment branch was at the **runtime foundation commit `8b78fbf`**
+> (`ops: add isolated shared-vps pilot deployment`). That branch was subsequently
+> merged to `main` as the **shared-VPS deployment merge commit `f682ec7`**
+> (PR #41), which is the commit the server clone at `/var/www/aish-pos` currently
+> has checked out (`HEAD = f682ec7`, branch `main`). So:
+> - Runtime foundation commit: `8b78fbf`
+> - Shared-VPS deployment merge commit / current deployed `HEAD`: `f682ec7`
+> - Existing GO tag `pilot-shared-vps-isolated-deployment-go` → target `f682ec7` (unchanged)
+>
+> Post-GO hardening evidence is tracked separately in
+> [`pilot-shared-vps-security-hardening.md`](pilot-shared-vps-security-hardening.md)
+> and [`pilot-runtime-maintenance.md`](pilot-runtime-maintenance.md).
+
 ## Environment
 
 | Field | Value |
@@ -36,7 +50,8 @@ ufw active (OpenSSH/80/443); port 8080 FREE
 ## Phase 3-4 — Clone + dependencies
 
 ```
-git clone main → /var/www/aish-pos   HEAD=8b78fbf, clean tree
+git clone main → /var/www/aish-pos   HEAD=8b78fbf (runtime foundation) at capture time;
+  now HEAD=f682ec7 (shared-VPS deployment merge commit) after PR #41 merge, clean tree
 required PHP extensions: all present (pdo_pgsql, pgsql, mbstring, intl, bcmath, gd, zip, curl, xml, ...)
 composer validate --strict → valid ; check-platform-reqs → all success (under PHP 8.5)
 composer install --no-dev --optimize-autoloader → DONE

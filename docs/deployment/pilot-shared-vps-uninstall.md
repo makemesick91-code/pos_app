@@ -51,8 +51,9 @@ rm -f /etc/php/8.5/fpm/pool.d/aish-pos.conf
 #   systemctl disable --now php8.5-fpm
 php-fpm8.5 -t 2>/dev/null && systemctl reload php8.5-fpm 2>/dev/null || true
 
-# 6. close the firewall port
-ufw delete allow 8080/tcp
+# 6. close the firewall port (post-hardening the rule is operator-IP scoped)
+ufw delete allow from <OPERATOR_IP> to any port 8080 proto tcp
+ufw delete allow 8080/tcp 2>/dev/null || true   # in case an older global rule exists
 
 # 7. VERIFY DaengtisiaMS before any destructive DB step
 curl -s -o /dev/null -w "daeng=%{http_code}\n" http://127.0.0.1/ -H "Host: _"   # expect 302
@@ -76,6 +77,22 @@ curl -s -o /dev/null -w "daeng=%{http_code}\n" http://127.0.0.1/ -H "Host: _"
 git -C /var/www/asia-dental-lab-v2 status --porcelain | wc -l   # expect 0
 ```
 
+## Post-GO hardening artifacts (2026-07-12)
+
+These were added by the hardening pass. On a **POS-only uninstall, keep the ones
+that protect DaengtisiaMS or the host** — they are not POS-owned:
+
+- **Swap** (`/swapfile`, `/etc/fstab` line, `/etc/sysctl.d/99-aish-pos-swap.conf`)
+  — host-level; keep unless the VPS is being repurposed. To remove: see
+  [rollback §5.3](pilot-shared-vps-rollback.md).
+- **PHP 8.3 apt holds** — **keep**; they protect DaengtisiaMS' runtime, not POS.
+- **PostgreSQL `PUBLIC CONNECT` revoke on `asia_dental_lab_pilot`** — **keep**;
+  this is a DaengtisiaMS-side hardening (explicit `dental_pilot` CONNECT, no
+  PUBLIC). Dropping the POS role/DB does not require reverting it.
+- **Scheduled runtime prunes** live in `backend/routes/console.php` and stop
+  automatically once `/etc/cron.d/aish-pos` (step 4) and `/var/www/aish-pos`
+  (step 8) are removed.
+
 ## Notes / cautions
 
 - **PHP 8.5 / ondrej PPA** were added for this pilot. Leave them unless you are
@@ -84,6 +101,8 @@ git -C /var/www/asia-dental-lab-v2 status --porcelain | wc -l   # expect 0
   during removal — it could pull the ondrej `php8.3` into DaengtisiaMS.
 - **Never** run `FLUSHALL`/`FLUSHDB` or global Redis operations (there is no
   Redis; POS uses the database for cache/queue/session).
-- The DaengtisiaMS database was never modified; there is no POS table inside it
-  and no POS grant to revoke on it.
+- The DaengtisiaMS database **data** was never modified; there is no POS table
+  inside it. The only database-level change was hardening its connect ACL
+  (revoke `PUBLIC CONNECT`, keep explicit `dental_pilot` CONNECT) — leave that in
+  place; there is no POS grant on it to revoke.
 - Keep the archive (step 8) until the pilot is confirmed no longer needed.
