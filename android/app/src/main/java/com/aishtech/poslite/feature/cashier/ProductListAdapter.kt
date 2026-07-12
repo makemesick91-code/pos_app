@@ -1,11 +1,12 @@
 package com.aishtech.poslite.feature.cashier
 
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.aishtech.poslite.R
 import com.aishtech.poslite.data.local.entity.LocalProductEntity
 import com.aishtech.poslite.databinding.ItemProductBinding
 import java.text.NumberFormat
@@ -54,8 +55,11 @@ class ProductListAdapter(
 
             val stock = stockLabels[product.id]
             binding.textStock.text = StockDisplay.label(stock)
+            // UIX-1: low-stock uses the semantic warning token; default uses secondary text.
+            val stockColorRes =
+                if (StockDisplay.isWarning(stock)) R.color.status_warning_fg else R.color.text_secondary
             binding.textStock.setTextColor(
-                if (StockDisplay.isWarning(stock)) WARNING_COLOR else DEFAULT_STOCK_COLOR,
+                ContextCompat.getColor(binding.root.context, stockColorRes),
             )
 
             binding.buttonAdd.setOnClickListener { onAdd(product) }
@@ -69,9 +73,6 @@ class ProductListAdapter(
     }
 
     private companion object {
-        val WARNING_COLOR = Color.parseColor("#C62828")
-        val DEFAULT_STOCK_COLOR = Color.parseColor("#616161")
-
         val DIFF = object : DiffUtil.ItemCallback<LocalProductEntity>() {
             override fun areItemsTheSame(a: LocalProductEntity, b: LocalProductEntity) = a.id == b.id
             override fun areContentsTheSame(a: LocalProductEntity, b: LocalProductEntity) = a == b

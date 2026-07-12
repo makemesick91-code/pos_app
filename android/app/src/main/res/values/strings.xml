@@ -78,4 +78,62 @@
     <string name="subscription_title">Status Langganan &amp; Perangkat</string>
     <string name="subscription_retry">Coba Lagi</string>
     <string name="subscription_logout">Keluar</string>
+
+    <!-- ===== UIX-1 canonical microcopy (source: operator UI/UX handoff MICROCOPY.md).
+         Use these exact strings; financial/legal status wording follows the backend. ===== -->
+
+    <!-- Offline / sync banners -->
+    <string name="uix_offline_banner">Sedang offline — transaksi tunai tetap bisa. Penjualan tersimpan di perangkat, akan disinkronkan otomatis. QRIS butuh internet.</string>
+    <string name="uix_qris_offline_reason">QRIS butuh koneksi internet. QRIS harus terverifikasi server secara real-time, jadi tidak bisa dipakai saat offline. Pembayaran tunai tetap bisa dan tersimpan aman di perangkat.</string>
+
+    <!-- Canonical sync status labels -->
+    <string name="uix_sync_saved_device">Tersimpan di perangkat</string>
+    <string name="uix_sync_pending">Menunggu sinkronisasi</string>
+    <string name="uix_sync_in_progress">Sedang disinkronkan</string>
+    <string name="uix_sync_done">Berhasil disinkronkan</string>
+    <string name="uix_sync_failed_action">Gagal disinkronkan — butuh tindakan</string>
+    <string name="uix_sync_try_again">Coba Sinkronkan Lagi</string>
+
+    <!-- Canonical QRIS status labels (status only from backend) -->
+    <string name="uix_qris_waiting">Menunggu Pembayaran</string>
+    <string name="uix_qris_verifying">Pembayaran Sedang Diverifikasi</string>
+    <string name="uix_qris_paid">Pembayaran Berhasil</string>
+    <string name="uix_qris_expired">QR Kedaluwarsa</string>
+    <string name="uix_qris_failed">Pembayaran Gagal</string>
+    <string name="uix_qris_settlement_pending">Settlement Tertunda</string>
+    <string name="uix_qris_expired_body">QR berlaku 5 menit dan tidak dibayar. Belum ada dana yang masuk — transaksi belum terjadi, keranjang Anda masih utuh.</string>
+    <string name="uix_qris_new">Buat QR Baru</string>
+    <string name="uix_qris_switch_cash">Ganti ke Tunai</string>
+
+    <!-- Cash -->
+    <string name="uix_cash_short">⚠ Uang diterima kurang Rp%1$s dari total. Tambah nominal atau ganti metode.</string>
+
+    <!-- Sync failure detail (3-part error pattern) -->
+    <string name="uix_sync_failed_detail">Apa yang terjadi: server menolak pengiriman %1$d kali.\nKemungkinan sebab: gangguan sementara di server.\nYang bisa dilakukan: coba kirim lagi; jika tetap gagal, hubungi Aish dengan kode di bawah.</string>
+    <string name="uix_sync_item_locked">Item ini tidak bisa dihapus — penjualan tercatat sah di perangkat.</string>
+
+    <!-- Subscription expired (block screen) -->
+    <string name="uix_subscription_expired">Langganan Anda telah berakhir. Paket %1$s berakhir %2$s. Transaksi, produk, dan laporan dijeda — data Anda tetap aman dan kembali begitu langganan diperpanjang.</string>
+    <string name="uix_subscription_contact">Hubungi Aish untuk Perpanjang</string>
+
+    <!-- Device limit -->
+    <string name="uix_device_limit">Paket %1$s mengizinkan %2$d perangkat dan semuanya sudah terpakai. Perangkat ini belum bisa dipakai bertransaksi.</string>
+    <string name="uix_device_revoke_register">Cabut Perangkat Lama &amp; Daftarkan Ini</string>
+    <string name="uix_device_contact_add">Hubungi Aish untuk Tambah Perangkat</string>
+
+    <!-- Closing (idempotent) -->
+    <string name="uix_closing_done">✓ Hari ini sudah ditutup — %1$s. Jika tombol ditekan dua kali, server me-replay snapshot yang sama — tidak ada data ganda.</string>
+    <string name="uix_closing_confirm">Ya, Tutup Hari Ini</string>
+
+    <!-- Destructive: clear cart -->
+    <string name="uix_clear_cart_confirm">Kosongkan keranjang? %1$d item akan dihapus dari keranjang. Tindakan ini tidak dapat dibatalkan.</string>
+    <string name="uix_action_back">Kembali</string>
+    <string name="uix_action_clear">Kosongkan</string>
+
+    <!-- Offline receipt header -->
+    <string name="uix_receipt_offline_header">*** STRUK OFFLINE / BELUM SYNC ***</string>
+    <string name="uix_receipt_local_ref">Ref lokal: %1$s</string>
+
+    <!-- Future state (no active button) -->
+    <string name="uix_coming_soon">SEGERA HADIR: %1$s — menunggu aturan backend.</string>
 </resources>
