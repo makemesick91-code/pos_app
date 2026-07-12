@@ -77,7 +77,7 @@ the console is reached only via an encrypted operator channel (SSH tunnel/VPN).
 | DMS HTTP `/` | 302 (healthy, same as baseline) |
 | php8.3-fpm / daeng queue | active / active |
 | PHP 8.3 version | 8.3.6 — unchanged (no apt upgrade) |
-| Cross-DB isolation | `aish_pos_user` → `asia_dental_lab_pilot` connection rejected |
+| Cross-DB isolation | the isolated POS database role cannot connect to the DMS database (connection rejected) |
 | Failed units | 0 |
 
 ## 9. Final AISH state
