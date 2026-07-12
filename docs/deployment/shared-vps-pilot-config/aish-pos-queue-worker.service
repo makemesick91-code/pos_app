@@ -1,0 +1,29 @@
+[Unit]
+Description=Aish POS Laravel queue worker (pilot, conservative, single process)
+After=network.target postgresql.service php8.5-fpm.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/aish-pos/backend
+ExecStart=/usr/bin/php8.5 /var/www/aish-pos/backend/artisan queue:work database \
+    --queue=default \
+    --sleep=3 \
+    --tries=3 \
+    --backoff=10,60,180 \
+    --timeout=120 \
+    --memory=256 \
+    --max-time=3600 \
+    --rest=1
+Restart=always
+RestartSec=5
+StartLimitIntervalSec=0
+KillSignal=SIGTERM
+TimeoutStopSec=150
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=aish-pos-queue-worker
+
+[Install]
+WantedBy=multi-user.target

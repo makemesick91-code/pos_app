@@ -1,0 +1,2 @@
+# Aish POS pilot scheduler (isolated from DaengtisiaMS)
+* * * * * www-data cd /var/www/aish-pos/backend && /usr/bin/php8.5 artisan schedule:run >> /var/www/aish-pos/backend/storage/logs/scheduler.log 2>&1

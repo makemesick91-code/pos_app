@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+#
+# Aish POS pilot database backup (isolated from DaengtisiaMS).
+# Dumps ONLY aish_pos_pilot using aish_pos_user credentials from /root/.pgpass.
+# NEVER touches the DaengtisiaMS database.
+#
+set -Eeuo pipefail
+umask 077
+
+BACKUP_DIR="/var/backups/aish-pos/database"
+DATABASE="aish_pos_pilot"
+DBUSER="aish_pos_user"
+DBHOST="127.0.0.1"
+RETENTION_DAYS=14
+
+export PGPASSFILE="/root/.pgpass"
+
+TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
+TARGET="${BACKUP_DIR}/aish_pos_${TIMESTAMP}.dump"
+
+mkdir -p "${BACKUP_DIR}"
+
+pg_dump \
+  --host="${DBHOST}" \
+  --username="${DBUSER}" \
+  --format=custom \
+  --file="${TARGET}" \
+  "${DATABASE}"
+
+test -s "${TARGET}"
+pg_restore --list "${TARGET}" >/dev/null
+
+find "${BACKUP_DIR}" \
+  -type f \
+  -name 'aish_pos_*.dump' \
+  -mtime +"${RETENTION_DAYS}" \
+  -delete
+
+echo "Backup verified: ${TARGET} ($(du -h "${TARGET}" | cut -f1))"

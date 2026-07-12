@@ -1,0 +1,38 @@
+server {
+    listen 8080;
+    listen [::]:8080;
+
+    server_name _;
+
+    root /var/www/aish-pos/backend/public;
+    index index.php index.html;
+
+    access_log /var/log/nginx/aish-pos-access.log;
+    error_log /var/log/nginx/aish-pos-error.log;
+
+    client_max_body_size 20M;
+
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.5-fpm-aish-pos.sock;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+        fastcgi_read_timeout 120;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+
+    location ~* \.(?:env|log|sql|bak|ini|conf|sh)$ {
+        deny all;
+    }
+}
