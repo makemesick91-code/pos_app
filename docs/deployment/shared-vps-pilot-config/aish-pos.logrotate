@@ -1,0 +1,12 @@
+/var/www/aish-pos/backend/storage/logs/*.log
+/var/log/nginx/aish-pos-*.log
+/var/log/php8.5-fpm-aish-pos-*.log {
+    daily
+    rotate 14
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    su root adm
+}
