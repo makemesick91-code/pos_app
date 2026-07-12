@@ -40,12 +40,16 @@ if git ls-files 'backend/database/seeders' | xargs grep -lniE "is_platform_admin
 else
   pass "no seeded platform-admin identity"
 fi
-# No obviously-weak default credential hardcoded in app/config/routes (non-seeder).
+# No obviously-weak default credential ASSIGNED in app/config/routes (non-seeder).
+# Matches an assignment to a weak literal (`=> 'admin123'`), not a mere mention —
+# so the provisioning command's own denylist of forbidden values is not flagged
+# (it is the control that REJECTS these). That file is also excluded explicitly.
 if git ls-files 'backend/app' 'backend/config' 'backend/routes' \
-   | xargs grep -lniE "admin123|changeme|'password123'|\"password123\"" 2>/dev/null | grep -q .; then
-  bad "possible hardcoded default credential in app/config/routes"
+   | grep -v 'PlatformAdminProvisionCommand.php' \
+   | xargs grep -lniE "=>[[:space:]]*['\"](admin123|changeme[0-9]*|password123)['\"]" 2>/dev/null | grep -q .; then
+  bad "possible hardcoded default credential assigned in app/config/routes"
 else
-  pass "no hardcoded default credential in app/config/routes"
+  pass "no hardcoded default credential assigned in app/config/routes"
 fi
 
 # 5. Provisioning command never accepts a visible password argument.
