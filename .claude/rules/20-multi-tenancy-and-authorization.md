@@ -25,6 +25,13 @@ Tenant isolation and the platform-admin boundary.
 - Platform admins operate across tenants but through admin services; they do not
   impersonate tenant users (impersonation is disabled and returns 403).
 
+## Tenant-owner web boundary (UIX-4)
+- The `/owner/*` console is tenant-scoped to the authenticated owner's own tenant only.
+  Owner identity = `is_active` AND `role = tenant_owner` AND a resolvable `tenant_id`;
+  it is never a platform capability and runs on the dedicated `owner` guard, separate
+  from `web`. Tenant context is server-resolved (`OwnerContextResolver`), never taken
+  from request input. See `.claude/rules/25-tenant-owner-web-console-boundary.md`.
+
 ## Admin surfaces default to read-only
 - Support/observability/admin consoles are read-only by default. Any mutation must be an
   explicitly authorized, audited admin action — never an incidental side effect.

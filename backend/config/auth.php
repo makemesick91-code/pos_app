@@ -42,6 +42,17 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // UIX-4 — dedicated session guard for the Tenant Owner Web Console
+        // (/owner/*). It shares the Eloquent users provider but keeps its own
+        // session state, so a platform-admin `web` session is NOT authenticated
+        // on `owner` and vice versa (surface separation, UIX4-R002/R003). The
+        // owner predicate (is_active AND role=tenant_owner AND a tenant) is
+        // re-checked on every request by EnsureTenantOwnerWeb.
+        'owner' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
     ],
 
     /*

@@ -18,6 +18,16 @@ Auth, session handling, and the security baseline for all four surfaces.
   no public admin page exists.
 - Device activation tokens are sha256-hashed; raw tokens are never stored or returned.
 
+## Tenant Owner browser console (`/owner/*`, UIX-4)
+- Session/cookie auth on the dedicated `owner` guard, gated by `EnsureTenantOwnerWeb`
+  (`tenant.owner.web`). Predicate (`is_active` AND `role = tenant_owner` AND a tenant)
+  is re-checked every request; a non-owner session is force-logged-out.
+- Owner login mirrors the admin console security posture: generic failure message, per-
+  (email,ip) throttling, timing normalization, session regeneration, POST-only secure
+  logout, no open redirect, and non-cacheable authenticated pages. No production default
+  owner credentials — provisioning is `tenant:owner-provision` (hidden prompt/STDIN,
+  strength-validated, hashed, never logged).
+
 ## Session & CSRF
 - The `/admin/*` console uses server sessions with CSRF protection on state-changing
   requests, secure/httponly session cookies, and short idle expiry.

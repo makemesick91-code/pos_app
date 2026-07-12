@@ -30,6 +30,11 @@ grep -q "platform.admin.web" backend/bootstrap/app.php && pass "web admin gate r
 grep -q "platform.admin.web" backend/routes/web.php && pass "web admin routes guarded" || bad "/admin routes not guarded"
 grep -q "'platform.admin'" backend/bootstrap/app.php && pass "api admin gate registered" || bad "platform.admin (api) missing"
 
+# 3b. Tenant Owner Web Console surface is gated (UIX4-R001..R007).
+grep -q "tenant.owner.web" backend/bootstrap/app.php && pass "owner web gate registered" || bad "tenant.owner.web not registered"
+grep -q "tenant.owner.web" backend/routes/web.php && pass "owner routes guarded" || bad "/owner routes not guarded"
+grep -q "OwnerContextResolver" backend/app/Http/Controllers/Owner/OwnerController.php && pass "owner context resolver used" || bad "owner context resolver not used"
+
 # 4. No default PLATFORM-ADMIN credentials (UIX3-R003). The platform-admin
 # console identity (is_platform_admin) must never be seeded with a password: it
 # is provisioned only via the secure hidden-prompt command. (A legacy dev-only
@@ -46,6 +51,7 @@ fi
 # (it is the control that REJECTS these). That file is also excluded explicitly.
 if git ls-files 'backend/app' 'backend/config' 'backend/routes' \
    | grep -v 'PlatformAdminProvisionCommand.php' \
+   | grep -v 'TenantOwnerProvisionCommand.php' \
    | xargs grep -lniE "=>[[:space:]]*['\"](admin123|changeme[0-9]*|password123)['\"]" 2>/dev/null | grep -q .; then
   bad "possible hardcoded default credential assigned in app/config/routes"
 else
@@ -60,6 +66,22 @@ if [ -f "$PROV" ]; then
 else
   bad "provisioning command missing"
 fi
+
+# 5b. Owner provisioning command never accepts a visible password argument (UIX4-R012).
+OPROV=backend/app/Console/Commands/TenantOwnerProvisionCommand.php
+if [ -f "$OPROV" ]; then
+  if grep -qE "\{--password" "$OPROV"; then bad "owner provisioning exposes --password argument"; else pass "owner provisioning has no visible password arg"; fi
+  grep -q "secret(" "$OPROV" && pass "owner provisioning uses hidden prompt" || bad "owner provisioning missing hidden prompt"
+else
+  bad "owner provisioning command missing"
+fi
+
+# 5c. UIX-4 tenant-owner foundation is persisted in the repo.
+for d in .claude/rules/25-tenant-owner-web-console-boundary.md \
+         docs/foundation/uix-4-tenant-owner-web-console.md \
+         docs/governance/tenant-owner-web-console-foundation.md; do
+  [ -f "$d" ] && pass "uix-4 doc $(basename "$d")" || bad "missing uix-4 doc $d"
+done
 
 # 6. No tracked secret files / keys.
 if git ls-files | grep -qE '(^|/)\.env$|\.pem$|id_rsa|id_ed25519|_ed25519$|\.p12$|\.keystore$'; then

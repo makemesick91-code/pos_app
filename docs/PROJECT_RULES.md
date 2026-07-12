@@ -1468,3 +1468,31 @@ Full text: `docs/foundation/uix-3-platform-admin-control-center.md`.
 14. `UIX3-R014` — Admin pages are `noindex, nofollow` with a same-origin referrer policy.
 15. `UIX3-R015` — Shared-VPS isolation preserved and DaengtisiaMS non-regressed; while HTTPS/domain is absent the portal is reachable only via an encrypted operator channel; public plaintext-HTTP admin usage is NO-GO and stated truthfully in evidence.
 16. `UIX3-R016` — Authoritative CI is the `pull_request` workflow set (no fake-green); the UIX-3 GO tag is created only after merge, deploy, runtime verification, and DaengtisiaMS non-regression evidence; existing GO tags are immutable.
+
+## Aish POS UIX-4 — Tenant Owner Web Console (UIX4-R001..UIX4-R022)
+
+Full narrative: `docs/foundation/uix-4-tenant-owner-web-console.md`. Governance:
+`docs/governance/tenant-owner-web-console-foundation.md`.
+
+1. `UIX4-R001` — Tenant Owner Web Console (`/owner/*`) is a distinct application surface from the public website, Platform Admin Console, and Android/API.
+2. `UIX4-R002` — Tenant Owner access never implies Platform Admin access; the two run on separate session guards.
+3. `UIX4-R003` — Platform Admin access never implies Tenant Owner membership; a platform-admin session can never reach `/owner/*`.
+4. `UIX4-R004` — Tenant context comes only from authorized server-side membership (the owner's own `tenant_id`), resolved in `OwnerContextResolver`.
+5. `UIX4-R005` — Raw tenant IDs from request input (route param, query, header, cookie, hidden field) are never trusted.
+6. `UIX4-R006` — Every owner query is tenant-scoped and deny-by-default; there is no automatic global scope, so scoping is explicit.
+7. `UIX4-R007` — Outlet/device lookups enforce tenant ownership; a foreign or unknown id resolves to 404, never another tenant's data.
+8. `UIX4-R008` — Any multi-tenant owner switching must validate every target membership via POST+CSRF and re-scope; the current domain is single-tenant-per-user so no switcher is exposed.
+9. `UIX4-R009` — Existing domain services (`TenantLifecycleService`, `TenantPlanResolver`, entitlement/usage, billing/onboarding/android-runtime viewers, `DailySalesReportService`) remain the source of truth; the console never recomputes business state.
+10. `UIX4-R010` — Dashboard values must be truthful; an unavailable read renders as "Tidak tersedia", never a fabricated zero.
+11. `UIX4-R011` — UIX-4 is read-only first; no tenant business mutation route exists. A mutation requires an existing governed service, policy, idempotency, audit, confirmation UX, and tests.
+12. `UIX4-R012` — Production default owner credentials are forbidden; `tenant:owner-provision` takes the password via hidden prompt/STDIN (never a visible CLI arg), validates strength, hashes it, and never logs or stores plaintext.
+13. `UIX4-R013` — Owner web login has one generic failure message (no enumeration), per-(email,ip) rate limiting, timing normalization, session regeneration, POST-only secure logout, and no user-supplied redirect.
+14. `UIX4-R014` — Authenticated owner pages are non-cacheable (`no-store, private`).
+15. `UIX4-R015` — Any cache keys/data include tenant and identity scope so a cached response cannot cross tenants.
+16. `UIX4-R016` — Audit reuses `AdminAuditLogger` (sanitized); no password/session/token/cookie/PII is stored, and device token/fingerprint hashes are never rendered.
+17. `UIX4-R017` — Responsive (360–1920, no horizontal overflow) and accessibility (semantic, labelled, keyboard, visible focus, `aria-expanded` nav, reduced motion, `noindex`) gates are mandatory.
+18. `UIX4-R018` — Cross-tenant isolation and surface/role-separation tests are release blockers.
+19. `UIX4-R019` — Public plaintext-HTTP use with real tenant data is NO-GO; while HTTPS/domain is absent the console is reached only via an encrypted operator/user channel.
+20. `UIX4-R020` — Shared-VPS deployment must not change or regress DaengtisiaMS.
+21. `UIX4-R021` — GO requires local/origin/VPS exact-match and runtime verification.
+22. `UIX4-R022` — Existing GO tags are immutable.

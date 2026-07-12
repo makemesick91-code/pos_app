@@ -28,6 +28,18 @@ class AdminAuditLog extends Model
     public const ACTION_ADMIN_LOGOUT = 'ADMIN_LOGOUT';
 
     public const ACTION_ADMIN_CONTROL_CENTER_VIEWED = 'ADMIN_CONTROL_CENTER_VIEWED';
+
+    // UIX-4 — tenant-owner browser console session events. Like the admin
+    // console, failed owner logins are NOT recorded here (no authenticated
+    // actor); they go to the app log with a redacted identifier.
+    public const ACTION_OWNER_LOGIN = 'OWNER_LOGIN';
+
+    public const ACTION_OWNER_LOGOUT = 'OWNER_LOGOUT';
+
+    public const ACTION_OWNER_PROVISIONED = 'OWNER_PROVISIONED';
+
+    public const TARGET_OWNER_CONSOLE = 'owner_console';
+
     public const ACTION_SUBSCRIPTION_ASSIGNED = 'SUBSCRIPTION_ASSIGNED';
     public const ACTION_SUBSCRIPTION_UPDATED = 'SUBSCRIPTION_UPDATED';
     public const ACTION_DEVICE_REVOKED = 'DEVICE_REVOKED';

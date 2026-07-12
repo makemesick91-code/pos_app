@@ -4,6 +4,13 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminLoginController;
 use App\Http\Controllers\Admin\AdminTenantWebController;
 use App\Http\Controllers\HealthCheckController;
+use App\Http\Controllers\Owner\OwnerDashboardController;
+use App\Http\Controllers\Owner\OwnerDeviceController;
+use App\Http\Controllers\Owner\OwnerLoginController;
+use App\Http\Controllers\Owner\OwnerOperationsController;
+use App\Http\Controllers\Owner\OwnerOutletController;
+use App\Http\Controllers\Owner\OwnerSubscriptionController;
+use App\Http\Controllers\Owner\OwnerUsageController;
 use App\Http\Controllers\PublicWebsite\LandingPageController;
 use App\Http\Controllers\PublicWebsite\LeadInterestController;
 use App\Http\Controllers\PublicWebsite\PackagePageController;
@@ -55,5 +62,41 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
         Route::get('/tenants', [AdminTenantWebController::class, 'index'])->name('tenants.index');
         Route::get('/tenants/{tenant}', [AdminTenantWebController::class, 'show'])->name('tenants.show');
+    });
+});
+
+/*
+ * UIX-4 — Tenant Owner browser login + Owner Web Console (session/cookie).
+ *
+ * A distinct application surface from the public website, the Platform Admin
+ * Console (/admin/*), and the Android/API (Sanctum) surface. Runs on its own
+ * `owner` session guard, guarded by tenant.owner.web (is_active + tenant_owner
+ * role + a resolvable tenant, deny-by-default). The tenant is always derived
+ * server-side from the authenticated owner's own record — never from a route
+ * parameter, query string, header, or cookie (UIX4-R004/R005). Read-only first:
+ * no tenant business mutation routes exist in this foundation sprint
+ * (UIX4-R011). Outlet/device ids are resolved only within the owner's tenant.
+ * NOTE: while HTTPS/domain is unavailable, this surface must be reached only via
+ * an encrypted operator/user channel; public plaintext HTTP access with real
+ * tenant data remains NO-GO (UIX4-R019, docs/security/uix-4-*).
+ */
+Route::prefix('owner')->name('owner.')->group(function (): void {
+    Route::get('/login', [OwnerLoginController::class, 'showLogin'])->name('login');
+    Route::post('/login', [OwnerLoginController::class, 'login'])->name('login.store');
+    Route::post('/logout', [OwnerLoginController::class, 'logout'])
+        ->middleware('tenant.owner.web')
+        ->name('logout');
+
+    Route::middleware('tenant.owner.web')->group(function (): void {
+        Route::get('/', [OwnerDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/outlets', [OwnerOutletController::class, 'index'])->name('outlets.index');
+        Route::get('/outlets/{outlet}', [OwnerOutletController::class, 'show'])
+            ->whereNumber('outlet')->name('outlets.show');
+        Route::get('/devices', [OwnerDeviceController::class, 'index'])->name('devices.index');
+        Route::get('/devices/{device}', [OwnerDeviceController::class, 'show'])
+            ->whereNumber('device')->name('devices.show');
+        Route::get('/subscription', [OwnerSubscriptionController::class, 'index'])->name('subscription');
+        Route::get('/usage', [OwnerUsageController::class, 'index'])->name('usage');
+        Route::get('/operations', [OwnerOperationsController::class, 'index'])->name('operations');
     });
 });
