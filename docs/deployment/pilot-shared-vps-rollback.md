@@ -98,7 +98,7 @@ Roll back **only** the item that regressed; each is independent.
 sudo cat /var/backups/aish-pos/post-go-hardening/config/ufw-20260712_100400.txt
 # remove the operator-IP rule; re-open ONLY if explicitly approved (do NOT
 # silently restore unrestricted public HTTP):
-sudo ufw delete allow from 103.175.222.198 to any port 8080 proto tcp
+sudo ufw delete allow from <OPERATOR_IP> to any port 8080 proto tcp
 sudo ufw status numbered
 ```
 

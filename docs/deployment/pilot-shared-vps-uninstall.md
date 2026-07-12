@@ -52,7 +52,7 @@ rm -f /etc/php/8.5/fpm/pool.d/aish-pos.conf
 php-fpm8.5 -t 2>/dev/null && systemctl reload php8.5-fpm 2>/dev/null || true
 
 # 6. close the firewall port (post-hardening the rule is operator-IP scoped)
-ufw delete allow from 103.175.222.198 to any port 8080 proto tcp
+ufw delete allow from <OPERATOR_IP> to any port 8080 proto tcp
 ufw delete allow 8080/tcp 2>/dev/null || true   # in case an older global rule exists
 
 # 7. VERIFY DaengtisiaMS before any destructive DB step

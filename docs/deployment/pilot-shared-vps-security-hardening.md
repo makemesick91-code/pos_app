@@ -24,7 +24,7 @@ value appears here.
 | POS domain | **none available** at hardening time |
 | HTTPS | **BLOCKED** — no domain/DNS; no certificate issued (not faked) |
 | Public unrestricted HTTP on :8080 | **DISABLED** |
-| Access mode | HTTP on `:8080`, **UFW-restricted to operator IP `103.175.222.198`** |
+| Access mode | HTTP on `:8080`, **UFW-restricted to operator IP `<OPERATOR_IP>`** |
 | SSH | unaffected (separate `OpenSSH` UFW rule) |
 | APP_URL / SESSION_SECURE_COOKIE | `http://145.79.13.224:8080` / `false` (correct for HTTP transport) |
 
@@ -40,13 +40,13 @@ BEFORE (global exposure):
 
 Commands:
 sudo ufw --force delete allow 8080/tcp        # removes v4 + v6 global rule
-sudo ufw allow from 103.175.222.198 to any port 8080 proto tcp
+sudo ufw allow from <OPERATOR_IP> to any port 8080 proto tcp
 
 AFTER:
 [1] OpenSSH         ALLOW IN  Anywhere
 [2] 80/tcp          ALLOW IN  Anywhere            # DaengtisiaMS (unchanged)
 [3] 443/tcp         ALLOW IN  Anywhere            # reserved (nothing listens yet)
-[4] 8080/tcp        ALLOW IN  103.175.222.198     # POS, operator-only
+[4] 8080/tcp        ALLOW IN  <OPERATOR_IP>     # POS, operator-only
 Default: deny (incoming)
 ```
 
