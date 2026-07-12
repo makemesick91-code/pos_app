@@ -15,7 +15,7 @@ class PublicWebsitePublicRouteTest extends TestCase
 
     public function test_public_pages_render_without_auth(): void
     {
-        $this->get('/')->assertOk()->assertSee('Aish POS Lite');
+        $this->get('/')->assertOk()->assertSee('Aish POS');
         $this->get('/packages')->assertOk();
         $this->get('/privacy')->assertOk()->assertSee('Kebijakan Privasi');
         $this->get('/terms')->assertOk()->assertSee('Ketentuan Layanan');

@@ -18,8 +18,8 @@ class TermsPageController extends Controller
 
         return view('public-website.terms', [
             'page' => $page,
-            'seoTitle' => $page?->seo_title ?? 'Ketentuan Layanan — Aish POS Lite',
-            'seoDescription' => $page?->seo_description ?? 'Ketentuan layanan Aish POS Lite (template kesiapan).',
+            'seoTitle' => $page?->seo_title ?? 'Ketentuan Layanan — Aish POS',
+            'seoDescription' => $page?->seo_description ?? 'Ketentuan penggunaan situs publik dan program pilot Aish POS.',
         ]);
     }
 }

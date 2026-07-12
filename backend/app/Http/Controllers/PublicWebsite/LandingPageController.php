@@ -22,17 +22,17 @@ class LandingPageController extends Controller
         return view('public-website.home', [
             'version' => $version,
             'page' => $page,
-            'seoTitle' => $page?->seo_title ?? 'Aish POS Lite — POS Android SaaS untuk UMKM',
+            'seoTitle' => $page?->seo_title ?? 'Aish POS — Kasir Android Ringan untuk UMKM',
             'seoDescription' => $page?->seo_description
-                ?? 'Aish POS Lite: kasir Android ringan untuk UMKM — QRIS, tunai, mode offline, cetak struk, stok sederhana, dan laporan harian.',
+                ?? 'Aish POS membantu UMKM mengelola kasir, tunai, QRIS, stok, dan laporan melalui aplikasi Android yang ringan.',
         ]);
     }
 
     public function thankYou(): View
     {
         return view('public-website.thank-you', [
-            'seoTitle' => 'Terima kasih — Aish POS Lite',
-            'seoDescription' => 'Terima kasih atas minat Anda pada Aish POS Lite. Tim kami akan menghubungi Anda.',
+            'seoTitle' => 'Terima kasih — Aish POS',
+            'seoDescription' => 'Terima kasih atas minat Anda pada Aish POS. Tim kami akan menghubungi Anda.',
         ]);
     }
 }

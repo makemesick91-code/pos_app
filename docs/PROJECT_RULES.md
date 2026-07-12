@@ -1424,3 +1424,24 @@ Enforced by `scripts/uix1_design_gate.sh` and `.github/workflows/uix1-ci.yml`. F
 20. `UIX-R020` — Handoff folder is design input; implemented tokens/components are the app source of truth; deviations documented.
 21. `UIX-R021` — New screens registered in the UIX-1 coverage matrix (`docs/uiux/uix-1-screen-coverage.md`).
 22. `UIX-R022` — Existing deployment GO tags (`pilot-shared-vps-isolated-deployment-go`, `pilot-shared-vps-post-go-hardening-go`) are immutable; the UIX-1 GO tag is created only on verified evidence.
+
+## Aish POS UIX-2 — Premium Public Experience Rules (UIX2-R001..UIX2-R016)
+
+Enforced by `scripts/uix2_design_gate.sh` and the UIX CI workflow.
+
+1. `UIX2-R001` — Public brand architecture is Aish Tech Solution → Aish POS; “Lite” is not mixed into public product copy.
+2. `UIX2-R002` — Homepage composition includes hero product visualization, features, workflow, use cases, offline/QRIS truth, pricing, proof, FAQ, conversion form, and footer.
+3. `UIX2-R003` — Every CTA resolves to a real route, anchor, or server-handled form; placeholder links are forbidden.
+4. `UIX2-R004` — Product previews represent implemented capabilities and must not imply fictional screens or payment outcomes.
+5. `UIX2-R005` — Public pricing comes from approved sources; undecided pricing says “Hubungi Kami” or pilot wording.
+6. `UIX2-R006` — Testimonials, customer identities, ratings, logos, and business metrics require approved evidence.
+7. `UIX2-R007` — Layouts support 360, 390, 412, 768, 1024, 1280, 1440, and 1920 CSS-pixel viewports without overflow.
+8. `UIX2-R008` — Navigation, tabs, disclosure content, forms, focus, landmarks, and touch targets remain keyboard and screen-reader accessible.
+9. `UIX2-R009` — Motion is optional, brief, and disabled by reduced-motion preference.
+10. `UIX2-R010` — UIX-1 semantic tokens remain the source of truth; new components alias those tokens.
+11. `UIX2-R011` — Public pages remain CDN-free and framework-free unless a measured need justifies a locked dependency.
+12. `UIX2-R012` — Offline and QRIS labels follow canonical server-confirmed terminology; QRIS is never described as offline.
+13. `UIX2-R013` — Pilot wording must not imply self-service signup, public production readiness, or verified HTTPS before those exist.
+14. `UIX2-R014` — Public changes require route/content tests, the design gate, and responsive screenshots.
+15. `UIX2-R015` — Logo assets require approval; without one, use the documented text lockup and neutral monogram slot.
+16. `UIX2-R016` — GO tagging is allowed only after green CI, merge, deployed-commit equality, runtime smoke, backups, and DaengtisiaMS regression evidence.

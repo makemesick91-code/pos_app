@@ -7,7 +7,7 @@
         <div class="wrap legal">
             <h1>Ketentuan Layanan</h1>
             <div class="note">Dokumen ini adalah <strong>template kesiapan (readiness placeholder)</strong> dan belum final secara hukum.</div>
-            <p>Ketentuan ini mengatur penggunaan situs publik Aish POS Lite dan formulir minat.</p>
+            <p>Ketentuan ini mengatur penggunaan situs publik Aish POS dan formulir minat.</p>
             <h3>Penggunaan situs</h3>
             <p>Situs ini bersifat informasi. Mengirim formulir minat tidak membuat akun, langganan, atau kewajiban penagihan.</p>
             <h3>Aktivasi layanan</h3>

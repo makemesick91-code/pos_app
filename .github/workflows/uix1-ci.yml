@@ -1,4 +1,4 @@
-name: UIX-1 CI
+name: UIX CI
 
 on:
   push:
@@ -13,6 +13,9 @@ jobs:
 
       - name: UIX-1 design foundation gate
         run: bash scripts/uix1_design_gate.sh
+
+      - name: UIX-2 premium public experience gate
+        run: bash scripts/uix2_design_gate.sh
 
       - name: UIX-1 rules present (UIX-R001..R022)
         run: |
