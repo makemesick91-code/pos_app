@@ -79,6 +79,8 @@
         .card .v { font-size: 28px; font-weight: 800; margin-top: 6px; }
         .card .sub { font-size: 12px; color: var(--aish-text-secondary); margin-top: 4px; }
         .unavailable { color: var(--aish-text-disabled); font-weight: 700; }
+        .aish-num { font-variant-numeric: tabular-nums; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
         .badge {
             display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
@@ -165,6 +167,7 @@
                 <a href="{{ route('owner.outlets.index') }}" @if(request()->routeIs('owner.outlets.*')) aria-current="page" @endif>Outlet</a>
                 <a href="{{ route('owner.devices.index') }}" @if(request()->routeIs('owner.devices.*')) aria-current="page" @endif>Perangkat</a>
                 <a href="{{ route('owner.subscription') }}" @if(request()->routeIs('owner.subscription')) aria-current="page" @endif>Langganan</a>
+                <a href="{{ route('owner.billing') }}" @if(request()->routeIs('owner.billing') || request()->routeIs('owner.billing.*')) aria-current="page" @endif>Tagihan</a>
                 <a href="{{ route('owner.usage') }}" @if(request()->routeIs('owner.usage')) aria-current="page" @endif>Penggunaan</a>
                 <a href="{{ route('owner.operations') }}" @if(request()->routeIs('owner.operations')) aria-current="page" @endif>Operasional</a>
             </nav>
