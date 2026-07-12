@@ -1,4 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Aish POS — UIX-1 app theme wired to the design foundation tokens.
+     Light-first (handoff foundation is a light system); elevation via border, not heavy shadow. -->
 <resources>
-    <style name="Theme.AishPosLite" parent="Theme.Material3.DayNight.NoActionBar" />
+    <style name="Theme.AishPosLite" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/action_primary</item>
+        <item name="colorPrimaryDark">@color/action_primary_pressed</item>
+        <item name="colorOnPrimary">@color/text_on_dark</item>
+        <item name="colorSecondary">@color/brand_secondary</item>
+        <item name="colorError">@color/action_destructive</item>
+        <item name="android:colorBackground">@color/bg_default</item>
+        <item name="colorSurface">@color/surface_default</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorOutline">@color/border_default</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="android:statusBarColor">@color/brand_dark</item>
+
+        <!-- Default component style -->
+        <item name="materialButtonStyle">@style/Widget.Aish.Button.Primary</item>
+    </style>
 </resources>
