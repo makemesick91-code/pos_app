@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminLoginController;
+use App\Http\Controllers\Admin\AdminTenantWebController;
 use App\Http\Controllers\HealthCheckController;
 use App\Http\Controllers\PublicWebsite\LandingPageController;
 use App\Http\Controllers\PublicWebsite\LeadInterestController;
@@ -30,3 +33,27 @@ Route::get('/thank-you', [LandingPageController::class, 'thankYou']);
 
 Route::post('/interest', [LeadInterestController::class, 'store'])
     ->middleware('throttle:'.config('public_website.lead_rate_limit', 'public-interest'));
+
+/*
+ * UIX-3 — Platform Admin browser login + SaaS Control Center (session/cookie).
+ *
+ * Distinct surface from the API (Sanctum) and from the public website. Guarded
+ * by platform.admin.web (is_active + isPlatformAdmin, deny-by-default). Read-only
+ * control center: NO tenant mutation routes exist in this foundation sprint.
+ * NOTE: while HTTPS/domain is unavailable, this surface must be reached only via
+ * an encrypted operator channel (SSH tunnel / VPN / private network); public
+ * plaintext HTTP admin access remains NO-GO (see docs/security/uix-3-*).
+ */
+Route::prefix('admin')->name('admin.')->group(function (): void {
+    Route::get('/login', [AdminLoginController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AdminLoginController::class, 'login'])->name('login.store');
+    Route::post('/logout', [AdminLoginController::class, 'logout'])
+        ->middleware('platform.admin.web')
+        ->name('logout');
+
+    Route::middleware('platform.admin.web')->group(function (): void {
+        Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/tenants', [AdminTenantWebController::class, 'index'])->name('tenants.index');
+        Route::get('/tenants/{tenant}', [AdminTenantWebController::class, 'show'])->name('tenants.show');
+    });
+});

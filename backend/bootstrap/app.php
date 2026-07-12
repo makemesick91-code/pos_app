@@ -4,6 +4,7 @@ use App\Http\Middleware\EnsureDeviceIsRegistered;
 use App\Http\Middleware\EnsureExportEntitled;
 use App\Http\Middleware\EnsureFeatureEntitled;
 use App\Http\Middleware\EnsurePlatformAdmin;
+use App\Http\Middleware\EnsurePlatformAdminWeb;
 use App\Http\Middleware\EnsureReportEntitled;
 use App\Http\Middleware\EnsureTenantCanWrite;
 use App\Http\Middleware\EnsureTenantEntitled;
@@ -34,6 +35,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.usage.limit' => EnsureTenantUsageLimitAvailable::class,
             'device.registered' => EnsureDeviceIsRegistered::class,
             'platform.admin' => EnsurePlatformAdmin::class,
+            // UIX-3 — session/web variant of the platform-admin gate for the
+            // browser SaaS Control Center (/admin/*). Redirects instead of
+            // returning JSON; same is_active + isPlatformAdmin predicate.
+            'platform.admin.web' => EnsurePlatformAdminWeb::class,
             // Sprint 32 — plan entitlement runtime enforcement & subscription
             // access control. entitlement.write gates mutating operational
             // requests on the tenant billing/subscription/lifecycle state (reads

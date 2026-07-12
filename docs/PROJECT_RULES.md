@@ -1445,3 +1445,26 @@ Enforced by `scripts/uix2_design_gate.sh` and the UIX CI workflow.
 14. `UIX2-R014` — Public changes require route/content tests, the design gate, and responsive screenshots.
 15. `UIX2-R015` — Logo assets require approval; without one, use the documented text lockup and neutral monogram slot.
 16. `UIX2-R016` — GO tagging is allowed only after green CI, merge, deployed-commit equality, runtime smoke, backups, and DaengtisiaMS regression evidence.
+
+## Aish POS UIX-3 — Platform Admin Login & SaaS Control Center Foundation (UIX3-R001..UIX3-R016)
+
+Enforced by `backend/tests/Feature/Uix3*`, `scripts/uix3_design_gate.sh`,
+`scripts/verify_application_foundation_rules.sh`, and the `uix3-ci.yml` workflow.
+Full text: `docs/foundation/uix-3-platform-admin-control-center.md`.
+
+1. `UIX3-R001` — A platform admin is a backend identity (`is_platform_admin` AND `is_active`), never a tenant role; tenant context never grants platform privilege.
+2. `UIX3-R002` — The browser console (`/admin/*`) is a distinct surface guarded by `platform.admin.web`, deny-by-default; unauthenticated visitors are redirected, non-admin sessions logged out.
+3. `UIX3-R003` — No production default credentials; `platform:admin-provision` takes the password via hidden prompt/STDIN (never a visible CLI arg), validates strength, hashes it, and never logs or stores plaintext.
+4. `UIX3-R004` — Login has one generic failure message (no enumeration), per-(email,ip) rate limiting, session regeneration, timing normalization, and no user-supplied redirect (no open redirect).
+5. `UIX3-R005` — State-changing admin requests are CSRF-protected; logout is POST-only and invalidates the session.
+6. `UIX3-R006` — Authenticated console responses are non-cacheable (`no-store, private`).
+7. `UIX3-R007` — Control-center metrics reuse existing governed summary services; no recomputed business status; unavailable groups render truthfully, never a fabricated zero.
+8. `UIX3-R008` — Authoritative tenant lifecycle status comes only from `TenantLifecycleService::resolve()`; never recomputed in a controller/view.
+9. `UIX3-R009` — Tenant list/detail reuse `AdminTenantService` + `SupportTenantHealthService` (domain-redacted); no password hash, token, secret, or unnecessary PII is rendered.
+10. `UIX3-R010` — Read-only foundation: no tenant mutation routes; a mutation requires an existing governed service, policy, idempotency, audit, confirmation UX, and tests — never duplicated logic.
+11. `UIX3-R011` — Cross-tenant detail views and console login/logout are audited via `AdminAuditLogger`; audit never stores password/session/token/cookie; failed logins log only a hashed identifier.
+12. `UIX3-R012` — Dashboard/list queries are bounded (grouped counts, pagination ≤50, page-scoped resolves); no all-tenant fan-out and no N+1.
+13. `UIX3-R013` — The console reuses the UIX-1/UIX-2 tokens (`aish-tokens.css`), build-free Blade; semantic, keyboard-usable, visible focus, `aria-expanded` nav, labels, reduced motion, responsive 360–1920 with no horizontal overflow.
+14. `UIX3-R014` — Admin pages are `noindex, nofollow` with a same-origin referrer policy.
+15. `UIX3-R015` — Shared-VPS isolation preserved and DaengtisiaMS non-regressed; while HTTPS/domain is absent the portal is reachable only via an encrypted operator channel; public plaintext-HTTP admin usage is NO-GO and stated truthfully in evidence.
+16. `UIX3-R016` — Authoritative CI is the `pull_request` workflow set (no fake-green); the UIX-3 GO tag is created only after merge, deploy, runtime verification, and DaengtisiaMS non-regression evidence; existing GO tags are immutable.
