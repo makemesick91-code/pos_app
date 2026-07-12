@@ -19,6 +19,15 @@ class AdminAuditLog extends Model
     use HasFactory;
 
     public const ACTION_TENANT_VIEWED = 'TENANT_VIEWED';
+
+    // UIX-3 — platform-admin browser console session events. Failed logins are
+    // NOT recorded here (no authenticated actor exists); they go to the app log
+    // with a redacted identifier to avoid account enumeration.
+    public const ACTION_ADMIN_LOGIN = 'ADMIN_LOGIN';
+
+    public const ACTION_ADMIN_LOGOUT = 'ADMIN_LOGOUT';
+
+    public const ACTION_ADMIN_CONTROL_CENTER_VIEWED = 'ADMIN_CONTROL_CENTER_VIEWED';
     public const ACTION_SUBSCRIPTION_ASSIGNED = 'SUBSCRIPTION_ASSIGNED';
     public const ACTION_SUBSCRIPTION_UPDATED = 'SUBSCRIPTION_UPDATED';
     public const ACTION_DEVICE_REVOKED = 'DEVICE_REVOKED';
