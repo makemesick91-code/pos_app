@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Aish POS — UIX-1 typography & component styles.
+     Source of truth: operator-provided UI/UX handoff package (DESIGN_TOKENS.json).
+     Font: handoff specifies Inter with Roboto/system fallback. Inter binaries are NOT bundled
+     (license review pending); we use the system sans-serif family as the documented fallback.
+     Financial/numeric styles enable tabular figures (tnum) per the handoff typography rules. -->
+<resources>
+
+    <!-- ===== Text appearances ===== -->
+    <style name="TextAppearance.Aish" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <style name="TextAppearance.Aish.Display">
+        <item name="android:textSize">@dimen/text_display</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.Aish.PageTitle">
+        <item name="android:textSize">@dimen/text_page_title</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.Aish.SectionTitle">
+        <item name="android:textSize">@dimen/text_section_title</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.Aish.CardTitle">
+        <item name="android:textSize">@dimen/text_card_title</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextAppearance.Aish.Body">
+        <item name="android:textSize">@dimen/text_body</item>
+        <item name="android:lineSpacingMultiplier">1.55</item>
+    </style>
+
+    <style name="TextAppearance.Aish.BodySmall">
+        <item name="android:textSize">@dimen/text_body_small</item>
+    </style>
+
+    <style name="TextAppearance.Aish.Label">
+        <item name="android:textSize">@dimen/text_label</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_secondary</item>
+    </style>
+
+    <style name="TextAppearance.Aish.Caption">
+        <item name="android:textSize">@dimen/text_caption</item>
+        <item name="android:textColor">@color/text_secondary</item>
+    </style>
+
+    <!-- Numeric / financial: tabular figures required for price, qty, cash, reports. -->
+    <style name="TextAppearance.Aish.NumericTable">
+        <item name="android:textSize">@dimen/text_numeric_table</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+    </style>
+
+    <style name="TextAppearance.Aish.CurrencyLarge">
+        <item name="android:textSize">@dimen/text_currency_large</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <!-- ===== Buttons ===== -->
+    <style name="Widget.Aish.Button.Primary" parent="Widget.Material3.Button">
+        <item name="android:minHeight">@dimen/button_height</item>
+        <item name="backgroundTint">@color/action_primary</item>
+        <item name="android:textColor">@color/text_on_dark</item>
+        <item name="android:textSize">@dimen/text_button</item>
+        <item name="android:textStyle">bold</item>
+        <item name="cornerRadius">@dimen/radius_button</item>
+    </style>
+
+    <!-- Pay / cash confirm button — 52dp per handoff, success semantics. -->
+    <style name="Widget.Aish.Button.Pay" parent="Widget.Aish.Button.Primary">
+        <item name="android:minHeight">@dimen/button_pay_height</item>
+        <item name="backgroundTint">@color/action_success</item>
+    </style>
+
+    <style name="Widget.Aish.Button.Destructive" parent="Widget.Aish.Button.Primary">
+        <item name="backgroundTint">@color/action_destructive</item>
+    </style>
+
+    <style name="Widget.Aish.Button.Secondary" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:minHeight">@dimen/button_height</item>
+        <item name="android:textColor">@color/action_primary</item>
+        <item name="strokeColor">@color/border_default</item>
+        <item name="cornerRadius">@dimen/radius_button</item>
+    </style>
+
+    <!-- ===== Inputs ===== -->
+    <style name="Widget.Aish.TextInput" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxCornerRadiusTopStart">@dimen/radius_input</item>
+        <item name="boxCornerRadiusTopEnd">@dimen/radius_input</item>
+        <item name="boxCornerRadiusBottomStart">@dimen/radius_input</item>
+        <item name="boxCornerRadiusBottomEnd">@dimen/radius_input</item>
+        <item name="boxStrokeColor">@color/border_default</item>
+    </style>
+
+    <!-- ===== Card / surface ===== -->
+    <style name="Widget.Aish.Card" parent="Widget.Material3.CardView.Outlined">
+        <item name="cardCornerRadius">@dimen/radius_card</item>
+        <item name="strokeColor">@color/border_default</item>
+        <item name="cardBackgroundColor">@color/surface_default</item>
+        <item name="cardElevation">0dp</item>
+    </style>
+
+    <!-- ===== Status badge (icon + label; never color alone) ===== -->
+    <style name="TextAppearance.Aish.Badge">
+        <item name="android:textSize">@dimen/text_label</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:paddingStart">@dimen/space_md</item>
+        <item name="android:paddingEnd">@dimen/space_md</item>
+        <item name="android:paddingTop">@dimen/space_xs</item>
+        <item name="android:paddingBottom">@dimen/space_xs</item>
+    </style>
+</resources>

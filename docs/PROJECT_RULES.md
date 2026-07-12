@@ -1394,3 +1394,33 @@ Mandatory:
 7. Alert readiness is vendor-neutral and CI-safe: no external monitoring vendor, network, or payment credential is required (`OBS-R021`, `OBS-R022`, `external_monitoring_vendor_required_in_ci_allowed=false`). `observability:go-no-go` must FAIL if the governance audit is NO_GO, a hard guardrail is not locked false, a Sprint 36 command is missing, a Sprint 24–35 prior gate is not registered, an observability service is missing, or a commercial-chain service is missing (`OBS-R032`). See `docs/sprints/sprint-36-observability-health-monitoring-queue-production-diagnostics-evidence.md`.
 8. Sprint 36 rules (`OBS-R001..R032`) coexist with Sprint 25 `TLS-R001..R010`, Sprint 26 `TPE-R001..R012`, Sprint 27 `UEL-R001..R015`, Sprint 28 `ULR-R001..R016`, Sprint 29 `EGC-R001..R015`, Sprint 30 `BIL-R001..R016`, Sprint 31 `PGW-R001..R018`, Sprint 32 `ENT-R001..R024`, Sprint 33 `ONB-R001..R026`, Sprint 34 `ADR-R001..R030`, and Sprint 35 `SUP-R001..R030`; the Sprint 36 `observability_health_snapshots`/`observability_anomaly_events`/`observability_scheduler_runs`/`observability_alert_suggestions` tables are additive and read every prior ledger without altering it.
 9. GO/WATCH/NO-GO report must be evidence-backed.
+
+## Aish POS UIX-1 — Design Foundation & UI Governance (UIX-R001..UIX-R022)
+
+Source of truth once implemented: the app's token/component foundation (`android/app/src/main/res/values/*`,
+`backend/resources/css/aish-tokens.css`). The operator UI/UX handoff package is design input only.
+Enforced by `scripts/uix1_design_gate.sh` and `.github/workflows/uix1-ci.yml`. Full text:
+`docs/foundation/uix-1-design-system.md`.
+
+1. `UIX-R001` — Semantic color tokens only; no hardcoded hex in Android layouts/Kotlin or web components.
+2. `UIX-R002` — Typography via defined styles; body ≥ 14 sp; caption reserved for metadata.
+3. `UIX-R003` — Spacing uses the 4 dp scale tokens.
+4. `UIX-R004` — Touch target ≥ 48 dp; pay/confirm button 52 dp.
+5. `UIX-R005` — Financial/numeric text uses tabular figures (`tnum` / `.aish-num`).
+6. `UIX-R006` — Every feature screen provides loading, empty, and error states.
+7. `UIX-R007` — Offline-aware screens show offline/sync state with the canonical labels.
+8. `UIX-R008` — Permission enforced in navigation and actions; backend is the source of truth.
+9. `UIX-R009` — Entitlement lock/upgrade states come from the backend decision; never computed client-side.
+10. `UIX-R010` — Destructive actions require confirmation; financial actions are server-confirmed only.
+11. `UIX-R011` — QRIS/sync never display success before the backend confirms PAID / synced.
+12. `UIX-R012` — Offline receipts labelled `*** STRUK OFFLINE / BELUM SYNC ***` until server confirms.
+13. `UIX-R013` — Idempotent sync via `client_reference`; failed items not user-deletable; no duplicate UI transactions.
+14. `UIX-R014` — Tenant isolation absolute; no cross-tenant data in UI; sensitive admin actions need reason + typed confirmation + audit log.
+15. `UIX-R015` — Feature without backend = labelled "SEGERA HADIR" future-state; no active fake button.
+16. `UIX-R016` — Reuse foundation components before creating new; no duplicates; explicit variants.
+17. `UIX-R017` — Status by icon + label, never color alone; WCAG AA contrast.
+18. `UIX-R018` — Motion ≤ 300 ms; respect `prefers-reduced-motion`; no continuous decorative animation.
+19. `UIX-R019` — Elevation via border (not heavy shadow/blur); optimized/vector assets; large lists lazy/virtualized.
+20. `UIX-R020` — Handoff folder is design input; implemented tokens/components are the app source of truth; deviations documented.
+21. `UIX-R021` — New screens registered in the UIX-1 coverage matrix (`docs/uiux/uix-1-screen-coverage.md`).
+22. `UIX-R022` — Existing deployment GO tags (`pilot-shared-vps-isolated-deployment-go`, `pilot-shared-vps-post-go-hardening-go`) are immutable; the UIX-1 GO tag is created only on verified evidence.

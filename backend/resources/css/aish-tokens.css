@@ -1,0 +1,84 @@
+/* Aish POS — Web Console / public-web design tokens (CSS custom properties).
+   Source of truth: operator-provided UI/UX handoff package (tokens/aish-tokens.css, DESIGN_TOKENS.json).
+   UIX-1 Design Foundation Lock. Self-contained, secret-free, no external CDN.
+   Load this before other stylesheets; financial columns use `.aish-num`. */
+
+:root {
+  /* Brand */
+  --aish-brand-dark: #0B1020;
+  --aish-brand-secondary: #6D5DFB;
+  --aish-brand-support: #06B6D4;
+  --aish-brand-premium: #D6A84B;
+
+  /* Action */
+  --aish-action-primary: #2563EB;
+  --aish-action-primary-pressed: #1D4ED8;
+  --aish-action-success: #15803D;
+  --aish-action-success-pressed: #136332;
+  --aish-action-destructive: #B91C1C;
+
+  /* Background & surface */
+  --aish-bg-default: #F7F9FC;
+  --aish-bg-subtle: #F1F4F9;
+  --aish-surface: #FFFFFF;
+
+  /* Text */
+  --aish-text-primary: #111827;
+  --aish-text-secondary: #64748B;
+  --aish-text-disabled: #9CA3AF;
+  --aish-text-on-dark: #FFFFFF;
+  --aish-text-on-dark-muted: #B9C5E8;
+  --aish-text-on-dark-subtle: #8EA3D8;
+
+  /* Border */
+  --aish-border: #E2E8F0;
+  --aish-border-subtle: #EEF2F7;
+
+  /* Status */
+  --aish-success-fg: #15803D; --aish-success-bg: #E7F4EA; --aish-success-border: #BFE3C8;
+  --aish-warning-fg: #B45309; --aish-warning-bg: #FBF0DC; --aish-warning-border: #F0DDB4;
+  --aish-danger-fg:  #B91C1C; --aish-danger-bg:  #FBE7E7; --aish-danger-border:  #F2C9C9;
+  --aish-info-fg:    #1D4ED8; --aish-info-bg:    #E8EEFC; --aish-info-border:    #C7D6F5;
+
+  /* Type */
+  --aish-font: 'Inter', Roboto, system-ui, -apple-system, sans-serif;
+
+  /* Spacing (px, grid 4) */
+  --aish-space-xs: 4px;  --aish-space-sm: 8px;  --aish-space-md: 12px;
+  --aish-space-lg: 16px; --aish-space-xl: 24px; --aish-space-2xl: 32px; --aish-space-3xl: 48px;
+
+  /* Radius */
+  --aish-radius-input: 8px;
+  --aish-radius-card: 12px;
+  --aish-radius-sheet: 16px;
+  --aish-radius-chip: 999px;
+
+  /* Motion */
+  --aish-motion-fast: 150ms;
+  --aish-motion-standard: 220ms;
+  --aish-motion-emphasis: 300ms;
+}
+
+/* Financial numbers are always tabular */
+.aish-num { font-variant-numeric: tabular-nums; }
+
+/* Base components */
+.aish-btn-primary {
+  height: 48px; padding: 0 20px; border: 0; border-radius: 12px;
+  background: var(--aish-action-primary); color: #fff;
+  font: 700 14px/1 var(--aish-font); cursor: pointer;
+  transition: background var(--aish-motion-fast);
+}
+.aish-btn-primary:hover, .aish-btn-primary:active { background: var(--aish-action-primary-pressed); }
+.aish-btn-primary:disabled { background: var(--aish-border-subtle); color: var(--aish-text-disabled); }
+
+.aish-badge { display: inline-flex; align-items: center; gap: 6px;
+  border-radius: 8px; padding: 4px 10px; font: 700 12px/1.4 var(--aish-font); }
+.aish-badge--success { background: var(--aish-success-bg); color: var(--aish-success-fg); }
+.aish-badge--warning { background: var(--aish-warning-bg); color: var(--aish-warning-fg); }
+.aish-badge--danger  { background: var(--aish-danger-bg);  color: var(--aish-danger-fg); }
+.aish-badge--info    { background: var(--aish-info-bg);    color: var(--aish-info-fg); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

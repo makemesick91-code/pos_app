@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Aish POS — Android color resources.
+     Source of truth: operator-provided UI/UX handoff package (DESIGN_TOKENS.json / tokens/colors.xml).
+     UIX-1 Design Foundation Lock. Do NOT hardcode hex in layouts/Kotlin — reference these semantic tokens. -->
+<resources>
+    <!-- Brand -->
+    <color name="brand_dark">#0B1020</color>
+    <color name="brand_secondary">#6D5DFB</color>
+    <color name="brand_support">#06B6D4</color>
+    <color name="brand_premium">#D6A84B</color>
+
+    <!-- Action -->
+    <color name="action_primary">#2563EB</color>
+    <color name="action_primary_pressed">#1D4ED8</color>
+    <color name="action_success">#15803D</color>
+    <color name="action_success_pressed">#136332</color>
+    <color name="action_destructive">#B91C1C</color>
+
+    <!-- Background & surface -->
+    <color name="bg_default">#F7F9FC</color>
+    <color name="bg_subtle">#F1F4F9</color>
+    <color name="surface_default">#FFFFFF</color>
+
+    <!-- Text -->
+    <color name="text_primary">#111827</color>
+    <color name="text_secondary">#64748B</color>
+    <color name="text_disabled">#9CA3AF</color>
+    <color name="text_on_dark">#FFFFFF</color>
+    <color name="text_on_dark_muted">#B9C5E8</color>
+    <color name="text_on_dark_subtle">#8EA3D8</color>
+
+    <!-- Border -->
+    <color name="border_default">#E2E8F0</color>
+    <color name="border_subtle">#EEF2F7</color>
+
+    <!-- Status: success -->
+    <color name="status_success_fg">#15803D</color>
+    <color name="status_success_bg">#E7F4EA</color>
+    <color name="status_success_border">#BFE3C8</color>
+
+    <!-- Status: warning -->
+    <color name="status_warning_fg">#B45309</color>
+    <color name="status_warning_bg">#FBF0DC</color>
+    <color name="status_warning_border">#F0DDB4</color>
+    <color name="status_warning_text_dark">#7C5A16</color>
+
+    <!-- Status: danger -->
+    <color name="status_danger_fg">#B91C1C</color>
+    <color name="status_danger_bg">#FBE7E7</color>
+    <color name="status_danger_border">#F2C9C9</color>
+
+    <!-- Status: info -->
+    <color name="status_info_fg">#1D4ED8</color>
+    <color name="status_info_bg">#E8EEFC</color>
+    <color name="status_info_border">#C7D6F5</color>
+
+    <!-- Semantic aliases used for UIX-1 migration of legacy hardcoded values.
+         Kept token-derived so a single source drives all surfaces. -->
+    <color name="divider">#E2E8F0</color>
+    <color name="scrim_subtle">#EEF2F7</color>
+</resources>

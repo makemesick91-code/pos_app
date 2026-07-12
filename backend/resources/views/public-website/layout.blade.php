@@ -13,8 +13,10 @@
     <meta property="og:title" content="{{ $seoTitle ?? 'Aish POS Lite' }}">
     <meta property="og:description" content="{{ $seoDescription ?? 'POS Android SaaS untuk UMKM.' }}">
     <meta property="og:type" content="website">
+    {{-- UIX-1: palette aligned to the Aish design foundation
+         (source of truth: resources/css/aish-tokens.css). Kept inline & CDN-free. --}}
     <style>
-        :root { --ink:#12203a; --muted:#5b6b86; --brand:#1f6feb; --bg:#f6f8fc; --card:#ffffff; --line:#e4eaf3; }
+        :root { --ink:#111827; --muted:#64748B; --brand:#2563EB; --brand-pressed:#1D4ED8; --bg:#F7F9FC; --card:#FFFFFF; --line:#E2E8F0; }
         * { box-sizing:border-box; }
         body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
                color:var(--ink); background:var(--bg); line-height:1.55; }
@@ -26,7 +28,9 @@
         nav a { margin-left:16px; color:var(--muted); font-size:.95rem; }
         .btn { display:inline-block; background:var(--brand); color:#fff; padding:12px 22px; border-radius:10px;
                font-weight:600; border:0; cursor:pointer; }
-        .btn.secondary { background:#eaf1fe; color:var(--brand); }
+        .btn:hover, .btn:active { background:var(--brand-pressed); }
+        .btn.secondary { background:#E8EEFC; color:var(--brand); }
+        .aish-num { font-variant-numeric:tabular-nums; }
         .hero { padding:56px 0 40px; text-align:center; }
         .hero h1 { font-size:2rem; margin:0 0 12px; }
         .hero p { color:var(--muted); font-size:1.1rem; max-width:640px; margin:0 auto 24px; }
@@ -38,19 +42,20 @@
         section h2 { font-size:1.4rem; margin:0 0 18px; text-align:center; }
         .price { font-size:1.5rem; font-weight:700; }
         .muted { color:var(--muted); }
-        .note { background:#fff7e6; border:1px solid #ffe2a8; border-radius:10px; padding:12px 16px; font-size:.9rem; color:#7a5b12; }
+        .note { background:#FBF0DC; border:1px solid #F0DDB4; border-radius:10px; padding:12px 16px; font-size:.9rem; color:#7C5A16; }
         form.lead { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:24px; max-width:560px; margin:0 auto; }
         form.lead label { display:block; font-size:.9rem; font-weight:600; margin:12px 0 4px; }
         form.lead input, form.lead textarea, form.lead select {
             width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:9px; font:inherit; }
         form.lead .consent { display:flex; gap:8px; align-items:flex-start; margin:14px 0; font-size:.9rem; color:var(--muted); }
         form.lead .consent input { width:auto; margin-top:3px; }
-        .errors { background:#fdecea; border:1px solid #f5c2c0; color:#8a1c15; border-radius:10px; padding:12px 16px; margin-bottom:14px; font-size:.9rem; }
+        .errors { background:#FBE7E7; border:1px solid #F2C9C9; color:#B91C1C; border-radius:10px; padding:12px 16px; margin-bottom:14px; font-size:.9rem; }
         footer.site { border-top:1px solid var(--line); padding:28px 0; color:var(--muted); font-size:.9rem; text-align:center; }
         footer.site a { margin:0 8px; }
         .legal { max-width:720px; }
         .legal h1 { font-size:1.6rem; }
         @media (max-width:560px){ .hero h1{font-size:1.6rem;} nav a{margin-left:10px;} }
+        @media (prefers-reduced-motion: reduce){ *{ transition-duration:0.01ms !important; animation-duration:0.01ms !important; } }
     </style>
 </head>
 <body>

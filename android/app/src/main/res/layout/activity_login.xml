@@ -49,7 +49,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:textColor="#B00020"
+            android:textColor="@color/action_destructive"
             android:visibility="gone" />
 
         <Button
