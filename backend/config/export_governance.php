@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminBillingController;
 use App\Http\Controllers\Api\V1\ReceiptController;
 use App\Http\Controllers\Api\V1\Reports\DailySalesCsvExportController;
 use App\Http\Controllers\Api\V1\Reports\DailySalesReportController;
 use App\Http\Controllers\Api\V1\Reports\InventoryMovementSummaryController;
 use App\Http\Controllers\Api\V1\Reports\PaymentSummaryReportController;
+use App\Http\Controllers\Owner\OwnerBillingController;
 
 /**
  * Sprint 29 — Multi-Export Route Metering Coverage & Export Governance Expansions.
@@ -111,6 +113,27 @@ return [
             'format' => 'json',
             'metering_enabled' => false,
             'exempt_reason' => 'Read-only inventory-movements-summary JSON report view; no downloadable export artifact is produced, so it is not counted against reports.exports.monthly.',
+        ],
+        // UIX-5 — authenticated invoice-document downloads. These deliver a single
+        // owning-tenant/admin invoice as print-ready HTML (not a monthly report
+        // export artifact and not tenant business-data bulk export). They are
+        // access-controlled by the owner/platform-admin web gate + tenant scope and
+        // are intentionally NOT counted against reports.exports.monthly (EGC-R010).
+        'GET owner/billing/invoices/{invoice}/download' => [
+            'disposition' => 'exempt',
+            'controller' => OwnerBillingController::class.'@downloadInvoice',
+            'report_type' => 'tenant-billing-invoice-document',
+            'format' => 'html',
+            'metering_enabled' => false,
+            'exempt_reason' => 'Authenticated Tenant Owner invoice-document download (single invoice, own tenant only, print-ready HTML). It is a billing-document delivery gated by tenant.owner.web and tenant scope, not a downloadable monthly report export, so it is not counted against reports.exports.monthly.',
+        ],
+        'GET admin/billing/invoices/{invoice}/download' => [
+            'disposition' => 'exempt',
+            'controller' => AdminBillingController::class.'@downloadInvoice',
+            'report_type' => 'tenant-billing-invoice-document',
+            'format' => 'html',
+            'metering_enabled' => false,
+            'exempt_reason' => 'Authenticated Platform Admin invoice-document download (single invoice, print-ready HTML) gated by platform.admin.web. It is a billing-document delivery, not a downloadable monthly report export, so it is not counted against reports.exports.monthly.',
         ],
     ],
 

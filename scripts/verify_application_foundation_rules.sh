@@ -83,6 +83,65 @@ for d in .claude/rules/25-tenant-owner-web-console-boundary.md \
   [ -f "$d" ] && pass "uix-4 doc $(basename "$d")" || bad "missing uix-4 doc $d"
 done
 
+# 5d. UIX-5 subscription/billing/invoice console foundation (UIX5-R001..R028).
+for d in .claude/rules/35-subscription-billing-invoice-integrity.md \
+         docs/foundation/uix-5-subscription-billing-invoice-console.md \
+         docs/governance/subscription-billing-invoice-foundation.md; do
+  [ -f "$d" ] && pass "uix-5 doc $(basename "$d")" || bad "missing uix-5 doc $d"
+done
+# Every UIX5 rule id is persisted in the modular rule, the foundation doc, and PROJECT_RULES.
+missing_ids=""
+for i in $(seq -w 1 28); do
+  id="UIX5-R0$i"
+  if grep -q "$id" .claude/rules/35-subscription-billing-invoice-integrity.md \
+     && grep -q "$id" docs/foundation/uix-5-subscription-billing-invoice-console.md \
+     && grep -q "$id" docs/PROJECT_RULES.md; then :; else missing_ids="$missing_ids $id"; fi
+done
+[ -z "$missing_ids" ] && pass "UIX5-R001..R028 fully persisted" || bad "UIX-5 rule ids not fully persisted:$missing_ids"
+# Owner + admin billing surfaces are wired (guarded by the checks in 3/3b above).
+grep -q "OwnerBillingController" backend/routes/web.php && pass "owner billing routes present" || bad "owner billing routes missing"
+grep -q "AdminBillingController" backend/routes/web.php && pass "admin billing routes present" || bad "admin billing routes missing"
+# Billing read adapter is tenant-scoped and present.
+SVC=backend/app/Services/BillingConsole/BillingConsoleReadService.php
+if [ -f "$SVC" ] && grep -q "where('tenant_id'" "$SVC"; then
+  pass "billing read adapter tenant-scoped"
+else
+  bad "BillingConsoleReadService missing or not tenant-scoped"
+fi
+# No unsafe float/cents money handling in billing console code (UIX5-R008).
+if git ls-files 'backend/app/Services/BillingConsole' \
+     'backend/app/Http/Controllers/Owner/OwnerBillingController.php' \
+     'backend/app/Http/Controllers/Admin/AdminBillingController.php' \
+   | xargs grep -lnE '\(float\)|floatval|/[[:space:]]*100([^0-9]|$)' 2>/dev/null | grep -q .; then
+  bad "unsafe float/cents money handling in billing console code"
+else
+  pass "no unsafe float money in billing console code"
+fi
+# Console controllers are wired ONLY in the guarded web routes (no public/API exposure).
+if git ls-files 'backend/routes' | grep -v 'routes/web.php' \
+   | xargs grep -lnE 'OwnerBillingController|AdminBillingController' 2>/dev/null | grep -q .; then
+  bad "billing console controller wired outside guarded web routes"
+else
+  pass "billing console controllers only in guarded web routes"
+fi
+# UI billing controllers perform no direct model mutation (UIX5-R015/R016).
+if grep -nE '->(save|update|delete|forceDelete|insert)\(' \
+     backend/app/Http/Controllers/Owner/OwnerBillingController.php \
+     backend/app/Http/Controllers/Admin/AdminBillingController.php 2>/dev/null | grep -q .; then
+  bad "billing UI controller performs a direct model mutation"
+else
+  pass "billing UI controllers are read-only"
+fi
+# Money is centrally formatted; billing views contain no inline number_format (UIX5-R010).
+if git ls-files 'backend/resources/views/owner/billing' 'backend/resources/views/admin/billing' \
+     'backend/resources/views/billing' \
+   | grep -v 'components/rupiah.blade.php' \
+   | xargs grep -lnE 'number_format' 2>/dev/null | grep -q .; then
+  bad "billing view formats money inline instead of using <x-rupiah>"
+else
+  pass "billing views use the central rupiah component"
+fi
+
 # 6. No tracked secret files / keys.
 if git ls-files | grep -qE '(^|/)\.env$|\.pem$|id_rsa|id_ed25519|_ed25519$|\.p12$|\.keystore$'; then
   bad "tracked secret/key file"

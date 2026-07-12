@@ -85,8 +85,26 @@ appear to conflict, the modular rule in `.claude/rules/` is authoritative.
   route parameter, query string, header, cookie, or hidden field. The domain is one
   tenant per user; there is no tenant switcher. See UIX4-R001..R022.
 
+## Billing console boundary (UIX-5)
+- The Subscription/Billing/Invoice console is read-only presentation over the
+  canonical billing domain on two surfaces: Tenant Owner Billing Center
+  (`/owner/billing/*`, `owner` guard) and Platform Admin Billing Operations
+  (`/admin/billing/*`, `platform.admin.web`). It is not a second billing engine.
+- Money is whole-rupiah integer only — never a float, never `/100` cents. Totals,
+  paid, and outstanding come from canonical services/model methods
+  (`BillingConsoleReadService`, `BillingSummaryService`, invoice model), never
+  recomputed in controllers/Blade. Format money only through `<x-rupiah>`; a null
+  value renders "Tidak tersedia", never a fabricated zero.
+- Owner billing is tenant-scoped, deny-by-default; a foreign/unknown invoice id is
+  404 and owner invoices never use implicit route-model binding. Invoice documents
+  are authenticated, non-path-traversable, with no public URL. The console is
+  read-only (no billing mutation route). QRIS/settlement state stays distinct from
+  invoice collection state ("Lunas" only when `collection_state = paid`). See
+  `.claude/rules/35-subscription-billing-invoice-integrity.md` (UIX5-R001..R028).
+
 ## Pointers
-- Modular enforceable rules: `.claude/rules/` (00–90, plus 25 tenant-owner boundary).
+- Modular enforceable rules: `.claude/rules/` (00–90, plus 25 tenant-owner boundary
+  and 35 billing-console integrity). Root agent index: `AGENTS.md`.
 - Full project rules & rule-set IDs (incl. UIX3-R001..R016): `docs/PROJECT_RULES.md`.
 - Architecture/foundation docs: `docs/foundation/` (see
   `docs/foundation/uix-3-platform-admin-control-center.md`).
