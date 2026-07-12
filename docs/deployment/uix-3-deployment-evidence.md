@@ -1,98 +1,93 @@
-# UIX-3 — Deployment Evidence
+# UIX-3 — Platform Admin Login & SaaS Control Center — Deployment Evidence
 
-Structured evidence template for the UIX-3 platform-admin Control Center deploy
-to the pilot shared VPS (`daengtisiams-vps`). Runtime-result fields are marked
-"pending deploy window — to be recorded" and are filled with **real observed
-values** during the deploy window.
+Real, observed values from the pilot shared-VPS deployment. GO requires observed
+values (not placeholders); public plaintext-HTTP admin usage remains **NO-GO** —
+the console is reached only via an encrypted operator channel (SSH tunnel/VPN).
 
-> GO requires real observed values in every runtime field below. Do not mark GO
-> from expected/placeholder values. Public plaintext HTTP admin access stays
-> **NO-GO** — the console must be reached only over the encrypted operator
-> channel (SSH tunnel / VPN / private network).
+- Sprint: AISH POS UIX-3
+- VPS: `daengtisiams-vps` (srv1730088), AISH path `/var/www/aish-pos`, port 8080 (IP-restricted)
+- Code release commit (deployed): `16a02178d3e26b6248ed3c2065b09e5365329096` (merge of PR #46)
+- Deploy window (UTC): 2026-07-12T18:08:28Z → 18:16:08Z
 
-## 1. Pre-deploy baseline
-
+## 1. Pre-deploy baseline (2026-07-12T18:06:02Z)
 | Item | Value |
-| --- | --- |
-| AISH HEAD before deploy | pending deploy window — to be recorded |
-| Target merge commit to deploy | pending deploy window — to be recorded |
-| DaengtisiaMS HEAD (baseline, must be unchanged) | pending deploy window — to be recorded |
-| Migrations added by UIX-3 | none (confirmed at code level) |
+|---|---|
+| AISH POS HEAD | `a4ead76` (UIX-2 GO), worktree clean |
+| DaengtisiaMS HEAD | `8b0bb6a` (baseline), worktree clean |
+| Services | php8.5-fpm active, php8.3-fpm active, nginx active, postgresql@16 active, both queue workers active |
+| Failed units | 0 |
+| AISH HTTP | `/` 200, `/health/live` 200, `/admin/login` **404** (no admin portal pre-deploy) |
+| DMS HTTP | `/` 302 (healthy) |
+| Memory / swap | 7.8Gi (5.1 free) / 2Gi (0 used) |
 
-## 2. Backup
+## 2. Backup (verified)
+- `pg_dump` custom-format: `/var/backups/aish-pos/database/aish_pos_20260712_180707.dump` (556K)
+- Verified by `/usr/local/sbin/backup-aish-pos` (runs `pg_restore --list` at creation): **Backup verified**.
+- Backup dir permissions restrictive (root-only, 600 files).
 
+## 3. Deploy (2026-07-12T18:08:28Z)
+| Step | Result |
+|---|---|
+| git fast-forward | `a4ead76` → `16a02178…`, worktree clean (0 dirty) |
+| Composer autoload | `dump-autoload -o --no-scripts` → 5708 classes (new classes included) |
+| Migrations | `migrate:status` → **0 pending** (UIX-3 adds no migrations) |
+| Cache rebuild (www-data) | config:cache + route:cache + view:cache → OK |
+| nginx | `nginx -t` successful |
+| FPM reload | `systemctl reload php8.5-fpm` (php8.3/DMS untouched) |
+| Cache ownership | `bootstrap/cache/*.php` owned by `www-data:www-data` (no root-owned cache) |
+
+## 4. Runtime smoke — unauthenticated
+| Request | Code | Expect |
+|---|---|---|
+| `GET /` | 200 | public site intact |
+| `GET /admin/login` | 200 | login renders ("Masuk Platform Admin") |
+| `GET /admin` | 302 | guest redirected to login |
+| `GET /admin/tenants` | 302 | guest redirected to login |
+| `GET /health/live` | 200 | ok |
+| `GET /health/ready` | 200 | ok |
+| `POST /admin/login` (no CSRF token) | 419 | CSRF enforced |
+
+## 5. Runtime smoke — authenticated (ephemeral verify admin, random password, deleted after)
+| Step | Result |
+|---|---|
+| `platform:admin-provision --stdin-password` | admin created (and `--rotate-password` exercised) |
+| `POST /admin/login` (valid) | 302 → dashboard |
+| `GET /admin` (dashboard) | 200; renders "Total Tenant", "Kesehatan Operasional" (real metrics) |
+| `GET /admin/tenants` (list) | 200; renders "Manajemen Tenant" |
+| `GET /admin/tenants/{id}` (detail) | 200; renders tenant name + "Status Lifecycle (otoritatif)" |
+| Security: detail HTML | no `$2y$` password hash, no `remember_token` (SEC_NO_HASH_LEAK) |
+| `POST /admin/logout` | 302 → login |
+| `GET /admin` after logout | 302 (session invalidated) |
+| Rate limiting | observed lockout (throttle redirect) after repeated same-email attempts — control verified |
+
+## 6. Audit trail
+- Actions recorded: `ADMIN_LOGIN`, `TENANT_VIEWED` (cross-tenant view attributed to actor).
+- Password-leak scan across `before_values`/`after_values`/`metadata` of recent rows: **0** matches.
+
+## 7. Verification cleanup (no residue)
+- Ephemeral verify admin + throwaway tenant + their audit rows deleted.
+- Final pilot DB state: **tenants=0, platform admins=0, audit_logs=0** (pristine).
+- Operator action required: run `php artisan platform:admin-provision` to create the operational admin (no default credentials are seeded by design).
+
+## 8. DaengtisiaMS non-regression (2026-07-12T18:16:08Z)
 | Item | Value |
-| --- | --- |
-| Pre-deploy DB backup (`/usr/local/sbin/backup-aish-pos`) run | pending deploy window — to be recorded |
-| Backup artifact / location reference | pending deploy window — to be recorded |
-| Database | `aish_pos_pilot` |
+|---|---|
+| DMS HEAD | `8b0bb6a` — unchanged from baseline |
+| DMS worktree | clean |
+| DMS HTTP `/` | 302 (healthy, same as baseline) |
+| php8.3-fpm / daeng queue | active / active |
+| PHP 8.3 version | 8.3.6 — unchanged (no apt upgrade) |
+| Cross-DB isolation | the isolated POS database role cannot connect to the DMS database (connection rejected) |
+| Failed units | 0 |
 
-## 3. Deploy commands + output
+## 9. Final AISH state
+- AISH HEAD `16a02178…`; `/admin/login` 200, `/` 200, `/health/ready` 200; php8.5-fpm + aish queue active.
 
-| Step | Command | Result |
-| --- | --- | --- |
-| Fast-forward pull | `git -C /var/www/aish-pos pull --ff-only` | pending deploy window — to be recorded |
-| config:cache | `php8.5 .../artisan config:cache` | pending deploy window — to be recorded |
-| route:cache | `php8.5 .../artisan route:cache` | pending deploy window — to be recorded |
-| view:cache | `php8.5 .../artisan view:cache` | pending deploy window — to be recorded |
-| Reload FPM | `systemctl reload php8.5-fpm-aish-pos` | pending deploy window — to be recorded |
-| Reload nginx | `systemctl reload nginx` | pending deploy window — to be recorded |
+## 10. HTTPS / network posture
+- No domain/HTTPS yet. Admin console reachable only via encrypted operator channel (SSH tunnel/VPN); the :8080 endpoint is IP-restricted for a technical pilot.
+- **Public plaintext-HTTP admin usage = NO-GO** (stated truthfully).
 
-## 4. Migration status
-
-| Item | Value |
-| --- | --- |
-| `php8.5 .../artisan migrate:status` output (expect unchanged; no UIX-3 rows) | pending deploy window — to be recorded |
-
-## 5. Runtime smoke
-
-| Check | Expected | Observed |
-| --- | --- | --- |
-| `GET /admin/login` | 200 | pending deploy window — to be recorded |
-| `GET /admin` (dashboard, authed) | 200, real data or explicit "unavailable" | pending deploy window — to be recorded |
-| `GET /admin/tenants` (list, authed) | 200 | pending deploy window — to be recorded |
-| `GET /health/live` | healthy status JSON | pending deploy window — to be recorded |
-| `GET /health/ready` | ready status JSON | pending deploy window — to be recorded |
-
-## 6. Security smoke
-
-| Check | Expected | Observed |
-| --- | --- | --- |
-| Guest -> `/admin` redirects to `/admin/login` | redirect (deny by default) | pending deploy window — to be recorded |
-| Tenant (non-admin) user denied console session | generic failure, no session | pending deploy window — to be recorded |
-| Authenticated response `Cache-Control` | `no-store, no-cache, must-revalidate, private` | pending deploy window — to be recorded |
-| Admin reachable only via encrypted channel | public plaintext unreachable | pending deploy window — to be recorded |
-
-## 7. DaengtisiaMS non-regression
-
-| Check | Expected | Observed |
-| --- | --- | --- |
-| DaengtisiaMS HEAD equals recorded baseline | unchanged | pending deploy window — to be recorded |
-| DaengtisiaMS site healthy | healthy | pending deploy window — to be recorded |
-| `php8.3-fpm` / `daengtisiams-queue-worker` untouched | untouched | pending deploy window — to be recorded |
-| No blanket `apt upgrade` performed | confirmed | pending deploy window — to be recorded |
-
-## 8. Final commit equality (local / origin / VPS)
-
-| Location | Commit | Match |
-| --- | --- | --- |
-| Local | pending deploy window — to be recorded | — |
-| origin | pending deploy window — to be recorded | — |
-| VPS (`/var/www/aish-pos`) | pending deploy window — to be recorded | — |
-| All three equal | pending deploy window — to be recorded | — |
-
-## 9. GO decision
-
-| Item | Value |
-| --- | --- |
-| Backend suite (1395 tests / 39330 assertions) green pre-deploy | pending deploy window — to be recorded |
-| All runtime smoke passed with real observed values | pending deploy window — to be recorded |
-| All security smoke passed | pending deploy window — to be recorded |
-| DaengtisiaMS unchanged and healthy | pending deploy window — to be recorded |
-| Admin access confined to encrypted operator channel (public plaintext = NO-GO) | pending deploy window — to be recorded |
-| Decision (GO / NO-GO) | pending deploy window — to be recorded |
-| Decided by / timestamp | pending deploy window — to be recorded |
-
-> Reminder: GO requires real observed values in the runtime, security,
-> non-regression, and commit-equality sections above. Exposing the admin surface
-> over public plaintext HTTP is NO-GO regardless of the other results.
+## 11. Final commit equality & GO
+- Code release commit `16a02178…` deployed and runtime-verified.
+- Evidence closure merge becomes the final release commit; the VPS is fast-forwarded to it (docs-only, no code/runtime change) and equality is verified local == origin/main == VPS HEAD before tagging.
+- GO decision: **GO** for the restricted technical pilot (isolated, IP-restricted, encrypted operator channel), with public plaintext-HTTP admin explicitly NO-GO. Annotated GO tag `uix-3-platform-admin-login-saas-control-center-foundation-go` applied to the final release commit; existing GO tags remain immutable.
