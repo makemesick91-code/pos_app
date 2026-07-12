@@ -18,8 +18,8 @@ class PrivacyPageController extends Controller
 
         return view('public-website.privacy', [
             'page' => $page,
-            'seoTitle' => $page?->seo_title ?? 'Kebijakan Privasi — Aish POS Lite',
-            'seoDescription' => $page?->seo_description ?? 'Kebijakan privasi Aish POS Lite (template kesiapan).',
+            'seoTitle' => $page?->seo_title ?? 'Kebijakan Privasi — Aish POS',
+            'seoDescription' => $page?->seo_description ?? 'Kebijakan privasi Aish POS untuk data formulir minat.',
         ]);
     }
 }

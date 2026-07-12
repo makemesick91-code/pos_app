@@ -1,89 +1,53 @@
 @extends('public-website.layout')
-
-{{-- Sprint 21 — landing page. Interest-only CTA; no self-service signup. --}}
-
 @section('content')
-    <section class="hero">
-        <div class="wrap">
-            <h1>{{ $version->headline ?? 'Kasir Android ringan untuk UMKM Anda' }}</h1>
-            <p>{{ $version->subheadline ?? 'Aish POS Lite membantu warung, toko kecil, dan kedai berjualan lebih cepat: QRIS, tunai, mode offline, cetak struk, stok sederhana, dan laporan harian.' }}</p>
-            <a class="btn" href="{{ $version->hero_cta_target ?? '#interest' }}">{{ $version->hero_cta_label ?? 'Ajukan Minat' }}</a>
-            <a class="btn secondary" href="/packages">Lihat Paket</a>
-        </div>
-    </section>
+@php
+$icon = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16v12H4zM7 4h10v3M8 11h3M8 15h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+@endphp
+<section class="hero" id="beranda"><div class="wrap hero-grid"><div class="hero-copy"><span class="eyebrow">POS Android ringan untuk UMKM Indonesia</span><h1>Kelola bisnis lebih cepat, dari kasir hingga laporan.</h1><p class="lead-copy">Aish POS menyatukan transaksi tunai, QRIS, stok, laporan, dan operasional outlet dalam aplikasi Android yang ringan dan mudah digunakan.</p><div class="hero-actions"><a class="btn" href="#interest">Coba Aish POS <span aria-hidden="true">→</span></a><a class="btn secondary" href="#cara-kerja">Lihat Cara Kerja</a></div><ul class="trust-bullets"><li>Tunai tetap jalan saat offline</li><li>QRIS terverifikasi backend</li><li>Siap untuk printer kasir</li><li>Stok dan laporan terintegrasi</li></ul></div>
+<div class="device-stage" aria-label="Pratinjau antarmuka kasir Aish POS"><div class="glow"></div><div class="float-card sync"><span class="status-dot"></span>Offline tersimpan<b>Siap disinkronkan</b></div><div class="phone"><div class="phone-screen"><div class="appbar"><strong>Aish POS · Kasir</strong><span>● Online</span></div><div class="product-grid"><div class="product"><div class="product-art"></div><b>Kopi Susu</b><span>Rp 18.000</span></div><div class="product"><div class="product-art"></div><b>Roti Bakar</b><span>Rp 15.000</span></div><div class="product"><div class="product-art"></div><b>Es Teh</b><span>Rp 7.000</span></div><div class="product"><div class="product-art"></div><b>Nasi Ayam</b><span>Rp 22.000</span></div></div><div class="cart"><div class="cart-row"><span>2 item dalam keranjang</span><span>Ubah</span></div><div class="cart-total"><span>Total</span><span class="aish-num">Rp 33.000</span></div></div></div></div><div class="float-card sales">Penjualan hari ini<b class="aish-num">Rp 1.284.000</b></div></div></div></section>
 
-    <section>
-        <div class="wrap">
-            <h2>Fitur inti</h2>
-            <div class="grid">
-                <div class="card"><h3>Pembayaran QRIS</h3><p>Terima QRIS online yang diproses aman di backend.</p></div>
-                <div class="card"><h3>Tunai & Offline</h3><p>Transaksi tunai tetap jalan tanpa internet, lalu tersinkron otomatis.</p></div>
-                <div class="card"><h3>Cetak Struk</h3><p>Struk termal ESC/POS langsung dari perangkat Android.</p></div>
-                <div class="card"><h3>Stok Sederhana</h3><p>Pergerakan stok tercatat otomatis dari penjualan.</p></div>
-                <div class="card"><h3>Laporan Harian</h3><p>Tutup kasir harian dan laporan penjualan yang rapi.</p></div>
-                <div class="card"><h3>Multi-perangkat</h3><p>Kelola beberapa perangkat sesuai batas paket langganan.</p></div>
-            </div>
-        </div>
-    </section>
+<div class="value-strip"><div class="wrap value-grid">@foreach(['Android ringan','Mode offline','Tunai & QRIS','Cetak struk','Stok sederhana','Laporan harian'] as $item)<div class="value-item">{{ $item }}</div>@endforeach</div></div>
 
-    <section>
-        <div class="wrap">
-            <h2>Cocok untuk</h2>
-            <div class="grid">
-                @foreach(($version->target_segments ?? ['Warung','Toko Kecil','Kedai','Laundry','Retail','Apotek ringan']) as $segment)
-                    <div class="card"><h3>{{ is_array($segment) ? ($segment['label'] ?? reset($segment)) : $segment }}</h3></div>
-                @endforeach
-            </div>
-        </div>
-    </section>
+<section class="section dark-section"><div class="wrap problem-grid"><div><span class="eyebrow">Dari kerepotan ke kendali</span><h2>Operasional rapi tanpa membuat kerja terasa rumit.</h2><p class="lead-copy">Aish POS dirancang mengikuti realitas usaha kecil: koneksi bisa terputus, kas harus cocok, dan pemilik tetap perlu tahu keadaan bisnis.</p></div><div class="pain-list"><div class="pain"><span class="pain-num">01</span><div><strong>Pencatatan manual & selisih kas</strong><p>Transaksi tercatat konsisten dan penutupan harian membantu pengecekan.</p></div></div><div class="pain"><span class="pain-num">02</span><div><strong>Stok terlambat diketahui</strong><p>Pergerakan stok berasal dari transaksi dan penyesuaian yang dapat diaudit.</p></div></div><div class="pain"><span class="pain-num">03</span><div><strong>Internet tidak selalu stabil</strong><p>Penjualan tunai dapat disimpan di perangkat lalu disinkronkan kembali.</p></div></div></div></div></section>
 
-    <section id="interest">
-        <div class="wrap">
-            <h2>Ajukan Minat</h2>
-            <p class="muted" style="text-align:center; max-width:560px; margin:0 auto 18px;">
-                Formulir ini hanya untuk menyatakan minat. Tim kami akan menghubungi Anda untuk aktivasi.
-                Tidak ada pembuatan akun atau penagihan otomatis.
-            </p>
+<section class="section" id="fitur"><div class="wrap"><div class="section-head"><span class="eyebrow">Satu alur kerja</span><h2>Fitur inti yang bekerja bersama</h2><p>Dari produk dipilih sampai laporan dibaca, setiap bagian dibuat ringkas untuk ritme kerja UMKM.</p></div><div class="feature-grid">
+@foreach([['Pembayaran QRIS','QR dibuat melalui backend dan status pembayaran diverifikasi sebelum transaksi dinyatakan berhasil.'],['Tunai & Offline','Simpan penjualan tunai di perangkat ketika koneksi terputus, tanpa mengorbankan antrean kasir.'],['Cetak Struk','Cetak struk termal ESC/POS dari perangkat Android setelah status transaksi memenuhi syarat.'],['Stok Sederhana','Pantau stok berbasis pergerakan barang yang terhubung dengan penjualan dan penyesuaian.'],['Laporan Harian','Lihat ringkasan penjualan dan penutupan kasir dari data backend yang otoritatif.'],['Multi-perangkat','Daftarkan perangkat sesuai batas paket dengan kontrol tenant dan perangkat di server.']] as [$title,$copy])<article class="feature-card"><span class="icon">{!! $icon !!}</span><h3>{{ $title }}</h3><p>{{ $copy }}</p></article>@endforeach
+</div></div></section>
 
-            @if ($errors->any())
-                <div class="errors" style="max-width:560px;margin:0 auto 14px;">
-                    <ul style="margin:0;padding-left:18px;">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
+<section class="section" id="produk" style="padding-top:0"><div class="wrap"><div class="section-head"><span class="eyebrow">Lihat produknya</span><h2>Bukan sekadar janji—lihat alurnya.</h2><p>Pratinjau ringan ini merepresentasikan kapabilitas yang sudah diterapkan pada aplikasi Android Aish POS.</p></div><div class="showcase"><div class="showcase-nav"><h3>Ruang kerja kasir</h3><p>Pilih bagian untuk melihat bagaimana informasi penting disajikan tanpa memenuhi layar.</p><div class="showcase-tabs" role="tablist" aria-label="Pratinjau produk">@foreach(['kasir'=>'Kasir','bayar'=>'Pembayaran','stok'=>'Stok','laporan'=>'Laporan','offline'=>'Offline'] as $id=>$label)<button id="tab-{{ $id }}" role="tab" aria-selected="{{ $loop->first ? 'true' : 'false' }}" aria-controls="panel-{{ $id }}" tabindex="{{ $loop->first ? '0' : '-1' }}">{{ $label }}</button>@endforeach</div></div><div class="preview">
+<div id="panel-kasir" role="tabpanel" aria-labelledby="tab-kasir"><div class="dash"><div class="ui-card"><small>Keranjang aktif</small><h3 style="margin-top:5px">Pesanan #A-018</h3>@foreach(['Kopi Susu × 2'=>'Rp 36.000','Roti Bakar × 1'=>'Rp 15.000','Es Teh × 1'=>'Rp 7.000'] as $a=>$b)<div class="stock-row"><span>{{ $a }}</span><b>{{ $b }}</b></div>@endforeach<div class="metric aish-num">Rp 58.000</div></div><div class="ui-card"><small>Metode pembayaran</small><div class="pay-row"><b>Tunai</b><span class="badge">Tersedia</span></div><div class="pay-row"><b>QRIS</b><span class="badge">Online</span></div></div></div></div>
+<div id="panel-bayar" role="tabpanel" aria-labelledby="tab-bayar" hidden><div class="dash"><div class="ui-card"><small>Status QRIS</small><h3 style="margin-top:5px">Menunggu Pembayaran</h3><div class="qris-box" aria-hidden="true"></div></div><div class="ui-card"><div class="pay-row"><span>Pembayaran</span><span class="badge warning">Diverifikasi</span></div><div class="pay-row"><span>Settlement</span><b>Belum tersedia</b></div><p class="lead-copy" style="font-size:.85rem">Keberhasilan pembayaran dan penyelesaian settlement ditampilkan sebagai status berbeda.</p></div></div></div>
+<div id="panel-stok" role="tabpanel" aria-labelledby="tab-stok" hidden><div class="ui-card"><small>Stok outlet hari ini</small><h3 style="margin-top:5px">Produk yang perlu diperhatikan</h3>@foreach(['Kopi Arabika'=>'24 tersedia','Susu segar'=>'6 tersisa','Gelas 12 oz'=>'84 tersedia','Roti tawar'=>'8 tersisa'] as $a=>$b)<div class="stock-row"><b>{{ $a }}</b><span class="{{ str_contains($b,'tersisa')?'badge warning':'badge' }}">{{ $b }}</span></div>@endforeach</div></div>
+<div id="panel-laporan" role="tabpanel" aria-labelledby="tab-laporan" hidden><div class="dash"><div class="ui-card"><small>Penjualan hari ini</small><div class="metric aish-num">Rp 1.284.000</div><div class="bars" aria-label="Grafik penjualan"><i style="height:34%"></i><i style="height:52%"></i><i style="height:46%"></i><i style="height:82%"></i><i style="height:68%"></i><i style="height:92%"></i></div></div><div class="ui-card"><small>Ringkasan</small><div class="pay-row"><span>Transaksi</span><b>47</b></div><div class="pay-row"><span>Tunai</span><b>31</b></div><div class="pay-row"><span>QRIS</span><b>16</b></div></div></div></div>
+<div id="panel-offline" role="tabpanel" aria-labelledby="tab-offline" hidden><div class="ui-card"><small>Antrean sinkronisasi</small><h3 style="margin-top:5px">Data tetap mempunyai status yang jelas</h3>@foreach(['Tersimpan di perangkat','Menunggu sinkronisasi','Sedang disinkronkan','Berhasil disinkronkan','Butuh tindakan','Gagal disinkronkan'] as $s)<div class="stock-row"><b>{{ $s }}</b><span class="badge {{ in_array($s,['Butuh tindakan','Gagal disinkronkan'])?'warning':'' }}">{{ $loop->iteration }}</span></div>@endforeach</div></div>
+</div></div></div></section>
 
-            <form class="lead" method="POST" action="/interest">
-                @csrf
-                <label for="contact_name">Nama *</label>
-                <input id="contact_name" name="contact_name" value="{{ old('contact_name') }}" required>
+<section class="section" id="cara-kerja" style="background:white"><div class="wrap"><div class="section-head"><span class="eyebrow">Cara kerja</span><h2>Dari pengenalan sampai transaksi pertama.</h2><p>Karena layanan masih pilot, aktivasi dan pengaturan awal dilakukan bersama tim Aish—bukan pendaftaran instan.</p></div><div class="steps">@foreach([['Ajukan minat','Ceritakan jenis usaha dan kebutuhan Anda.'],['Atur usaha & outlet','Tim membantu aktivasi tenant dan outlet.'],['Tambahkan produk','Siapkan katalog dan harga jual.'],['Mulai transaksi','Gunakan kasir untuk tunai atau QRIS online.'],['Pantau usaha','Periksa stok, penjualan, dan laporan.']] as [$a,$b])<div class="step"><h3>{{ $a }}</h3><p>{{ $b }}</p></div>@endforeach</div></div></section>
 
-                <label for="contact_email">Email *</label>
-                <input id="contact_email" type="email" name="contact_email" value="{{ old('contact_email') }}" required>
+<section class="section" id="solusi"><div class="wrap"><div class="section-head"><span class="eyebrow">Dibuat untuk alur nyata</span><h2>Cocok untuk usaha yang ingin lebih rapi.</h2><p>Kapabilitas inti yang sama dapat disesuaikan dengan berbagai ritme operasional sederhana.</p></div><div class="use-grid">@foreach([['Warung','Transaksi cepat dan pencatatan tunai saat koneksi tidak stabil.'],['Toko kecil','Katalog, stok sederhana, dan ringkasan penjualan harian.'],['Kedai','Keranjang ringkas, QRIS online, dan cetak struk.'],['Laundry','Pencatatan produk/jasa dan riwayat transaksi yang rapi.'],['Retail sederhana','Stok berbasis pergerakan dan beberapa perangkat sesuai paket.'],['Multi-outlet ringan','Kontrol outlet, perangkat, dan akses yang dikelola server.']] as [$a,$b])<article class="use-card"><h3>{{ $a }}</h3><p>{{ $b }}</p><ul><li>Alur kasir ringan</li><li>Laporan terintegrasi</li></ul></article>@endforeach</div></div></section>
 
-                <label for="contact_phone">Nomor WhatsApp</label>
-                <input id="contact_phone" name="contact_phone" value="{{ old('contact_phone') }}">
+<section class="section dark-section" id="offline"><div class="wrap offline-grid"><div><span class="eyebrow">Tetap bekerja saat koneksi berubah</span><h2>Tunai bisa offline. QRIS tetap online.</h2><p class="lead-copy">Penjualan tunai disimpan lebih dahulu di perangkat dengan referensi idempoten, lalu dikirim ke server ketika koneksi kembali. QRIS tidak pernah dibuat tanpa koneksi.</p><p class="lead-copy">Status “berhasil disinkronkan” hanya muncul setelah konfirmasi server. Data yang gagal tetap dipertahankan untuk dicoba ulang atau ditindaklanjuti.</p></div><div class="sync-visual"><div class="sync-flow">@foreach(['Tersimpan di perangkat','Menunggu sinkronisasi','Sedang disinkronkan','Berhasil disinkronkan','Butuh tindakan','Gagal disinkronkan'] as $s)<div class="sync-state"><span></span><strong>{{ $s }}</strong></div>@endforeach</div></div></div></section>
 
-                <label for="business_name">Nama Usaha</label>
-                <input id="business_name" name="business_name" value="{{ old('business_name') }}">
+<section class="section" id="pembayaran"><div class="wrap payment-grid"><div class="payment-card"><span class="badge warning">Menunggu Pembayaran</span><div class="qris-box" aria-hidden="true"></div><div class="pay-row"><span>Nominal</span><b class="aish-num">Rp 58.000</b></div><div class="pay-row"><span>Verifikasi</span><b>Melalui backend</b></div></div><div><span class="eyebrow">Pembayaran yang tidak ambigu</span><h2>Status pembayaran dijelaskan apa adanya.</h2><p class="lead-copy">Aish POS membedakan pembayaran tunai, QRIS yang sedang diverifikasi, keberhasilan pembayaran, QR kedaluwarsa, kegagalan, dan settlement tertunda.</p><div class="pain-list">@foreach(['Pembayaran Sedang Diverifikasi','Pembayaran Berhasil','QR Kedaluwarsa','Pembayaran Gagal','Settlement Tertunda'] as $s)<div class="stock-row"><strong>{{ $s }}</strong><span aria-hidden="true">→</span></div>@endforeach</div></div></div></section>
 
-                <label for="business_type">Jenis Usaha</label>
-                <input id="business_type" name="business_type" value="{{ old('business_type') }}" placeholder="Warung, Toko, Kedai, ...">
+<section class="section" id="harga" style="background:white"><div class="wrap"><div class="section-head"><span class="eyebrow">Paket pilot</span><h2>Mulai sesuai skala operasional.</h2><p>Harga publik belum difinalkan. Batas di bawah mengikuti katalog entitlement backend; penawaran dan aktivasi dilakukan bersama tim.</p></div><div class="pricing-grid">@foreach([['Starter','Untuk satu usaha kecil','1 outlet','10 perangkat','200 produk','5.000 transaksi/bulan'],['Growth','Untuk usaha berkembang','Hingga 5 outlet','50 perangkat','2.000 produk','50.000 transaksi/bulan'],['Professional','Untuk operasi multi-cabang','Hingga 25 outlet','250 perangkat','20.000 produk','500.000 transaksi/bulan']] as $plan)<article class="price-card {{ $loop->iteration===2?'featured':'' }}">@if($loop->iteration===2)<span class="popular">Paling fleksibel</span>@endif<h3>{{ $plan[0] }}</h3><p class="muted">{{ $plan[1] }}</p><div class="price-value">Hubungi Kami</div><p class="muted">Dalam tahap pilot</p><ul><li>{{ $plan[2] }}</li><li>{{ $plan[3] }}</li><li>{{ $plan[4] }}</li><li>{{ $plan[5] }}</li><li>Kasir, stok & laporan dasar</li></ul><a class="btn {{ $loop->iteration!==2?'secondary':'' }}" href="#interest">Ajukan Minat</a></article>@endforeach</div><p class="note" style="max-width:820px;margin:24px auto 0">Batas paket adalah batas sistem maksimum, bukan janji kapasitas perangkat serentak. Detail dukungan dan harga dikonfirmasi dalam penawaran pilot.</p></div></section>
 
-                <label for="message">Pesan</label>
-                <textarea id="message" name="message" rows="3">{{ old('message') }}</textarea>
+<section class="section"><div class="wrap"><div class="section-head"><span class="eyebrow">Bukti kapabilitas, bukan angka buatan</span><h2>Fondasi yang dapat dijelaskan.</h2><p>Belum ada testimoni publik yang disetujui, jadi kami hanya menampilkan hal yang didukung implementasi.</p></div><div class="proof-grid">@foreach([['Isolasi tenant','Data operasional setiap usaha dibatasi oleh konteks tenant di backend.'],['Akses berbasis peran','Endpoint bisnis dan administrasi memakai otorisasi yang sesuai.'],['Perangkat terkendali','Registrasi dan batas perangkat diputuskan oleh server.'],['Sinkronisasi aman','Penjualan tunai offline memakai referensi idempoten dan antrean retry.']] as [$a,$b])<article class="proof"><h3>{{ $a }}</h3><p>{{ $b }}</p></article>@endforeach</div></div></section>
 
-                <div class="consent">
-                    <input id="consent" type="checkbox" name="consent" value="1" required>
-                    <label for="consent" style="margin:0;font-weight:400;">
-                        Saya setuju data ini digunakan untuk menghubungi saya terkait Aish POS Lite.
-                    </label>
-                </div>
+<section class="section" id="faq" style="background:white"><div class="wrap"><div class="section-head"><span class="eyebrow">Pertanyaan umum</span><h2>Jawaban jujur sebelum Anda mencoba.</h2></div><div class="faq-list">@foreach([
+['Apakah Aish POS bisa digunakan tanpa internet?','Transaksi tunai dapat disimpan ketika offline dan disinkronkan saat koneksi kembali. QRIS tetap membutuhkan internet.'],
+['Apakah mendukung pembayaran tunai dan QRIS?','Ya. Tunai dapat berjalan online maupun offline. QRIS dibuat dan diverifikasi melalui backend saat online.'],
+['Apakah bisa mencetak struk?','Ya, aplikasi memiliki fondasi pencetakan termal ESC/POS. Struk final mengikuti status pembayaran yang sah.'],
+['Apakah bisa digunakan di beberapa perangkat?','Ya, jumlah perangkat aktif mengikuti batas paket dan registrasi di server.'],
+['Bagaimana pengelolaan stok dan laporan?','Stok dihitung dari pergerakan inventori, sedangkan laporan memakai data backend yang otoritatif.'],
+['Apakah data setiap usaha terpisah?','Ya. Akses data operasional dibatasi berdasarkan tenant dan outlet yang telah divalidasi.'],
+['Bagaimana cara mulai mencoba?','Isi formulir minat. Tim kami akan menghubungi Anda untuk menilai kecocokan dan membantu aktivasi pilot.'],
+['Apakah tersedia untuk tablet?','Aplikasi Android dapat berjalan pada perangkat kompatibel, tetapi antarmuka tablet adaptif khusus masih termasuk backlog.'],
+['Apakah aplikasi siap untuk penggunaan publik?','Saat ini Aish POS berada dalam pilot terbatas dengan aktivasi terbantu. Belum tersedia pendaftaran publik mandiri.']
+] as [$q,$a])<details><summary>{{ $q }}</summary><p>{{ $a }}</p></details>@endforeach</div></div></section>
 
-                <button class="btn" type="submit">Kirim Minat</button>
-            </form>
-        </div>
-    </section>
+<section class="section" id="interest"><div class="wrap"><div class="cta-band"><span class="eyebrow" style="color:#67e8f9">Mulai secara bertahap</span><h2>Siap membuat operasional usaha lebih rapi?</h2><p>Ajukan minat untuk mencoba alur transaksi, stok, dan laporan Aish POS dalam program pilot terbatas.</p><a class="btn" href="#interest-form">Isi Formulir Minat</a> <a class="btn secondary" href="#harga">Lihat Paket</a></div>
+<form class="lead-form" id="interest-form" method="POST" action="/interest" aria-label="Formulir minat Aish POS">@csrf
+@if($errors->any())<div class="errors" role="alert"><strong>Periksa kembali isian berikut:</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+<div class="field"><label for="contact_name">Nama <span aria-hidden="true">*</span></label><input id="contact_name" name="contact_name" value="{{ old('contact_name') }}" autocomplete="name" required></div><div class="field"><label for="business_name">Nama usaha</label><input id="business_name" name="business_name" value="{{ old('business_name') }}" autocomplete="organization"></div><div class="field"><label for="contact_email">Email <span aria-hidden="true">*</span></label><input id="contact_email" type="email" name="contact_email" value="{{ old('contact_email') }}" autocomplete="email" required></div><div class="field"><label for="contact_phone">Nomor WhatsApp</label><input id="contact_phone" name="contact_phone" value="{{ old('contact_phone') }}" autocomplete="tel" inputmode="tel"></div><div class="field full"><label for="business_type">Jenis usaha</label><input id="business_type" name="business_type" value="{{ old('business_type') }}" placeholder="Contoh: warung, toko, kedai"></div><div class="field full"><label for="message">Kebutuhan atau pesan</label><textarea id="message" name="message">{{ old('message') }}</textarea></div><label class="consent" for="consent"><input id="consent" type="checkbox" name="consent" value="1" required><span>Saya setuju data ini digunakan untuk menghubungi saya terkait pilot Aish POS. Pengiriman formulir tidak membuat akun atau mengaktifkan penagihan.</span></label><div class="form-actions"><button class="btn" type="submit">Kirim Permintaan</button></div></form></div></section>
 @endsection

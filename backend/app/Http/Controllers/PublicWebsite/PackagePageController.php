@@ -23,9 +23,9 @@ class PackagePageController extends Controller
         return view('public-website.packages', [
             'packages' => $packages,
             'page' => $page,
-            'seoTitle' => $page?->seo_title ?? 'Paket & Harga — Aish POS Lite',
+            'seoTitle' => $page?->seo_title ?? 'Paket Pilot — Aish POS',
             'seoDescription' => $page?->seo_description
-                ?? 'Pilihan paket Aish POS Lite untuk UMKM. Hubungi tim kami untuk aktivasi — belum ada pendaftaran mandiri.',
+                ?? 'Pilihan paket pilot Aish POS untuk UMKM. Hubungi tim kami untuk penawaran dan aktivasi terbantu.',
         ]);
     }
 }
