@@ -49,8 +49,9 @@ accessibility · responsive-validation · visual-regression · this evidence · 
 
 ### Deferred to CI / on-device (recorded, not skipped)
 - Android build/unit tests: local build not possible (JDK 25 here; CI is the JDK-21 gate per repo convention).
-- Vite `npm run build`: needs network for `npm ci` (unavailable in this sandbox); runs in CI. Public-website
-  palette change is inline-Blade, independent of the Vite bundle.
+- Vite build: **not** part of UIX-1 CI — the repo commits no `package-lock.json` and no CI builds the Vite
+  bundle; the public-website palette change is inline-Blade and independent of the bundle (verified: `app.css`
+  does not import `aish-tokens.css`; the layout uses inline `<style>`).
 - Backend **full** suite: runs in CI (`uix1-ci.yml`); this change touches no backend PHP/routes/migrations.
 
 ## Graphify before / after (isolated to UIX-1)

@@ -25,7 +25,9 @@ Therefore: no `migrate` step required; queue/scheduler unaffected.
 cd /var/www/aish-pos && git fetch origin && git switch main && git pull --ff-only origin main
 # expect HEAD == UIX1_MERGE_COMMIT, tree clean
 cd backend && composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
-npm ci && npm run build           # rebuilds public assets (Vite)
+# Frontend build NOT required for this change: the public-website palette change is inline Blade and does
+# not depend on the Vite bundle; the repo commits no package-lock.json. Only run `npm install && npm run build`
+# if the current deploy already builds frontend assets.
 # NO artisan migrate (no migrations in this change)
 php8.5 artisan optimize:clear && php8.5 artisan config:cache && php8.5 artisan route:cache && php8.5 artisan view:cache
 sudo systemctl restart aish-pos-queue-worker

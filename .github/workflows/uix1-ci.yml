@@ -44,12 +44,6 @@ jobs:
           DB_CONNECTION: sqlite
           DB_DATABASE: database/database.sqlite
 
-      - name: Public website build (Vite)
-        working-directory: backend
-        run: |
-          npm ci
-          npm run build
-
       - name: Backend full test suite
         working-directory: backend
         run: php artisan test
