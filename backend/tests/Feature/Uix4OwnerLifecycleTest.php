@@ -46,6 +46,22 @@ class Uix4OwnerLifecycleTest extends TestCase
             ->assertSee('dibatasi');
     }
 
+    public function test_suspended_tenant_dashboard_hides_business_data(): void
+    {
+        $tenant = Tenant::factory()->suspended()->create();
+        $owner = $this->ownerFor($tenant);
+        Store::factory()->count(3)->create(['tenant_id' => $tenant->id, 'is_active' => true]);
+
+        // The suspension status is shown, but business cards/panels (outlet
+        // counts, device counts, today's sales) are not exposed while blocked.
+        $this->actingAs($owner, 'owner')
+            ->get('/owner')
+            ->assertOk()
+            ->assertSee('Ditangguhkan')
+            ->assertDontSee('Outlet aktif')
+            ->assertDontSee('Ringkasan penjualan hari ini');
+    }
+
     public function test_suspended_tenant_outlets_page_is_restricted(): void
     {
         $tenant = Tenant::factory()->suspended()->create();

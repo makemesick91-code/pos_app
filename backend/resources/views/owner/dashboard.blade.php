@@ -27,6 +27,7 @@
             <div class="sub">Sumber otoritatif lifecycle tenant</div>
         </div>
 
+        @if($data['operational'])
         <div class="card">
             <div class="k">Outlet aktif</div>
             @if($data['outlets']['available'] ?? false)
@@ -46,6 +47,7 @@
                 <div class="v"><span class="unavailable">Tidak tersedia</span></div>
             @endif
         </div>
+        @endif
 
         <div class="card">
             <div class="k">Paket langganan</div>
@@ -78,6 +80,7 @@
         </div>
     </div>
 
+    @if($data['operational'])
     <div class="panel">
         <h2>Ringkasan penjualan hari ini</h2>
         <div class="panel-body">
@@ -95,4 +98,5 @@
             @endif
         </div>
     </div>
+    @endif
 @endsection

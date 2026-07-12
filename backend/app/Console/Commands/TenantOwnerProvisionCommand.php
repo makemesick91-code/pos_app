@@ -69,16 +69,19 @@ class TenantOwnerProvisionCommand extends Command
 
         $existing = User::query()->where('email', $email)->first();
 
-        // Guard against hijacking an account that belongs to a different tenant
-        // or is a platform admin — never silently move it.
-        if ($existing !== null && $existing->tenant_id !== null && (int) $existing->tenant_id !== (int) $tenant->id) {
-            $this->error('That email already belongs to a different tenant. Refusing to reassign.');
+        // Never silently adopt an account that is not already a member of this
+        // tenant. A platform admin is refused outright, and an existing user is
+        // only updated when it already belongs to THIS tenant (e.g. promoting a
+        // cashier to owner). A user with a different tenant — or none at all
+        // (orphaned / saas_admin) — is refused; provision a fresh email instead.
+        if ($existing !== null && $existing->isPlatformAdmin()) {
+            $this->error('That email is a platform admin. Owner and platform-admin identities are kept separate.');
 
             return self::FAILURE;
         }
 
-        if ($existing !== null && $existing->isPlatformAdmin()) {
-            $this->error('That email is a platform admin. Owner and platform-admin identities are kept separate.');
+        if ($existing !== null && (int) ($existing->tenant_id ?? -1) !== (int) $tenant->id) {
+            $this->error('That email is not a member of this tenant. Refusing to reassign; use a new email.');
 
             return self::FAILURE;
         }

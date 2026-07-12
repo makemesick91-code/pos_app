@@ -102,6 +102,19 @@ class Uix4TenantOwnerProvisionCommandTest extends TestCase
         $this->assertDatabaseHas('users', ['email' => 'owner@aish.test', 'tenant_id' => $tenantA->id]);
     }
 
+    public function test_refuses_existing_account_with_no_tenant_membership(): void
+    {
+        Tenant::factory()->create(['code' => 'ACME01']);
+        // An orphaned / tenant-less account (e.g. a role-only user) must not be
+        // silently adopted as this tenant's owner.
+        User::factory()->saasAdmin()->create(['email' => 'orphan@aish.test', 'is_platform_admin' => false]);
+
+        $this->artisan('tenant:owner-provision', ['--tenant' => 'ACME01', '--email' => 'orphan@aish.test'])
+            ->assertFailed();
+
+        $this->assertDatabaseHas('users', ['email' => 'orphan@aish.test', 'tenant_id' => null]);
+    }
+
     public function test_refuses_platform_admin_email(): void
     {
         Tenant::factory()->create(['code' => 'ACME01']);
