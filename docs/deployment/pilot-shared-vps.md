@@ -21,6 +21,15 @@ There is no DNS name and no origin TLS on this VPS (no certbot installed), so th
 pilot runs over HTTP and **HTTPS is deferred** until a domain/DNS is provided.
 `SESSION_SECURE_COOKIE` is therefore `false`.
 
+> **Post-GO hardening (2026-07-12):** port 8080 is no longer globally exposed — it
+> is UFW-restricted to the operator IP; 2 GiB swap was added; DaengtisiaMS' PHP 8.3
+> packages are `apt-mark hold`; and `PUBLIC CONNECT` was revoked on
+> `asia_dental_lab_pilot`. Database runtime pruning + a `pilot:runtime-storage-status`
+> probe were added. See
+> [security hardening](pilot-shared-vps-security-hardening.md) and
+> [runtime maintenance](pilot-runtime-maintenance.md). HTTPS remains **blocked**
+> until a domain is provided; public real-data HTTP is **NO-GO**.
+
 ## Architecture / isolation matrix
 
 | Concern | DaengtisiaMS (existing, untouched) | Aish POS (pilot) |
