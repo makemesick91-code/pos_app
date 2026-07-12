@@ -10,13 +10,17 @@ appear to conflict, the modular rule in `.claude/rules/` is authoritative.
 - Backend: Laravel (PHP 8.5) in `backend/`. Build-free Blade for web surfaces (no Node/Vite at deploy).
 - Do not add tenant-facing admin web consoles beyond what a sprint authorizes.
 
-## Four-surface architecture
+## Five-surface architecture
 1. Public website — Blade marketing/landing pages, no privileged data.
 2. Android / tenant API — Sanctum tokens, tenant-scoped; every business route runs the
    lifecycle → entitlement → usage-limit guard chain.
 3. Platform Admin API — `/api/v1/admin/*`, Sanctum + `platform.admin` middleware.
 4. Platform Admin browser console — `/admin/*`, session/cookie + `platform.admin.web`
    middleware (delivered by UIX-3).
+5. Tenant Owner browser console — `/owner/*`, session/cookie on the dedicated `owner`
+   guard + `tenant.owner.web` middleware (delivered by UIX-4). Read-only, tenant-scoped
+   to the authenticated owner's own tenant; never a platform capability. See
+   `.claude/rules/25-tenant-owner-web-console-boundary.md`.
 
 ## Multi-tenant boundary
 - Tenant data is always scoped to the authenticated tenant; never read/write across tenants.
@@ -72,8 +76,17 @@ appear to conflict, the modular rule in `.claude/rules/` is authoritative.
 - Existing GO tags are immutable. The final release commit must be equal across local,
   origin, and the VPS. GO tags are annotated.
 
+## Tenant-owner boundary (UIX-4)
+- Tenant owner identity = `users.is_active` AND `role = tenant_owner` AND a resolvable
+  `tenant_id`. Never a platform capability, never grantable through platform flows.
+- The `/owner/*` console runs on the `owner` session guard, distinct from the
+  platform-admin `web` guard; neither session satisfies the other's gate.
+- Tenant context is derived server-side from the owner's own record only — never from a
+  route parameter, query string, header, cookie, or hidden field. The domain is one
+  tenant per user; there is no tenant switcher. See UIX4-R001..R022.
+
 ## Pointers
-- Modular enforceable rules: `.claude/rules/` (00–90).
+- Modular enforceable rules: `.claude/rules/` (00–90, plus 25 tenant-owner boundary).
 - Full project rules & rule-set IDs (incl. UIX3-R001..R016): `docs/PROJECT_RULES.md`.
 - Architecture/foundation docs: `docs/foundation/` (see
   `docs/foundation/uix-3-platform-admin-control-center.md`).

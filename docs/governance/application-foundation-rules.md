@@ -84,3 +84,15 @@ No GO tag before green authoritative CI, successful deploy, runtime verification
 non-regression, and real non-placeholder evidence. The final release commit must be equal
 across local, origin, and the VPS. GO tags are annotated and immutable — existing tags are
 never moved or overwritten. Absence of proof is NO-GO.
+
+## Tenant Owner Web Console (UIX-4)
+The fifth surface, `/owner/*`, is a session/cookie console for a tenant owner over the
+dedicated `owner` guard, gated by `tenant.owner.web`. Owner identity is
+`is_active` AND `role = tenant_owner` AND a resolvable tenant — never a platform
+capability, and separate from the platform-admin `web` guard. Tenant context is resolved
+server-side from the owner's own record (`OwnerContextResolver`), never from request
+input; every query is explicitly tenant-scoped. The console is read-only first, reuses the
+canonical domain services as the source of truth, renders truthful unavailable states, and
+never exposes device token/fingerprint hashes. Full rule set UIX4-R001..R022 lives in
+`docs/foundation/uix-4-tenant-owner-web-console.md` and
+`docs/governance/tenant-owner-web-console-foundation.md`.

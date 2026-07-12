@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureExportEntitled;
 use App\Http\Middleware\EnsureFeatureEntitled;
 use App\Http\Middleware\EnsurePlatformAdmin;
 use App\Http\Middleware\EnsurePlatformAdminWeb;
+use App\Http\Middleware\EnsureTenantOwnerWeb;
 use App\Http\Middleware\EnsureReportEntitled;
 use App\Http\Middleware\EnsureTenantCanWrite;
 use App\Http\Middleware\EnsureTenantEntitled;
@@ -39,6 +40,12 @@ return Application::configure(basePath: dirname(__DIR__))
             // browser SaaS Control Center (/admin/*). Redirects instead of
             // returning JSON; same is_active + isPlatformAdmin predicate.
             'platform.admin.web' => EnsurePlatformAdminWeb::class,
+            // UIX-4 — session/web gate for the Tenant Owner Web Console
+            // (/owner/*). Deny-by-default identity predicate (is_active AND
+            // role=tenant_owner AND a resolvable tenant) on the dedicated
+            // `owner` guard. Redirects instead of returning JSON; a
+            // platform-admin session can never satisfy it (UIX4-R002/R003).
+            'tenant.owner.web' => EnsureTenantOwnerWeb::class,
             // Sprint 32 — plan entitlement runtime enforcement & subscription
             // access control. entitlement.write gates mutating operational
             // requests on the tenant billing/subscription/lifecycle state (reads
