@@ -216,12 +216,19 @@ class BillingConsoleReadService
      */
     public function presentInvoice(TenantBillingInvoice $invoice): array
     {
-        // `collected_amount` is populated by withSum on the list query; on a
-        // single loaded invoice fall back to the canonical model method.
-        $collected = $invoice->collected_amount !== null
-            ? (int) $invoice->collected_amount
-            : $invoice->collectedAmount();
-        $outstanding = max(0, (int) $invoice->total_amount - $collected);
+        // List/recent queries eager-sum payments into a `collected_amount` alias
+        // (recorded+confirmed only, mirroring TenantBillingInvoice::collectedAmount())
+        // to avoid an N+1. SQL SUM over zero payments yields NULL, so the ALIAS
+        // PRESENCE (not its value) tells us whether this row came from the list
+        // path. A single loaded invoice (detail/document) has no alias and
+        // delegates to the canonical model methods — no recompute (UIX5-R002).
+        if (array_key_exists('collected_amount', $invoice->getAttributes())) {
+            $collected = (int) ($invoice->getAttributes()['collected_amount'] ?? 0);
+            $outstanding = max(0, (int) $invoice->total_amount - $collected);
+        } else {
+            $collected = $invoice->collectedAmount();
+            $outstanding = $invoice->outstandingAmount();
+        }
 
         return [
             'id' => (int) $invoice->id,

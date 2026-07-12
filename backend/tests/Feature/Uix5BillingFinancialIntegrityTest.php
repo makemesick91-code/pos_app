@@ -9,6 +9,7 @@ use App\Models\TenantBillingPaymentIntent;
 use App\Models\User;
 use App\Services\BillingConsole\BillingConsoleReadService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\Concerns\BuildsBillingData;
 use Tests\TestCase;
 
@@ -109,6 +110,33 @@ class Uix5BillingFinancialIntegrityTest extends TestCase
         $this->assertSame(TenantBillingInvoice::COLLECTION_PENDING, $fresh->collection_state);
         // No payment/intent fabricated by a read.
         $this->assertSame(0, TenantBillingPayment::query()->where('invoice_id', $invoice->id)->count());
+    }
+
+    public function test_invoice_list_does_not_issue_per_row_payment_sum_queries(): void
+    {
+        // 12 fully-unpaid invoices (distinct periods to satisfy the unique key).
+        \App\Models\TenantBillingInvoice::factory()
+            ->count(12)
+            ->sequence(fn ($seq) => ['period_key' => sprintf('%04d-%02d', 2010 + intdiv($seq->index, 12), ($seq->index % 12) + 1)])
+            ->create(['tenant_id' => $this->tenant->id]);
+
+        DB::enableQueryLog();
+        $this->actingAs($this->owner, 'owner')->get('/owner/billing/invoices')->assertOk();
+
+        // The collected total is eager-summed in one aggregate subquery; a per-row
+        // fallback would emit a separate `select sum("amount")` per unpaid invoice.
+        // A per-row fallback is a standalone aggregate whose PRIMARY table is
+        // tenant_billing_payments. The main list query also contains a payments
+        // sum, but as a subquery inside a select from tenant_billing_invoices, so
+        // we exclude any query that also references the invoices table.
+        $perRowSums = collect(DB::getQueryLog())
+            ->filter(fn ($q) => str_contains($q['query'], 'sum(')
+                && str_contains($q['query'], 'from "tenant_billing_payments"')
+                && ! str_contains($q['query'], 'tenant_billing_invoices'))
+            ->count();
+        DB::disableQueryLog();
+
+        $this->assertSame(0, $perRowSums, 'invoice list must not run a payment-sum query per row');
     }
 
     public function test_null_amount_renders_unavailable_not_zero(): void
