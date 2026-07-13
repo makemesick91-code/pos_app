@@ -170,6 +170,7 @@
                 <a href="{{ route('owner.billing') }}" @if(request()->routeIs('owner.billing') || request()->routeIs('owner.billing.*')) aria-current="page" @endif>Tagihan</a>
                 <a href="{{ route('owner.usage') }}" @if(request()->routeIs('owner.usage')) aria-current="page" @endif>Penggunaan</a>
                 <a href="{{ route('owner.operations') }}" @if(request()->routeIs('owner.operations')) aria-current="page" @endif>Operasional</a>
+                <a href="{{ route('owner.support') }}" @if(request()->routeIs('owner.support') || request()->routeIs('owner.support.*')) aria-current="page" @endif>Dukungan</a>
             </nav>
         </aside>
 

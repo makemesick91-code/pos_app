@@ -77,6 +77,21 @@
         .aish-num { font-variant-numeric: tabular-nums; }
         .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
+        .badge {
+            display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
+            border: 1px solid var(--aish-border);
+        }
+        .badge-ok { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+        .badge-warn { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+        .badge-bad { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+        .badge-neutral { background: var(--aish-bg-subtle); color: var(--aish-text-secondary); }
+
+        .notice {
+            border: 1px solid #fde68a; background: #fffbeb; color: #92400e;
+            border-radius: var(--aish-radius-card); padding: var(--aish-space-lg); margin-bottom: var(--aish-space-lg);
+        }
+        .notice.bad { border-color: #fecaca; background: #fef2f2; color: #991b1b; }
+
         .panel {
             background: var(--aish-surface); border: 1px solid var(--aish-border);
             border-radius: var(--aish-radius-card); box-shadow: var(--shadow); margin-top: var(--aish-space-xl);
@@ -141,6 +156,9 @@
                 <a href="{{ route('admin.dashboard') }}" @if(request()->routeIs('admin.dashboard')) aria-current="page" @endif>Dashboard</a>
                 <a href="{{ route('admin.tenants.index') }}" @if(request()->routeIs('admin.tenants.*')) aria-current="page" @endif>Tenant</a>
                 <a href="{{ route('admin.billing') }}" @if(request()->routeIs('admin.billing') || request()->routeIs('admin.billing.*')) aria-current="page" @endif>Penagihan</a>
+                <a href="{{ route('admin.support') }}" @if(request()->routeIs('admin.support') || request()->routeIs('admin.support.*')) aria-current="page" @endif>Dukungan</a>
+                <a href="{{ route('admin.observability') }}" @if(request()->routeIs('admin.observability')) aria-current="page" @endif>Observabilitas</a>
+                <a href="{{ route('admin.incidents.index') }}" @if(request()->routeIs('admin.incidents.*')) aria-current="page" @endif>Insiden</a>
             </nav>
         </aside>
 

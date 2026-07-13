@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\Admin\AdminBillingController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminIncidentController;
 use App\Http\Controllers\Admin\AdminLoginController;
+use App\Http\Controllers\Admin\AdminObservabilityWebController;
+use App\Http\Controllers\Admin\AdminSupportController;
 use App\Http\Controllers\Admin\AdminTenantWebController;
 use App\Http\Controllers\HealthCheckController;
 use App\Http\Controllers\Owner\OwnerBillingController;
@@ -12,6 +15,7 @@ use App\Http\Controllers\Owner\OwnerLoginController;
 use App\Http\Controllers\Owner\OwnerOperationsController;
 use App\Http\Controllers\Owner\OwnerOutletController;
 use App\Http\Controllers\Owner\OwnerSubscriptionController;
+use App\Http\Controllers\Owner\OwnerSupportController;
 use App\Http\Controllers\Owner\OwnerUsageController;
 use App\Http\Controllers\PublicWebsite\LandingPageController;
 use App\Http\Controllers\PublicWebsite\LeadInterestController;
@@ -75,6 +79,19 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
             ->whereNumber('invoice')->name('billing.invoices.show');
         Route::get('/billing/invoices/{invoice}/download', [AdminBillingController::class, 'downloadInvoice'])
             ->whereNumber('invoice')->name('billing.invoices.download');
+
+        // UIX-6 — Platform Admin Support, Observability & Incident Console.
+        // Read-only, platform-scoped; NO mutation routes (UIX6-R015/R016). Reuses
+        // the Sprint 35/36 canonical services; observability presents truthful
+        // freshness (UIX6-R011), incidents are read verbatim (UIX6-R014).
+        Route::get('/support', [AdminSupportController::class, 'index'])->name('support');
+        Route::get('/support/tenants', [AdminSupportController::class, 'tenants'])->name('support.tenants');
+        Route::get('/support/tenants/{tenant}', [AdminSupportController::class, 'tenantDetail'])
+            ->name('support.tenants.show');
+        Route::get('/observability', [AdminObservabilityWebController::class, 'index'])->name('observability');
+        Route::get('/incidents', [AdminIncidentController::class, 'index'])->name('incidents.index');
+        Route::get('/incidents/{incident}', [AdminIncidentController::class, 'show'])
+            ->whereNumber('incident')->name('incidents.show');
     });
 });
 
@@ -122,5 +139,14 @@ Route::prefix('owner')->name('owner.')->group(function (): void {
             ->whereNumber('invoice')->name('billing.invoices.show');
         Route::get('/billing/invoices/{invoice}/download', [OwnerBillingController::class, 'downloadInvoice'])
             ->whereNumber('invoice')->name('billing.invoices.download');
+
+        // UIX-6 — Tenant Owner Support / Operational view. Read-only, STRICTLY
+        // tenant-scoped to the owner's own tenant (server-resolved). Incident ids
+        // are resolved only within the tenant; a foreign/unknown id is 404
+        // (UIX6-R004/R008). The owner never sees platform-global observability or
+        // another tenant's data (UIX6-R005/R010).
+        Route::get('/support', [OwnerSupportController::class, 'index'])->name('support');
+        Route::get('/support/incidents/{incident}', [OwnerSupportController::class, 'showIncident'])
+            ->whereNumber('incident')->name('support.incidents.show');
     });
 });

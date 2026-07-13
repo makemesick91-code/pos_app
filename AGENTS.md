@@ -16,7 +16,7 @@ the modular rule wins.
 - Test suite: `cd backend && php artisan test` (in-memory sqlite).
 - Targeted: `php artisan test --filter <Name>`.
 - Gates: `scripts/verify_application_foundation_rules.sh`,
-  `scripts/uix{1,2,3,4,5}_design_gate.sh`.
+  `scripts/uix{1,2,3,4,5,6}_design_gate.sh`.
 - Authoritative CI = the `pull_request` GitHub workflows, not local runs.
 
 ## Surfaces
@@ -26,7 +26,12 @@ the modular rule wins.
 4. Platform Admin browser console (`/admin/*`, `platform.admin.web`) — incl. UIX-5
    Billing Operations (`/admin/billing/*`).
 5. Tenant Owner browser console (`/owner/*`, `owner` guard, `tenant.owner.web`) —
-   incl. UIX-5 Billing Center (`/owner/billing/*`).
+   incl. UIX-5 Billing Center (`/owner/billing/*`) and UIX-6 Support view
+   (`/owner/support/*`).
+
+The Platform Admin console (surface 4) also carries the UIX-6 Support,
+Observability & Incident console (`/admin/support/*`, `/admin/observability`,
+`/admin/incidents/*`).
 
 ## Boundaries & source of truth
 - Tenant data is always scoped to the authenticated tenant; never cross-tenant.
@@ -45,6 +50,17 @@ the modular rule wins.
 - Invoice downloads are authenticated, tenant/surface-scoped, non-path-traversable;
   no public invoice URL. Distinct QRIS/settlement vs collection semantics.
 
+## Support/observability/incident rules (UIX-6)
+- Read-only presentation over the canonical Sprint 35/36 domains via
+  `App\Services\SupportConsole\*`; never a second support/alert/incident/health
+  engine, never recomputed in controllers/Blade. No mutation route.
+- Unknown/stale health is never shown as healthy; unsupported values render
+  "Tidak tersedia". No raw logs, stack traces, secrets, or infra identifiers in
+  the browser. Owner support is tenant-scoped (foreign incident id → 404, no
+  implicit route-model binding); owner never sees platform-global data.
+- See `.claude/rules/45-support-observability-incident-governance.md`
+  (UIX6-R001..R033).
+
 ## Security & release
 - No production default credentials; secrets from environment only; redact via
   `AdminAuditLogger::sanitize()`. Public plaintext-HTTP admin/billing exposure = NO-GO.
@@ -53,6 +69,6 @@ the modular rule wins.
   immutable, and require observed evidence + local/origin/VPS exact match (rule 90).
 
 ## Pointers
-- `CLAUDE.md`, `.claude/rules/` (esp. 25 owner console, 35 billing console),
-  `docs/PROJECT_RULES.md`, `docs/foundation/`, `docs/governance/`,
-  `docs/deployment/`.
+- `CLAUDE.md`, `.claude/rules/` (esp. 25 owner console, 35 billing console,
+  45 support/observability/incident console), `docs/PROJECT_RULES.md`,
+  `docs/foundation/`, `docs/governance/`, `docs/deployment/`.

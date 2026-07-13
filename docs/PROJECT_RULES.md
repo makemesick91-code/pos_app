@@ -1531,3 +1531,43 @@ rule: `.claude/rules/35-subscription-billing-invoice-integrity.md`.
 26. `UIX5-R026` — Production Artisan cache operations must preserve PHP-FPM runtime ownership of `storage/framework` and `bootstrap/cache`.
 27. `UIX5-R027` — Shared-VPS deployment must not change or regress DaengtisiaMS.
 28. `UIX5-R028` — GO requires observed evidence, authoritative CI success, local/origin/VPS exact match, runtime verification, and immutable previous tags.
+
+## Aish POS UIX-6 — Support, Observability & Incident Console (UIX6-R001..UIX6-R033)
+
+Full narrative: `docs/foundation/uix-6-support-observability-incident-console.md`.
+Governance: `docs/governance/support-observability-incident-foundation.md`. Modular
+rule: `.claude/rules/45-support-observability-incident-governance.md`.
+
+1. `UIX6-R001` — Support, observability, alerting, health, and incident services remain canonical sources of truth; the console reuses `App\Services\SupportOperations\*` and `App\Services\Observability\*`.
+2. `UIX6-R002` — Controllers, view models, and Blade templates must not duplicate support/health/alert/incident logic; `App\Services\SupportConsole\*` are read adapters only.
+3. `UIX6-R003` — Platform support and incident routes require dedicated platform-admin web authorization (`platform.admin.web`).
+4. `UIX6-R004` — Tenant Owner operational/support access is always tenant-scoped and deny-by-default, from server-resolved `OwnerContext`.
+5. `UIX6-R005` — Tenant Owner access never grants platform-global observability or incident visibility.
+6. `UIX6-R006` — Platform Admin access never grants Tenant Owner membership.
+7. `UIX6-R007` — Raw tenant IDs from client input are never trusted.
+8. `UIX6-R008` — Incident and support route-model binding must enforce surface and tenant/platform authorization; a foreign/unknown id returns 404; owner incidents never use implicit route-model binding.
+9. `UIX6-R009` — Raw logs, stack traces, environment values, credentials, tokens, cookies, and private headers must never be rendered in browser consoles.
+10. `UIX6-R010` — Tenant Owner views must not expose hosts, internal IPs, worker names, database roles, infrastructure topology, or platform-global identifiers.
+11. `UIX6-R011` — Unknown health is not healthy, and stale health must be represented explicitly.
+12. `UIX6-R012` — Metrics and operational statuses must include truthful freshness semantics when available.
+13. `UIX6-R013` — Unsupported values render as "Tidak tersedia", never as fabricated success, zero, or healthy status.
+14. `UIX6-R014` — Incident severity, status, impact, acknowledgement, mitigation, and resolution semantics come from canonical domain services.
+15. `UIX6-R015` — Direct incident, alert, tenant, device, sync, payment, or settlement state updates from UI controllers are forbidden.
+16. `UIX6-R016` — Support and incident consoles are read-only first unless a governed mutation service already exists; UIX-6 ships read-only.
+17. `UIX6-R017` — Incident mutations require explicit authorization, confirmation, idempotency, audit, regression tests, and compensation/rollback semantics.
+18. `UIX6-R018` — Incident timelines and historical evidence are append-only or modified only through canonical correction mechanisms.
+19. `UIX6-R019` — Audit records must redact credentials, tokens, raw payloads, and unnecessary PII.
+20. `UIX6-R020` — Observability cache keys include surface, identity, tenant, metric/query scope, and freshness window.
+21. `UIX6-R021` — Tenant A observability/support data must never be served to Tenant B or to another identity through cache reuse.
+22. `UIX6-R022` — Lists and timelines must be paginated or strictly bounded.
+23. `UIX6-R023` — Polling intervals must be bounded and must not create excessive platform load.
+24. `UIX6-R024` — Real-time claims are forbidden unless the data path is genuinely real-time.
+25. `UIX6-R025` — Search, filters, and sorting fields must be explicitly validated and whitelisted.
+26. `UIX6-R026` — Support exports or evidence downloads require authenticated and authorized delivery with redaction.
+27. `UIX6-R027` — Cross-tenant support, incident detail, timeline, export, and cache-isolation tests are mandatory release blockers.
+28. `UIX6-R028` — Raw-log, stack-trace, secret, and PII leakage tests are mandatory release blockers.
+29. `UIX6-R029` — Authenticated production runtime verification is mandatory; CI-only browser behavior is insufficient for UIX-6 GO.
+30. `UIX6-R030` — HTTPS and HTTP-to-HTTPS redirect must remain active for authenticated support and incident consoles.
+31. `UIX6-R031` — Production Artisan cache operations must preserve PHP-FPM runtime ownership of `storage/framework` and `bootstrap/cache`.
+32. `UIX6-R032` — Shared-VPS deployment must not change or regress DaengtisiaMS.
+33. `UIX6-R033` — GO requires observed evidence, authoritative CI success, local/origin/VPS exact match, runtime verification, and immutable previous tags.

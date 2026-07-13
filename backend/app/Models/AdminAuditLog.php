@@ -53,6 +53,17 @@ class AdminAuditLog extends Model
 
     public const TARGET_BILLING_INVOICE = 'billing_invoice';
 
+    // UIX-6 — Support, Observability & Incident Console (read-only view audit).
+    public const ACTION_ADMIN_SUPPORT_VIEWED = 'ADMIN_SUPPORT_VIEWED';
+
+    public const ACTION_ADMIN_OBSERVABILITY_VIEWED = 'ADMIN_OBSERVABILITY_VIEWED';
+
+    public const ACTION_ADMIN_INCIDENT_VIEWED = 'ADMIN_INCIDENT_VIEWED';
+
+    public const TARGET_SUPPORT_CONSOLE = 'support_console';
+
+    public const TARGET_OBSERVABILITY_CONSOLE = 'observability_console';
+
     public const ACTION_SUBSCRIPTION_ASSIGNED = 'SUBSCRIPTION_ASSIGNED';
     public const ACTION_SUBSCRIPTION_UPDATED = 'SUBSCRIPTION_UPDATED';
     public const ACTION_DEVICE_REVOKED = 'DEVICE_REVOKED';
