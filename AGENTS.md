@@ -2,9 +2,9 @@
 
 Aish POS is a multi-tenant Android Point-of-Sale SaaS with a Laravel (PHP 8.5)
 backend in `backend/`. This file is the concise agent index; the enforceable,
-authoritative detail lives in `CLAUDE.md`, `.claude/rules/` (00–90, plus 25 and
-35), and `docs/PROJECT_RULES.md`. When guidance here and a modular rule conflict,
-the modular rule wins.
+authoritative detail lives in `CLAUDE.md`, `.claude/rules/` (00–90, plus 25, 35,
+45, and 55), and `docs/PROJECT_RULES.md`. When guidance here and a modular rule
+conflict, the modular rule wins.
 
 ## Repository structure
 - `backend/` — Laravel app (routes, controllers, services, models, migrations,
@@ -13,10 +13,16 @@ the modular rule wins.
   deployment runbooks, evidence. `scripts/` — design/foundation gates + deploy.
 
 ## Canonical commands
-- Test suite: `cd backend && php artisan test` (in-memory sqlite).
+- Backend test suite: `cd backend && php artisan test` (in-memory sqlite).
 - Targeted: `php artisan test --filter <Name>`.
+- Android app: `com.aishtech.poslite` under `android/` (native Views/XML,
+  Retrofit/OkHttp, Room, WorkManager). Build/test via the committed Gradle wrapper
+  on JDK 21 in CI: `cd android && ./gradlew :app:testDebugUnitTest` (unit) and
+  `:app:assembleDebug`/`assembleRelease`. Do NOT change minSdk/target/compileSdk,
+  the package id, or do a broad dependency upgrade. Do not rely on local Android
+  builds — CI is the authoritative Android gate.
 - Gates: `scripts/verify_application_foundation_rules.sh`,
-  `scripts/uix{1,2,3,4,5,6}_design_gate.sh`.
+  `scripts/uix{1,2,3,4,5,6}_design_gate.sh`, `scripts/uix7_android_design_gate.sh`.
 - Authoritative CI = the `pull_request` GitHub workflows, not local runs.
 
 ## Surfaces
@@ -60,6 +66,22 @@ Observability & Incident console (`/admin/support/*`, `/admin/observability`,
   implicit route-model binding); owner never sees platform-global data.
 - See `.claude/rules/45-support-observability-incident-governance.md`
   (UIX6-R001..R033).
+
+## Android cashier experience rules (UIX-7)
+- The Android Cashier app is a distinct tenant/device-scoped surface (Sanctum API
+  tokens; never web-console auth). UI/ViewModels present canonical state only — no
+  duplicated pricing/tax/payment/QRIS/settlement/sync logic.
+- Offline sale is durable before "saved" is shown; interrupted in-flight sync is
+  recoverable (never lost); retries are idempotent on `clientReference` (no
+  duplicate server txns); SYNCED only on server ack; checkout has a ViewModel
+  double-submit guard. Money is whole-rupiah `Long` (`core/money/RupiahMoney`) —
+  no unsafe float in new/changed cashier code — formatted only via the canonical
+  formatter; unknown → "Tidak tersedia". QRIS created ≠ paid/settled, online-only.
+- `allowBackup=false`, cleartext denied by default (release → `https://aishpos.online`),
+  no credentials/tokens/PII in logs/screenshots/test artifacts. On-device runtime
+  verification + GO are operator-performed and deferred until real device evidence
+  exists — never fabricated. See
+  `.claude/rules/55-android-cashier-experience.md` (UIX7-R001..R044).
 
 ## Security & release
 - No production default credentials; secrets from environment only; redact via

@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -12,14 +13,13 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.aishtech.poslite.R
 import com.aishtech.poslite.core.ServiceLocator
+import com.aishtech.poslite.core.money.RupiahMoney
 import com.aishtech.poslite.data.repository.CartRepository
 import com.aishtech.poslite.databinding.ActivityCashierBinding
 import com.aishtech.poslite.feature.receipt.ReceiptActivity
 import com.aishtech.poslite.feature.reports.ReportsActivity
 import com.aishtech.poslite.feature.sync.OfflineSalesSyncScheduler
 import kotlinx.coroutines.launch
-import java.text.NumberFormat
-import java.util.Locale
 
 /**
  * Cashier foundation screen: manual sync, local product search, and a
@@ -67,7 +67,10 @@ class CashierActivity : AppCompatActivity() {
         binding.buttonReports.setOnClickListener {
             startActivity(Intent(this, ReportsActivity::class.java))
         }
-        binding.buttonClearCart.setOnClickListener { viewModel.clearCart() }
+        // UIX7-R016 — clearing the cart is destructive; confirm before discarding
+        // so an accidental tap can never wipe an in-progress sale. Uses the
+        // canonical UIX-1 microcopy already shipped in strings.xml.
+        binding.buttonClearCart.setOnClickListener { confirmClearCart() }
         binding.buttonCheckout.setOnClickListener {
             val paid = binding.inputPaidAmount.text?.toString()?.toDoubleOrNull() ?: 0.0
             viewModel.checkoutCash(paid)
@@ -195,15 +198,28 @@ class CashierActivity : AppCompatActivity() {
         }
     }
 
+    private fun confirmClearCart() {
+        val count = viewModel.cartItems.value?.sumOf { it.quantity } ?: 0
+        if (count == 0) {
+            viewModel.clearCart()
+            return
+        }
+        AlertDialog.Builder(this)
+            .setMessage(getString(R.string.uix_clear_cart_confirm, count))
+            .setNegativeButton(R.string.uix_action_back, null)
+            .setPositiveButton(R.string.uix_action_clear) { _, _ -> viewModel.clearCart() }
+            .show()
+    }
+
     private fun openReceipt(saleId: Long) {
         val intent = Intent(this, ReceiptActivity::class.java)
             .putExtra(ReceiptActivity.EXTRA_SALE_ID, saleId)
         startActivity(intent)
     }
 
-    private fun formatPrice(value: Double): String {
-        val format = NumberFormat.getNumberInstance(Locale("in", "ID"))
-        format.maximumFractionDigits = 0
-        return "Rp ${format.format(value)}"
-    }
+    // UIX7-R019/R029 — money is rendered only through the single canonical
+    // whole-rupiah formatter. Legacy Double amounts are bridged without a fresh
+    // float calculation.
+    private fun formatPrice(value: Double): String =
+        RupiahMoney.format(RupiahMoney.fromDouble(value))
 }

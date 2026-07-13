@@ -38,10 +38,19 @@ abstract class OfflineSaleDao {
         return localId
     }
 
+    /**
+     * Rows eligible for a (re)sync attempt: PENDING, FAILED, and — since UIX-7
+     * (UIX7-R009/R012) — orphaned in-flight rows still marked SYNCING. A sale is
+     * set SYNCING immediately before the network call, so a process death between
+     * [markSyncing] and the server response would otherwise strand it in SYNCING
+     * forever and silently lose the transaction. Replaying it is safe because the
+     * submit is idempotent on the device-generated clientReference; the server
+     * dedupes a genuine in-flight duplicate.
+     */
     @Query(
         """
         SELECT * FROM offline_sales
-        WHERE syncStatus IN ('PENDING', 'FAILED')
+        WHERE syncStatus IN ('PENDING', 'FAILED', 'SYNCING')
         ORDER BY createdAt ASC
         LIMIT :limit
         """

@@ -112,3 +112,27 @@ state stays distinct from invoice collection state. Read-only: no mutation route
 set UIX5-R001..R028 lives in `docs/foundation/uix-5-subscription-billing-invoice-console.md`,
 `docs/governance/subscription-billing-invoice-foundation.md`, and
 `.claude/rules/35-subscription-billing-invoice-integrity.md`.
+
+## Android Cashier Experience (UIX-7)
+A remediation of the Android Cashier app (`com.aishtech.poslite`, native Views/XML +
+Retrofit/OkHttp + Room + WorkManager) cashier experience over the existing Android and
+backend domain services — not a feature expansion and never a second pricing, payment,
+QRIS, settlement, or sync engine. The app is a distinct tenant/device-scoped surface
+authenticated by Sanctum API tokens; it never inherits Platform Admin or Tenant Owner web
+authorization, and UI/ViewModels present canonical state only. Offline sales are durably
+persisted before a success state is shown; an interrupted in-flight sync is recoverable
+rather than stranded and silently lost; retries are idempotent on the device
+`clientReference` (no duplicate server transactions); a row is SYNCED only on canonical
+server acknowledgement; and checkout carries a ViewModel-level double-submit guard. Money
+is a canonical whole-rupiah integer (`core/money/RupiahMoney`, `Long`) with no unsafe float
+math in new/changed cashier code, formatted only through the single canonical formatter,
+with "Tidak tersedia" for unknown values; QRIS creation is never presented as paid/settled
+and QRIS is online-only. Security: `allowBackup=false`, cleartext denied by default
+(release/pilot → `https://aishpos.online`), `Authorization` redacted from debug-only logs,
+and no credentials/tokens/PII in logs, screenshots, or test artifacts. Because this build
+environment has no Android SDK/emulator/device, CI (JDK 21) is the authoritative build/test
+gate; on-device authenticated runtime verification against `aishpos.online` and the GO tag
+are operator-performed and deferred until real device evidence is captured — never
+fabricated. Full rule set UIX7-R001..R044 lives in
+`docs/foundation/uix-7-android-cashier-experience-remediation.md` and
+`.claude/rules/55-android-cashier-experience.md`.
