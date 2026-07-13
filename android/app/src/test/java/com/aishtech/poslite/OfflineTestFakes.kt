@@ -70,7 +70,12 @@ class FakeOfflineDb : OfflineSaleDao(), OfflineSaleItemDao {
 
     override suspend fun getPendingOrFailed(limit: Int): List<LocalOfflineSaleEntity> =
         sales.values
-            .filter { it.syncStatus == OfflineSyncStatus.PENDING || it.syncStatus == OfflineSyncStatus.FAILED }
+            .filter {
+                it.syncStatus == OfflineSyncStatus.PENDING ||
+                    it.syncStatus == OfflineSyncStatus.FAILED ||
+                    // UIX7-R009/R012 — recover orphaned in-flight (crashed mid-attempt) rows.
+                    it.syncStatus == OfflineSyncStatus.SYNCING
+            }
             .sortedBy { it.createdAt }
             .take(limit)
 

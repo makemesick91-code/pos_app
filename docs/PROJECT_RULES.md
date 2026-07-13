@@ -1571,3 +1571,55 @@ rule: `.claude/rules/45-support-observability-incident-governance.md`.
 31. `UIX6-R031` — Production Artisan cache operations must preserve PHP-FPM runtime ownership of `storage/framework` and `bootstrap/cache`.
 32. `UIX6-R032` — Shared-VPS deployment must not change or regress DaengtisiaMS.
 33. `UIX6-R033` — GO requires observed evidence, authoritative CI success, local/origin/VPS exact match, runtime verification, and immutable previous tags.
+
+## Aish POS UIX-7 — Android Cashier Experience Remediation (UIX7-R001..UIX7-R044)
+
+Remediation of the Android Cashier app (`com.aishtech.poslite`) cashier
+experience over existing Android/backend domain services. Modular rule:
+`.claude/rules/55-android-cashier-experience.md`. Foundation:
+`docs/foundation/uix-7-android-cashier-experience-remediation.md`.
+
+1. `UIX7-R001` — Android Cashier is a distinct authenticated application surface and never inherits Platform Admin or Tenant Owner web authorization.
+2. `UIX7-R002` — Existing backend and Android domain services remain the canonical sources of truth.
+3. `UIX7-R003` — UI, ViewModel, Presenter, and local adapters must not duplicate pricing, tax, discount, entitlement, payment, QRIS, settlement, or sync business logic.
+4. `UIX7-R004` — Tenant, outlet, user, and device context must be resolved from authenticated canonical state.
+5. `UIX7-R005` — Raw client-supplied tenant or outlet identifiers are never trusted as authorization.
+6. `UIX7-R006` — Local database, cache, files, preferences, and background work must be tenant/device/user scoped; backup is disabled.
+7. `UIX7-R007` — Tenant A local or cached data must never be visible after authentication as Tenant B.
+8. `UIX7-R008` — Offline transactions must be durably persisted before the UI presents a successful save state.
+9. `UIX7-R009` — Network availability is never required to preserve an otherwise valid offline transaction; interrupted in-flight sync is recoverable, never silently lost.
+10. `UIX7-R010` — Sync retries must be idempotent and must not create duplicate server transactions.
+11. `UIX7-R011` — Sync state, retry state, failure state, and conflict state must remain semantically distinct.
+12. `UIX7-R012` — Unknown or stale sync state must never be presented as synced; SYNCED only on canonical server acknowledgement.
+13. `UIX7-R013` — Conflict resolution must use canonical rules and must never silently overwrite authoritative transaction data.
+14. `UIX7-R014` — Cart state must survive supported configuration changes and process recreation.
+15. `UIX7-R015` — Checkout must prevent accidental double submission (ViewModel-level re-entry guard).
+16. `UIX7-R016` — Logout, device reset, or account switching must not silently discard unsynced transactions; destructive cart actions are confirmed.
+17. `UIX7-R017` — Device reactivation and account switching require explicit, governed handling of local tenant-scoped data.
+18. `UIX7-R018` — Financial values use a canonical whole-rupiah integer representation; unsafe float money calculations are forbidden in new/changed cashier code.
+19. `UIX7-R019` — Totals, paid amounts, change, outstanding, and receipt values come from canonical calculations, formatted only through the single canonical formatter.
+20. `UIX7-R020` — QRIS created, pending, paid, confirmed, settlement pending, settled, failed, and expired states remain distinct.
+21. `UIX7-R021` — QRIS creation alone must never be displayed as paid or settled.
+22. `UIX7-R022` — Offline UI must not claim QRIS payment success without canonical confirmation; QRIS is online-only.
+23. `UIX7-R023` — Receipt and transaction history must display canonical, mutually consistent values.
+24. `UIX7-R024` — Loading, unavailable, offline, pending, failed, retrying, conflict, and success states must be truthful; unavailable renders "Tidak tersedia".
+25. `UIX7-R025` — Actions that can create transactions must provide safe progress and duplicate-tap protection.
+26. `UIX7-R026` — Android logs, analytics, crash reports, screenshots, and test artifacts must not contain credentials, tokens, private payment payloads, or unnecessary PII.
+27. `UIX7-R027` — Sensitive tokens and device credentials use the existing approved secure-storage mechanism; cleartext HTTP is denied by default.
+28. `UIX7-R028` — Exported Android components, deep links, intents, and file sharing must be explicitly reviewed and least-privilege.
+29. `UIX7-R029` — UI must use the existing Aish POS design tokens and components; no hardcoded off-system colors.
+30. `UIX7-R030` — Status must never rely on color alone.
+31. `UIX7-R031` — Interactive targets, TalkBack semantics, focus order, content descriptions, and font scaling are release gates.
+32. `UIX7-R032` — Phone and tablet layouts must remain usable without clipped primary actions or inaccessible transaction totals.
+33. `UIX7-R033` — Main-thread disk, database, and network I/O are forbidden.
+34. `UIX7-R034` — Background sync and polling must respect battery, network, retry, and platform scheduling constraints.
+35. `UIX7-R035` — Aggressive unbounded polling is forbidden.
+36. `UIX7-R036` — Crash, ANR, duplicate transaction, lost offline transaction, and cross-tenant leakage are automatic NO-GO conditions.
+37. `UIX7-R037` — Performance budgets must use measured baseline data and must not be fabricated.
+38. `UIX7-R038` — Android release artifacts must be traceable to source commit, package ID, version name, version code, variant, and hash.
+39. `UIX7-R039` — Pilot runtime verification must use an installable artifact against HTTPS `aishpos.online` with synthetic data.
+40. `UIX7-R040` — Synthetic accounts, devices, products, and transactions must be cleaned and cleanup must be verified.
+41. `UIX7-R041` — Production Artisan operations must preserve PHP-FPM ownership of `storage/framework` and `bootstrap/cache`.
+42. `UIX7-R042` — Composer `--no-dev` production verification must not rely on Faker or development-only packages.
+43. `UIX7-R043` — Shared-VPS synchronization must not change or regress DaengtisiaMS.
+44. `UIX7-R044` — GO requires authoritative CI, device runtime verification, evidence closure, local/origin/VPS exact match, and immutable previous tags.

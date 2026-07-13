@@ -120,10 +120,34 @@ appear to conflict, the modular rule in `.claude/rules/` is authoritative.
   raw logs, stack traces, secrets, or infrastructure identifiers reach the browser.
   See `.claude/rules/45-support-observability-incident-governance.md` (UIX6-R001..R033).
 
+## Android cashier experience boundary (UIX-7)
+- The Android Cashier app (`com.aishtech.poslite`, native Views/XML) is a distinct
+  tenant/device-scoped POS surface. It authenticates with Sanctum API tokens and
+  never inherits Platform Admin (`/admin/*`) or Tenant Owner (`/owner/*`) web
+  authorization. Business truth stays in the backend `App\Services\*` domains and
+  the app's canonical repositories/managers; UI/ViewModels present and orchestrate
+  only — no duplicated pricing, tax, payment, QRIS, settlement, or sync logic.
+- Offline durability before success: an offline sale is cleared from the cart only
+  after a durable local save, an interrupted in-flight sync is recoverable (never
+  stranded/lost), retries are idempotent on the device `clientReference` (no
+  duplicate server transactions), and SYNCED is shown only on server ack.
+- Money is canonical whole-rupiah integer (`core/money/RupiahMoney`, `Long`) —
+  never unsafe float in new/changed cashier code — and formatted only through the
+  single canonical formatter; unknown renders "Tidak tersedia". QRIS created ≠
+  paid/settled; QRIS is online-only. Checkout has a ViewModel-level double-submit
+  guard. Tokens/tenant DB are not backed up (`allowBackup=false`); cleartext HTTP
+  is denied by default (release/pilot → `https://aishpos.online`). No credentials/
+  tokens/PII in logs, screenshots, or test artifacts.
+- This environment cannot build/run Android (no SDK, JDK 25); CI (JDK 21) is the
+  build/test gate. On-device authenticated runtime verification against
+  `aishpos.online` and the GO tag are operator-performed and deferred until real
+  device evidence is captured — never fabricated. See
+  `.claude/rules/55-android-cashier-experience.md` (UIX7-R001..R044).
+
 ## Pointers
 - Modular enforceable rules: `.claude/rules/` (00–90, plus 25 tenant-owner boundary,
-  35 billing-console integrity, and 45 support/observability/incident governance).
-  Root agent index: `AGENTS.md`.
+  35 billing-console integrity, 45 support/observability/incident governance, and
+  55 android cashier experience). Root agent index: `AGENTS.md`.
 - Full project rules & rule-set IDs (incl. UIX3-R001..R016): `docs/PROJECT_RULES.md`.
 - Architecture/foundation docs: `docs/foundation/` (see
   `docs/foundation/uix-3-platform-admin-control-center.md`).

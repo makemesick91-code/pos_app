@@ -16,6 +16,11 @@ android {
         versionName = "0.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // UIX-7 — the API base URL is build-typed so release/pilot builds default
+        // to the TLS pilot host while dev keeps the emulator host alias. No secret
+        // or token is embedded here (see AppConfig / rule 30).
+        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8000/\"")
     }
 
     buildTypes {
@@ -25,6 +30,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Pilot/production build talks to the HTTPS pilot backend only.
+            buildConfigField("String", "API_BASE_URL", "\"https://aishpos.online/\"")
         }
     }
 

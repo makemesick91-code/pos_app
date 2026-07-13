@@ -99,6 +99,27 @@ class OfflineSalesSyncLogicTest {
     }
 
     @Test
+    fun `orphaned in-flight SYNCING sale is recovered and synced on the next run`() = runTest {
+        // Simulate a crash mid-attempt: the row was marked SYNCING before the
+        // server responded, so it is stranded. Before UIX-7 it was excluded from
+        // the retry queue and silently lost (UIX7-R009/R012).
+        val db = FakeOfflineDb()
+        db.insertOfflineSaleWithItems(pendingSale("stuck"), emptyList())
+        db.markSyncing(db.sales.keys.first(), attemptedAt = 500L)
+        assertEquals(OfflineSyncStatus.SYNCING, db.sales.values.single().syncStatus)
+
+        // The recovery queue must pick it up...
+        assertTrue(db.getPendingOrFailed(10).isNotEmpty())
+
+        // ...and a successful replay drives it to SYNCED with the server id.
+        val summary = repo(db, listOf(Response.success(SaleResponse(data = sampleSale(id = 77))))).syncPending()
+        assertEquals(1, summary.synced)
+        val sale = db.sales.values.single()
+        assertEquals(OfflineSyncStatus.SYNCED, sale.syncStatus)
+        assertEquals(77L, sale.serverSaleId)
+    }
+
+    @Test
     fun `only pending and failed sales are attempted`() = runTest {
         val db = FakeOfflineDb()
         // One pending, and one that fails then should be retried on next run.

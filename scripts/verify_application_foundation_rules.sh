@@ -193,6 +193,29 @@ else
   pass "UIX-6 views render no raw trace/log/unescaped content"
 fi
 
+# 5f. UIX-7 Android cashier experience foundation (UIX7-R001..R044).
+[ -f .claude/rules/55-android-cashier-experience.md ] && pass "UIX-7 modular rule present" || bad "missing .claude/rules/55-android-cashier-experience.md"
+missing_uix7=""
+for i in $(seq -w 1 44); do
+  id="UIX7-R0$i"
+  if grep -q "$id" .claude/rules/55-android-cashier-experience.md \
+     && grep -q "$id" docs/foundation/uix-7-android-cashier-experience-remediation.md \
+     && grep -q "$id" docs/PROJECT_RULES.md; then :; else missing_uix7="$missing_uix7 $id"; fi
+done
+[ -z "$missing_uix7" ] && pass "UIX7-R001..R044 fully persisted" || bad "UIX-7 rule ids not fully persisted:$missing_uix7"
+# Canonical whole-rupiah money type exists (UIX7-R018/R019).
+[ -f android/app/src/main/java/com/aishtech/poslite/core/money/RupiahMoney.kt ] && pass "RupiahMoney canonical money type present" || bad "missing RupiahMoney money type"
+# Cleartext denied by default + backup disabled (UIX7-R006/R026/R027).
+[ -f android/app/src/main/res/xml/network_security_config.xml ] && pass "network security config present" || bad "missing network_security_config.xml"
+if grep -q 'android:usesCleartextTraffic="true"' android/app/src/main/AndroidManifest.xml; then
+  bad "manifest still allows cleartext traffic app-wide"
+else
+  pass "no app-wide cleartext traffic"
+fi
+grep -q 'android:allowBackup="false"' android/app/src/main/AndroidManifest.xml && pass "app backup disabled" || bad "allowBackup is not false"
+# Cashier money is formatted through the canonical formatter (UIX7-R019).
+grep -q 'RupiahMoney' android/app/src/main/java/com/aishtech/poslite/feature/cashier/CashierActivity.kt && pass "cashier uses canonical money formatter" || bad "cashier not using RupiahMoney formatter"
+
 # 6. No tracked secret files / keys.
 if git ls-files | grep -qE '(^|/)\.env$|\.pem$|id_rsa|id_ed25519|_ed25519$|\.p12$|\.keystore$'; then
   bad "tracked secret/key file"

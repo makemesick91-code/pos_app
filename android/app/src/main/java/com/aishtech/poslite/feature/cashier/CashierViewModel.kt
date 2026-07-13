@@ -141,6 +141,11 @@ class CashierViewModel(
      * cashier can retry (Sprint 4 runtime rule).
      */
     fun checkoutCash(paidAmount: Double) {
+        // UIX7-R015/R025 — a submission is already in flight; ignore the repeat
+        // tap so a double-press can never create two server transactions. The UI
+        // also disables the button, but this guard closes the tap-before-observer
+        // race at the source.
+        if (_checkout.value is CheckoutState.Submitting) return
         if (cart.isEmpty()) {
             _checkout.value = CheckoutState.Error("Keranjang kosong.")
             return
@@ -173,6 +178,8 @@ class CashierViewModel(
      * never eligible for this path — offline is CASH-only.
      */
     fun checkoutCashOffline(paidAmount: Double) {
+        // UIX7-R015/R025 — reject a re-entrant submit (see checkoutCash).
+        if (_checkout.value is CheckoutState.Submitting) return
         if (cart.isEmpty()) {
             _checkout.value = CheckoutState.Error("Keranjang kosong.")
             return
