@@ -32,7 +32,13 @@ object ApiClient {
             builder.addInterceptor(DeviceHeaderInterceptor(deviceUuidProvider))
         }
 
-        if (BuildConfig.DEBUG) {
+        // UIX-7 (UIX7-R026/R047) — HTTP logging is attached ONLY for the emulator
+        // `debug` build type, never for `pilot` or `release`. The `pilot` variant is
+        // debuggable (so BuildConfig.DEBUG is true), which is why the gate is the
+        // build-type name, not BuildConfig.DEBUG: no request/response logging runs
+        // against the live pilot/production backend. Even in debug the level is
+        // BASIC (no headers/body) and Authorization is redacted.
+        if (BuildConfig.BUILD_TYPE == "debug") {
             val logging = HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BASIC
             }
