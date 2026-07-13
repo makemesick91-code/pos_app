@@ -40,6 +40,19 @@ class AdminAuditLog extends Model
 
     public const TARGET_OWNER_CONSOLE = 'owner_console';
 
+    // UIX-5 — Subscription, Billing & Invoice Console (read-only access audit).
+    public const ACTION_OWNER_INVOICE_VIEWED = 'OWNER_INVOICE_VIEWED';
+
+    public const ACTION_OWNER_INVOICE_DOWNLOADED = 'OWNER_INVOICE_DOWNLOADED';
+
+    public const ACTION_ADMIN_BILLING_VIEWED = 'ADMIN_BILLING_VIEWED';
+
+    public const ACTION_ADMIN_INVOICE_VIEWED = 'ADMIN_INVOICE_VIEWED';
+
+    public const ACTION_ADMIN_INVOICE_DOWNLOADED = 'ADMIN_INVOICE_DOWNLOADED';
+
+    public const TARGET_BILLING_INVOICE = 'billing_invoice';
+
     public const ACTION_SUBSCRIPTION_ASSIGNED = 'SUBSCRIPTION_ASSIGNED';
     public const ACTION_SUBSCRIPTION_UPDATED = 'SUBSCRIPTION_UPDATED';
     public const ACTION_DEVICE_REVOKED = 'DEVICE_REVOKED';

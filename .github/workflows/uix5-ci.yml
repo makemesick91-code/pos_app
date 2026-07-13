@@ -1,0 +1,63 @@
+name: UIX-5 CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  billing-console-gate:
+    name: UIX-5 billing console gate + backend regression
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Application foundation rules gate
+        run: bash scripts/verify_application_foundation_rules.sh
+
+      - name: UIX-5 billing console design gate (chains UIX-4/3/2/1)
+        run: bash scripts/uix5_design_gate.sh
+
+      - name: UIX-5 rules present (UIX5-R001..R028)
+        run: |
+          for i in $(seq -w 1 28); do
+            grep -q "UIX5-R0$i" docs/PROJECT_RULES.md
+            grep -q "UIX5-R0$i" docs/foundation/uix-5-subscription-billing-invoice-console.md
+            grep -q "UIX5-R0$i" .claude/rules/35-subscription-billing-invoice-integrity.md
+          done
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Prepare sqlite environment
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          mkdir -p storage/app storage/logs storage/framework/views storage/framework/cache storage/framework/cache/data storage/framework/sessions storage/framework/testing bootstrap/cache
+          touch database/database.sqlite
+          php artisan migrate --force || true
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: UIX-5 feature tests
+        working-directory: backend
+        run: php artisan test --testsuite=Feature --filter='Uix5'
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Backend full regression suite
+        working-directory: backend
+        run: php artisan test
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite

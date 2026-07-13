@@ -96,3 +96,19 @@ canonical domain services as the source of truth, renders truthful unavailable s
 never exposes device token/fingerprint hashes. Full rule set UIX4-R001..R022 lives in
 `docs/foundation/uix-4-tenant-owner-web-console.md` and
 `docs/governance/tenant-owner-web-console-foundation.md`.
+
+## Subscription, Billing & Invoice Console (UIX-5)
+A read-only billing console added to two surfaces: Tenant Owner Billing Center
+(`/owner/billing/*`, `owner` guard) and Platform Admin Billing Operations
+(`/admin/billing/*`, `platform.admin.web`). It is presentation over the canonical
+billing domain (Sprint 30/31 `tenant_billing_*` + `App\Services\Billing\*` /
+`App\Services\PaymentGateway\*`), never a second billing engine: `BillingConsoleReadService`
+reads canonical columns and calls canonical methods, never recomputing totals, paid,
+outstanding, lifecycle, or settlement. Money is whole-rupiah integer (no floats, no
+`/100`), formatted only via `<x-rupiah>`, with a truthful "Tidak tersedia" for unavailable
+values. Owner billing is tenant-scoped deny-by-default (foreign/unknown invoice → 404);
+invoice documents are authenticated, non-path-traversable, with no public URL; QRIS/settlement
+state stays distinct from invoice collection state. Read-only: no mutation routes. Full rule
+set UIX5-R001..R028 lives in `docs/foundation/uix-5-subscription-billing-invoice-console.md`,
+`docs/governance/subscription-billing-invoice-foundation.md`, and
+`.claude/rules/35-subscription-billing-invoice-integrity.md`.

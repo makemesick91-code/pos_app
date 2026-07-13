@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminBillingController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminLoginController;
 use App\Http\Controllers\Admin\AdminTenantWebController;
 use App\Http\Controllers\HealthCheckController;
+use App\Http\Controllers\Owner\OwnerBillingController;
 use App\Http\Controllers\Owner\OwnerDashboardController;
 use App\Http\Controllers\Owner\OwnerDeviceController;
 use App\Http\Controllers\Owner\OwnerLoginController;
@@ -62,6 +64,17 @@ Route::prefix('admin')->name('admin.')->group(function (): void {
         Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
         Route::get('/tenants', [AdminTenantWebController::class, 'index'])->name('tenants.index');
         Route::get('/tenants/{tenant}', [AdminTenantWebController::class, 'show'])->name('tenants.show');
+
+        // UIX-5 — Platform Admin Billing Operations. Read-only, platform-scoped;
+        // NO mutation routes (UIX5-R015/R016).
+        Route::get('/tenants/{tenant}/billing', [AdminBillingController::class, 'tenantBilling'])
+            ->name('tenants.billing');
+        Route::get('/billing', [AdminBillingController::class, 'index'])->name('billing');
+        Route::get('/billing/invoices', [AdminBillingController::class, 'invoices'])->name('billing.invoices');
+        Route::get('/billing/invoices/{invoice}', [AdminBillingController::class, 'showInvoice'])
+            ->whereNumber('invoice')->name('billing.invoices.show');
+        Route::get('/billing/invoices/{invoice}/download', [AdminBillingController::class, 'downloadInvoice'])
+            ->whereNumber('invoice')->name('billing.invoices.download');
     });
 });
 
@@ -98,5 +111,16 @@ Route::prefix('owner')->name('owner.')->group(function (): void {
         Route::get('/subscription', [OwnerSubscriptionController::class, 'index'])->name('subscription');
         Route::get('/usage', [OwnerUsageController::class, 'index'])->name('usage');
         Route::get('/operations', [OwnerOperationsController::class, 'index'])->name('operations');
+
+        // UIX-5 — Tenant Owner Billing Center. Read-only, tenant-scoped to the
+        // owner's own tenant only. Invoice ids are resolved server-side within
+        // the tenant; a foreign/unknown id is 404 (UIX5-R003/R006). No public
+        // invoice URL exists — the download route is authenticated (UIX5-R007).
+        Route::get('/billing', [OwnerBillingController::class, 'index'])->name('billing');
+        Route::get('/billing/invoices', [OwnerBillingController::class, 'invoices'])->name('billing.invoices');
+        Route::get('/billing/invoices/{invoice}', [OwnerBillingController::class, 'showInvoice'])
+            ->whereNumber('invoice')->name('billing.invoices.show');
+        Route::get('/billing/invoices/{invoice}/download', [OwnerBillingController::class, 'downloadInvoice'])
+            ->whereNumber('invoice')->name('billing.invoices.download');
     });
 });

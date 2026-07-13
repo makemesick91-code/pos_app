@@ -74,6 +74,8 @@
         .card .v { font-size: 28px; font-weight: 800; margin-top: 6px; }
         .card .sub { font-size: 12px; color: var(--aish-text-secondary); margin-top: 4px; }
         .unavailable { color: var(--aish-text-disabled); font-weight: 700; }
+        .aish-num { font-variant-numeric: tabular-nums; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
         .panel {
             background: var(--aish-surface); border: 1px solid var(--aish-border);
@@ -138,6 +140,7 @@
             <nav class="side-nav" aria-label="Menu">
                 <a href="{{ route('admin.dashboard') }}" @if(request()->routeIs('admin.dashboard')) aria-current="page" @endif>Dashboard</a>
                 <a href="{{ route('admin.tenants.index') }}" @if(request()->routeIs('admin.tenants.*')) aria-current="page" @endif>Tenant</a>
+                <a href="{{ route('admin.billing') }}" @if(request()->routeIs('admin.billing') || request()->routeIs('admin.billing.*')) aria-current="page" @endif>Penagihan</a>
             </nav>
         </aside>
 

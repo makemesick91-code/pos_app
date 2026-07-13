@@ -1496,3 +1496,38 @@ Full narrative: `docs/foundation/uix-4-tenant-owner-web-console.md`. Governance:
 20. `UIX4-R020` — Shared-VPS deployment must not change or regress DaengtisiaMS.
 21. `UIX4-R021` — GO requires local/origin/VPS exact-match and runtime verification.
 22. `UIX4-R022` — Existing GO tags are immutable.
+
+## Aish POS UIX-5 — Subscription, Billing & Invoice Console (UIX5-R001..UIX5-R028)
+
+Full narrative: `docs/foundation/uix-5-subscription-billing-invoice-console.md`.
+Governance: `docs/governance/subscription-billing-invoice-foundation.md`. Modular
+rule: `.claude/rules/35-subscription-billing-invoice-integrity.md`.
+
+1. `UIX5-R001` — Subscription, entitlement, usage, billing, invoice, renewal, dunning, QRIS, and settlement services remain canonical and are reused, never forked.
+2. `UIX5-R002` — Controllers, view models, and Blade templates must not duplicate financial business logic; `BillingConsoleReadService` reads canonical columns/methods only.
+3. `UIX5-R003` — Tenant Owner billing access is always tenant-scoped and deny-by-default, from server-resolved `OwnerContext`.
+4. `UIX5-R004` — Platform Admin billing access requires the `platform.admin.web` gate and never grants owner membership.
+5. `UIX5-R005` — Tenant Owner access never grants platform-global visibility.
+6. `UIX5-R006` — Invoice resolution/download enforce the active surface and tenant boundary; foreign/unknown id returns 404; owner invoices never use implicit route-model binding.
+7. `UIX5-R007` — Public or unauthenticated invoice URLs are forbidden; no direct-storage invoice URL exists.
+8. `UIX5-R008` — Financial values use whole-rupiah integer money types; no unsafe float arithmetic and no `/100` cents conversion.
+9. `UIX5-R009` — Currency, rounding, tax, discount, billing-period, and timezone semantics come from the existing domain source of truth.
+10. `UIX5-R010` — Invoice totals/balances are displayed from canonical values, never recomputed in views; money is formatted only through `<x-rupiah>`.
+11. `UIX5-R011` — Issued, pending, paid, settled, failed, expired, refunded, and void states remain semantically distinct.
+12. `UIX5-R012` — QRIS payment state is never presented as settlement unless the canonical settlement source confirms it (only `collection_state = paid` renders "Lunas").
+13. `UIX5-R013` — Unknown/unsupported values render as "Tidak tersedia", never a fabricated zero.
+14. `UIX5-R014` — Historical invoice/payment evidence is immutable except through governed correction/void in the owning service.
+15. `UIX5-R015` — Direct model updates for subscription/invoice/payment/dunning/settlement state are forbidden in UI controllers.
+16. `UIX5-R016` — Billing console scope is read-only first unless a governed, idempotent, audited mutation service already exists; UIX-5 ships read-only.
+17. `UIX5-R017` — Any financial mutation requires authorization, confirmation, idempotency, audit, tests, and documented compensation behaviour.
+18. `UIX5-R018` — Invoice documents use authenticated, authorized, non-path-traversable delivery (filename from the canonical invoice number, never request input).
+19. `UIX5-R019` — Invoice documents/logs redact credentials, tokens, webhook secrets, signature/payload hashes, and unnecessary PII.
+20. `UIX5-R020` — Billing responses are private/non-cacheable; cache keys include surface, identity, tenant, period, and filter scope.
+21. `UIX5-R021` — Subscription and invoice lists are paginated and bounded.
+22. `UIX5-R022` — Search and sort fields are explicitly whitelisted.
+23. `UIX5-R023` — Cross-tenant invoice list, detail, export, and download tests are mandatory release blockers.
+24. `UIX5-R024` — Financial-integrity and status-transition regression tests are mandatory release blockers.
+25. `UIX5-R025` — Public plaintext HTTP access involving real billing/invoice data remains NO-GO.
+26. `UIX5-R026` — Production Artisan cache operations must preserve PHP-FPM runtime ownership of `storage/framework` and `bootstrap/cache`.
+27. `UIX5-R027` — Shared-VPS deployment must not change or regress DaengtisiaMS.
+28. `UIX5-R028` — GO requires observed evidence, authoritative CI success, local/origin/VPS exact match, runtime verification, and immutable previous tags.
