@@ -1,0 +1,101 @@
+# Reusable: Android build + unit tests (all variants) + endpoint contract.
+# Supersedes the ~41 duplicated `assembleDebug` builds with ONE authoritative
+# multi-variant build that also asserts per-variant BuildConfig endpoints
+# (UIX7-R046/R049) and uploads APK artifacts. Never weakened (CICD2-R011).
+name: _android-build
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  android-build-test:
+    name: Android build & unit tests (debug/pilot/release)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: Package and SDK levels intact
+        run: |
+          grep -q "com.aishtech.poslite" android/app/build.gradle.kts
+          grep -q "minSdk = 26" android/app/build.gradle.kts
+          grep -q "targetSdk = 35" android/app/build.gradle.kts
+
+      - name: Android release readiness
+        run: bash scripts/android_release_readiness.sh
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Build debug APK (emulator dev — http://10.0.2.2:8000/)
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Build pilot APK (physical-device — HTTPS aishpos.online, cleartext denied)
+        working-directory: android
+        run: ./gradlew assemblePilot --no-daemon --stacktrace
+
+      - name: Build release APK (production — HTTPS base URL, cleartext denied)
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Unit tests — all variants (incl. variant-aware endpoint contract)
+        working-directory: android
+        run: ./gradlew testDebugUnitTest testPilotUnitTest testReleaseUnitTest --no-daemon --stacktrace
+
+      - name: Assert generated BuildConfig endpoints per variant (UIX7-R046/R049)
+        working-directory: android
+        run: |
+          set -euo pipefail
+          ./gradlew :app:generateDebugBuildConfig :app:generatePilotBuildConfig :app:generateReleaseBuildConfig --no-daemon --stacktrace
+          check() { # <variant-dir> <expected-url> <forbid-local:true|false>
+            local dir="$1" want="$2" forbid="$3"
+            local cfg
+            cfg=$(find app/build -path "*/$dir/*BuildConfig.java" | head -1)
+            if [ -z "$cfg" ]; then echo "BuildConfig for $dir not found"; exit 1; fi
+            if ! grep -q "$want" "$cfg"; then
+              echo "variant $dir: expected endpoint $want not present in $cfg"; exit 1
+            fi
+            if [ "$forbid" = "true" ] && grep -q "10.0.2.2" "$cfg"; then
+              echo "variant $dir: forbidden emulator host 10.0.2.2 present in $cfg"; exit 1
+            fi
+            echo "variant $dir endpoint OK: $want"
+          }
+          check debug   "http://10.0.2.2:8000/"   false
+          check pilot   "https://aishpos.online/"  true
+          check release "https://aishpos.online/"  true
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apks-${{ github.sha }}
+          path: |
+            android/app/build/outputs/apk/debug/*.apk
+            android/app/build/outputs/apk/pilot/*.apk
+            android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: warn
+
+      - name: No secret leakage in Android sources
+        run: |
+          # Fail the step on a match (no trailing `|| true`, which would make this a no-op).
+          ! grep -REn 'BEARER [A-Za-z0-9]|api[_-]?key\s*=\s*"[A-Za-z0-9]{16}|password\s*=\s*"' android/app/src/main

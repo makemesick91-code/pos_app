@@ -1,0 +1,153 @@
+# =============================================================================
+# AISH POS — Main Integrity Smoke  (CICD-CTRL-2, Lane C)
+# -----------------------------------------------------------------------------
+# On push to main: prove the merged tree equals the authoritatively-tested PR
+# candidate (CICD2-R007) and confirm deployability — WITHOUT re-running the full
+# suite. If equivalence cannot be proven, ESCALATE to full CI (CICD2-R008).
+# =============================================================================
+name: AISH POS Main Integrity Smoke
+
+on:
+  push:
+    branches: [main]
+
+# Sequential main pushes: do NOT cancel a running integrity/release check.
+concurrency:
+  group: main-smoke-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  equivalence:
+    name: Prove source equivalence to tested PR candidate
+    runs-on: ubuntu-latest
+    # Needs pull-requests + actions read to resolve the associated PR and verify the
+    # authoritative CI concluded success for the candidate (adversarial finding).
+    permissions:
+      contents: read
+      pull-requests: read
+      actions: read
+    outputs:
+      equivalent: ${{ steps.eq.outputs.equivalent }}
+      reason: ${{ steps.eq.outputs.reason }}
+      pr_number: ${{ steps.eq.outputs.pr_number }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify source equivalence (tree-hash)
+        id: eq
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/ci/verify_source_equivalence.sh "${{ github.sha }}"
+
+  foundation:
+    name: Foundation + design + CI-architecture gates
+    needs: equivalence
+    uses: ./.github/workflows/_foundation-gates.yml
+
+  security:
+    name: Security validation (secrets / artifacts)
+    needs: equivalence
+    uses: ./.github/workflows/_security-validation.yml
+
+  deployability:
+    name: Deployability smoke (boot + routes, equivalent path)
+    needs: equivalence
+    if: ${{ needs.equivalence.outputs.equivalent == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PHP 8.5
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: pdo, sqlite3, pdo_sqlite, mbstring, bcmath
+          coverage: none
+      - name: Validate composer
+        working-directory: backend
+        run: composer validate --strict
+      - name: Cache composer packages
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor
+          key: composer-${{ runner.os }}-php8.5-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-php8.5-
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+      - name: Prepare environment (sqlite)
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/' .env
+          sed -i 's#^DB_DATABASE=.*#DB_DATABASE=database/database.sqlite#' .env
+          php artisan key:generate
+          mkdir -p storage/framework/views storage/framework/cache storage/framework/cache/data storage/framework/sessions storage/framework/testing bootstrap/cache
+          touch database/database.sqlite
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+      - name: App boots and routes resolve (deployability)
+        working-directory: backend
+        run: |
+          php artisan about --only=environment
+          php artisan route:list >/dev/null
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+  escalate-backend:
+    name: ESCALATED full backend (equivalence unproven)
+    needs: equivalence
+    if: ${{ needs.equivalence.outputs.equivalent != 'true' }}
+    uses: ./.github/workflows/_backend-tests.yml
+
+  escalate-android:
+    name: ESCALATED full Android (equivalence unproven)
+    needs: equivalence
+    if: ${{ needs.equivalence.outputs.equivalent != 'true' }}
+    uses: ./.github/workflows/_android-build.yml
+
+  main-summary:
+    name: Main smoke summary (truthful gate)
+    needs: [equivalence, foundation, security, deployability, escalate-backend, escalate-android]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate
+        env:
+          EQUIV: ${{ needs.equivalence.outputs.equivalent }}
+          REASON: ${{ needs.equivalence.outputs.reason }}
+          R_EQ: ${{ needs.equivalence.result }}
+          R_FOUND: ${{ needs.foundation.result }}
+          R_SEC: ${{ needs.security.result }}
+          R_DEPLOY: ${{ needs.deployability.result }}
+          R_ESC_B: ${{ needs.escalate-backend.result }}
+          R_ESC_A: ${{ needs.escalate-android.result }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          echo "main $SHA — equivalent=$EQUIV ($REASON)"
+          echo "results: equivalence=$R_EQ foundation=$R_FOUND security=$R_SEC deployability=$R_DEPLOY escalate-backend=$R_ESC_B escalate-android=$R_ESC_A"
+          fail=0
+          req() { if [ "$2" != "success" ]; then echo "::error::job '$1' result='$2' (expected success)"; fail=1; fi; }
+          skp() { if [ "$2" != "skipped" ]; then echo "::error::job '$1' result='$2' (expected skipped)"; fail=1; fi; }
+          req equivalence "$R_EQ"
+          req foundation "$R_FOUND"
+          req security "$R_SEC"
+          if [ "$EQUIV" = "true" ]; then
+            req deployability "$R_DEPLOY"
+            skp escalate-backend "$R_ESC_B"
+            skp escalate-android "$R_ESC_A"
+            echo "Source equivalence PROVEN — deployability smoke only (no full re-run)."
+          else
+            echo "Source equivalence UNPROVEN — full CI escalated on main."
+            req escalate-backend "$R_ESC_B"
+            req escalate-android "$R_ESC_A"
+            skp deployability "$R_DEPLOY"
+          fi
+          [ "$fail" = 0 ] || { echo "::error::Main smoke summary FAILED."; exit 1; }
+          echo "Main smoke summary PASSED."

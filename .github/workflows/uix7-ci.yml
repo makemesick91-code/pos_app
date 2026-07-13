@@ -1,9 +1,9 @@
 name: UIX-7 CI
 
 on:
-  push:
-  pull_request:
-
+  # CICD-CTRL-2: neutralized to manual-only; superseded by ci-authoritative.yml (Lane B)
+  # and ci-main-smoke.yml (Lane C). Full validation still runnable on demand.
+  workflow_dispatch:
 jobs:
   android-cashier-foundation-gate:
     name: UIX-7 Android cashier foundation + design gate

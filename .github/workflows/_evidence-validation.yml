@@ -1,0 +1,43 @@
+# Reusable: strict docs/evidence validation (lightweight lane, Lane D).
+# Runs ONLY after the fail-closed classifier confirms a docs/evidence-only
+# change (CICD2-R004). Re-runs the classifier as a defense-in-depth guard so a
+# non-lightweight file can never take this lane, then validates evidence content.
+name: _evidence-validation
+
+on:
+  workflow_call:
+    inputs:
+      base_ref:
+        type: string
+        required: true
+      head_ref:
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  evidence-validation:
+    name: Strict evidence / docs validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Classifier guard (must be docs/evidence-only)
+        run: |
+          set -euo pipefail
+          out=$(bash scripts/ci/classify_changes.sh "${{ inputs.base_ref }}" "${{ inputs.head_ref }}")
+          echo "$out"
+          if echo "$out" | grep -qx 'full_ci_required=true'; then
+            echo "::error::Non-lightweight change reached the evidence lane — escalate to full CI (CICD2-R019)."
+            exit 1
+          fi
+
+      - name: Validate evidence content (placeholders / secrets / source-equivalence)
+        env:
+          BASE_REF: ${{ inputs.base_ref }}
+          HEAD_REF: ${{ inputs.head_ref }}
+        run: bash scripts/ci/validate_evidence.sh

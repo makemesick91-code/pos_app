@@ -1,9 +1,9 @@
 name: Sprint 4 CI
 
 on:
-  push:
-  pull_request:
-
+  # CICD-CTRL-2: neutralized to manual-only; superseded by ci-authoritative.yml (Lane B)
+  # and ci-main-smoke.yml (Lane C). Full validation still runnable on demand.
+  workflow_dispatch:
 jobs:
   foundation-validation:
     name: Foundation & Sprint 4 smoke

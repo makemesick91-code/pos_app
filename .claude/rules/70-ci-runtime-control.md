@@ -27,3 +27,17 @@ Continuous integration authority and runtime guardrails.
 ## Merge discipline
 - One concern per PR where practical; each PR leaves `main` green and deployable.
 - Merges to `main` happen via reviewed pull requests, never direct pushes that skip CI.
+
+## Authoritative CI consolidation (CICD-CTRL-2)
+- The authoritative gate is a single consolidated workflow, **AISH POS Authoritative
+  PR CI** (`.github/workflows/ci-authoritative.yml`), running exactly one complete
+  validation per final source candidate. Development pushes use targeted checks;
+  `main` runs an integrity/deployability smoke that escalates to full CI unless
+  tested-source equivalence is proven. Legacy `sprint*-ci`/`uix*-ci` workflows are
+  neutralized to `workflow_dispatch` (manual-only), never deleted.
+- Lightweight docs/evidence CI is allowed only when the fail-closed classifier
+  (`scripts/ci/classify_changes.sh`) confirms the strict allowlist; rules, workflows,
+  scripts, deps, schema, config, tests, and source never qualify. See
+  `.claude/rules/72-authoritative-ci-consolidation.md` (CICD2-R001..R024) and
+  `docs/governance/ci-runtime-control.md`. Optimization eliminates redundant
+  execution; it never weakens a required gate to turn CI green.

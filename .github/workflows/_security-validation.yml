@@ -1,0 +1,31 @@
+# Reusable: repository security validation (secrets / forbidden artifacts).
+name: _security-validation
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  security-scan:
+    name: Secret & forbidden-artifact scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: No forbidden files tracked (env / apk / vendor / keystore / sqlite)
+        run: |
+          ! git ls-files | grep -E '(^|/)\.env$|\.apk$|\.aab$|(^|/)vendor/|(^|/)node_modules/|\.sqlite$|database\.sqlite|(^|/)app/build/|(^|/)\.gradle/|\.keystore$|\.jks$'
+
+      - name: No committed secrets (tokens / private keys / hardcoded passwords)
+        run: |
+          set -uo pipefail
+          # Scan tracked source; exclude docs redaction examples and lockfiles.
+          matches=$(git grep -nIE \
+            'BEGIN (RSA|OPENSSH|EC|DSA|PGP) PRIVATE KEY|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{16}|password\s*=\s*["'"'"'][^"'"'"']{6,}' \
+            -- ':!*.lock' ':!docs/**' ':!**/*test*' ':!**/*Test*' 2>/dev/null || true)
+          if [ -n "$matches" ]; then
+            echo "Potential secret material detected:"; echo "$matches"; exit 1
+          fi
+          echo "No committed secret material detected."
