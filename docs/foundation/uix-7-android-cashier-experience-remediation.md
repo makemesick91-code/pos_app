@@ -8,7 +8,7 @@ backend domain services. It is a remediation, not a feature expansion, and it
 never becomes a second pricing, payment, QRIS, settlement, or sync engine.
 
 The modular enforceable rule is `.claude/rules/55-android-cashier-experience.md`.
-The rule-set IDs (UIX7-R001..UIX7-R044) are mirrored in
+The rule-set IDs (UIX7-R001..UIX7-R051) are mirrored in
 `docs/PROJECT_RULES.md`. This document is the narrative foundation.
 
 ## App shape (baseline)
@@ -113,3 +113,22 @@ captured (UIX7-R044). No runtime evidence is fabricated.
 - UIX7-R042 — Composer --no-dev verification not reliant on Faker/dev packages.
 - UIX7-R043 — Shared-VPS sync must not change/regress DaengtisiaMS.
 - UIX7-R044 — GO requires authoritative CI, device runtime verification, evidence closure, local/origin/VPS exact match, immutable previous tags.
+
+## Build-variant endpoint & physical-device pilot connectivity
+
+The original UIX-7 remediation build-typed the API base URL but left the default
+`debug` variant (which produced the downloaded `app-debug.apk`) pointing at the
+Android Emulator host alias `http://10.0.2.2:8000/`. `10.0.2.2` only resolves the
+developer host from inside the emulator, so on a real phone the app could not
+reach the backend and showed "Tidak dapat terhubung ke server" — even though
+`https://aishpos.online/` login was independently verified HTTP 200. The fix adds
+a dedicated, installable `pilot` build variant that targets the governed HTTPS
+backend and isolates the emulator cleartext exceptions to the debug source set.
+
+- UIX7-R045 — Emulator development and physical-device pilot API endpoints use explicit separate build variants (`debug` vs `pilot`).
+- UIX7-R046 — Debug emulator builds may use the `10.0.2.2` host alias; pilot and release builds must use the governed HTTPS backend (`https://aishpos.online/`).
+- UIX7-R047 — Pilot and release variants deny cleartext and never use trust-all TLS or disabled hostname validation; HTTP logging does not run for the debuggable pilot variant.
+- UIX7-R048 — Localhost/emulator cleartext exceptions stay in the debug-only source set (`src/debug/res/xml`) and never enter pilot/release manifests.
+- UIX7-R049 — A physical-device pilot APK is installable, approved-cert signed, source-traceable, and verified to contain the governed pilot HTTPS API URL.
+- UIX7-R050 — Connection-error investigation distinguishes DNS, TLS, transport, authentication, authorization, and invalid-build-endpoint failures from observed evidence.
+- UIX7-R051 — UIX-7 GO stays blocked until physical-device authenticated verification, offline/reconnect verification, synthetic cleanup, and evidence closure are complete; on-device evidence is operator-captured, never fabricated.

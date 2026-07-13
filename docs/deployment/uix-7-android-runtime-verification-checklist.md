@@ -7,14 +7,33 @@ UIX7-R039) requires real hardware. The GO tag
 `uix-7-android-cashier-experience-remediation-go` is **deferred** until the
 evidence below is captured. Do not fabricate any result.
 
-## 0. Prerequisites
+## 0. Root cause of the physical-device connectivity failure (fixed in code)
+The first pilot attempt installed `app-debug.apk`, whose `debug` build type is
+scoped to the **Android Emulator** and targets `http://10.0.2.2:8000/`. The host
+alias `10.0.2.2` only resolves the developer machine from inside the emulator, so
+on a real phone the app could not reach the backend ("Tidak dapat terhubung ke
+server") even though `https://aishpos.online/` login was independently HTTP 200.
+This was **not** bad credentials, backend/DNS/TLS outage, or an auth failure — it
+was the wrong build endpoint (UIX7-R050). The fix is a dedicated, installable,
+debug-signed **`pilot`** build variant that targets the governed HTTPS backend
+with cleartext denied and no HTTP logging (UIX7-R045..R049).
+
+## 0.1 Prerequisites
 - Approved physical device or hardware-accelerated emulator (minSdk 26+).
-- Pilot artifact from CI (`assembleRelease` → `app-release-unsigned.apk`, sign
-  locally with a disposable debug/pilot key) OR `assembleDebug` (`app-debug.apk`,
-  already debug-signed and installable). Record: source commit, `applicationId`,
-  `versionName`, `versionCode`, variant, SHA-256 (see §Artifact).
-- Backend: `https://aishpos.online` (pilot). Release build points here by default
-  (`BuildConfig.API_BASE_URL`); cleartext is denied by `network_security_config`.
+- **Pilot artifact — use `./gradlew :app:assemblePilot`** →
+  `android/app/build/outputs/apk/pilot/app-pilot.apk`. It is debug-signed (so
+  installable via `adb install -r`) and its `BuildConfig.API_BASE_URL` is
+  `https://aishpos.online/`. Do **not** use `app-debug.apk` on a physical device
+  (emulator endpoint), and do **not** use the unsigned release APK. Record: source
+  commit, `applicationId`, `versionName`, `versionCode`, variant `pilot`, SHA-256,
+  signing fingerprint (see §Artifact).
+- Backend: `https://aishpos.online` (pilot). Pilot/release point here by default
+  (`BuildConfig.API_BASE_URL`); cleartext is denied by `network_security_config`
+  (system trust store only; no trust-all, no hostname override).
+- Confirm the installed pilot build actually talks HTTPS: `adb logcat` must show
+  requests to `aishpos.online` and **never** to `10.0.2.2`/`localhost`. A
+  `CLEARTEXT communication not permitted` or `ConnectException 10.0.2.2` in a
+  pilot build is an automatic FAIL.
 - **Synthetic data only** — a disposable tenant, outlet, device, cashier, a few
   products, and test transactions provisioned through canonical services. Never
   real merchant/customer data. Never a real QRIS charge (use sandbox/test fixture).

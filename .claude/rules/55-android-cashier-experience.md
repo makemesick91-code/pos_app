@@ -120,3 +120,28 @@ presents and orchestrates only.
   DaengtisiaMS.
 - UIX7-R044 — GO requires authoritative CI, device runtime verification, evidence
   closure, local/origin/VPS exact match, and immutable previous tags.
+
+## Build-variant endpoint & pilot connectivity (physical-device fix)
+- UIX7-R045 — Emulator development and physical-device pilot API endpoints must
+  use explicit separate build variants (`debug` vs `pilot`); they are never the
+  same artifact reconfigured at runtime.
+- UIX7-R046 — Debug emulator builds may use the `10.0.2.2` host alias, but pilot
+  and release builds must resolve to the governed HTTPS backend
+  (`https://aishpos.online/`). A physical-device build must never ship the
+  emulator alias.
+- UIX7-R047 — Pilot and release variants must deny cleartext traffic and must
+  never use a trust-all TrustManager or a disabled/overridden hostname
+  verification; HTTP logging must not run for the debuggable pilot variant.
+- UIX7-R048 — Localhost and emulator cleartext exceptions must remain in the
+  debug-only Android source set (`src/debug/res/xml`) and must not enter the
+  pilot or release merged manifest/network-security config.
+- UIX7-R049 — A physical-device pilot APK must be installable, signed by an
+  approved pilot/debug certificate, source-traceable, and verified to contain the
+  governed pilot HTTPS API URL.
+- UIX7-R050 — Connection-error investigation must distinguish DNS, TLS,
+  transport, authentication, authorization, and invalid-build-endpoint failures
+  using observed evidence, never assumption.
+- UIX7-R051 — UIX-7 GO remains blocked until physical-device authenticated
+  verification, offline/reconnect verification, synthetic cleanup, and evidence
+  closure are complete; on-device evidence is operator-captured and never
+  fabricated.
