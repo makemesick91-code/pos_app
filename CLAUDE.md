@@ -102,9 +102,28 @@ appear to conflict, the modular rule in `.claude/rules/` is authoritative.
   invoice collection state ("Lunas" only when `collection_state = paid`). See
   `.claude/rules/35-subscription-billing-invoice-integrity.md` (UIX5-R001..R028).
 
+## Support/observability/incident console boundary (UIX-6)
+- The Support, Observability & Incident console is read-only presentation over the
+  canonical Sprint 35 (`App\Services\SupportOperations\*`) and Sprint 36
+  (`App\Services\Observability\*`) domains on two surfaces: Platform Admin
+  (`/admin/support/*`, `/admin/observability`, `/admin/incidents/*`,
+  `platform.admin.web`) and Tenant Owner (`/owner/support/*`, `owner` guard). It
+  is not a second support/alert/incident/health engine.
+- Read adapters live in `App\Services\SupportConsole\*` and never recompute health,
+  alert, or incident state. Owner access is tenant-scoped and deny-by-default; a
+  foreign/unknown incident id is 404 and owner incidents never use implicit
+  route-model binding. The console is read-only (no mutation route); incident
+  transitions stay in their governed services.
+- Truthful health: unknown/stale health is never presented as healthy — the
+  observability presenter marks a component `unknown` when evidence is absent/stale
+  and surfaces snapshot freshness. Unsupported values render "Tidak tersedia". No
+  raw logs, stack traces, secrets, or infrastructure identifiers reach the browser.
+  See `.claude/rules/45-support-observability-incident-governance.md` (UIX6-R001..R033).
+
 ## Pointers
-- Modular enforceable rules: `.claude/rules/` (00–90, plus 25 tenant-owner boundary
-  and 35 billing-console integrity). Root agent index: `AGENTS.md`.
+- Modular enforceable rules: `.claude/rules/` (00–90, plus 25 tenant-owner boundary,
+  35 billing-console integrity, and 45 support/observability/incident governance).
+  Root agent index: `AGENTS.md`.
 - Full project rules & rule-set IDs (incl. UIX3-R001..R016): `docs/PROJECT_RULES.md`.
 - Architecture/foundation docs: `docs/foundation/` (see
   `docs/foundation/uix-3-platform-admin-control-center.md`).

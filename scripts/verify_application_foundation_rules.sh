@@ -142,6 +142,57 @@ else
   pass "billing views use the central rupiah component"
 fi
 
+# 5e. UIX-6 support/observability/incident console foundation (UIX6-R001..R033).
+for d in .claude/rules/45-support-observability-incident-governance.md \
+         docs/foundation/uix-6-support-observability-incident-console.md \
+         docs/governance/support-observability-incident-foundation.md; do
+  [ -f "$d" ] && pass "uix-6 doc $(basename "$d")" || bad "missing uix-6 doc $d"
+done
+# Every UIX6 rule id is persisted in the modular rule, the foundation doc, and PROJECT_RULES.
+missing_uix6=""
+for i in $(seq -w 1 33); do
+  id="UIX6-R0$i"
+  if grep -q "$id" .claude/rules/45-support-observability-incident-governance.md \
+     && grep -q "$id" docs/foundation/uix-6-support-observability-incident-console.md \
+     && grep -q "$id" docs/PROJECT_RULES.md; then :; else missing_uix6="$missing_uix6 $id"; fi
+done
+[ -z "$missing_uix6" ] && pass "UIX6-R001..R033 fully persisted" || bad "UIX-6 rule ids not fully persisted:$missing_uix6"
+# Support/observability/incident console surfaces are wired in the guarded web routes (UIX6-R003).
+grep -q "AdminSupportController" backend/routes/web.php && pass "admin support routes present" || bad "admin support routes missing"
+grep -q "AdminObservabilityWebController" backend/routes/web.php && pass "admin observability route present" || bad "admin observability route missing"
+grep -q "AdminIncidentController" backend/routes/web.php && pass "admin incident routes present" || bad "admin incident routes missing"
+grep -q "OwnerSupportController" backend/routes/web.php && pass "owner support routes present" || bad "owner support routes missing"
+# Read adapters exist and reuse canonical services (UIX6-R001/R002).
+for svc in ObservabilityConsoleReadService SupportConsoleReadService IncidentConsoleReadService OwnerSupportReadService; do
+  [ -f "backend/app/Services/SupportConsole/$svc.php" ] && pass "read adapter $svc" || bad "missing read adapter $svc"
+done
+# Console controllers are wired ONLY in the guarded web routes (no public/API exposure).
+if git ls-files 'backend/routes' | grep -v 'routes/web.php' \
+   | xargs grep -lnE 'AdminSupportController|AdminObservabilityWebController|AdminIncidentController|OwnerSupportController' 2>/dev/null | grep -q .; then
+  bad "support/observability/incident console controller wired outside guarded web routes"
+else
+  pass "support console controllers only in guarded web routes"
+fi
+# UIX-6 UI controllers perform no direct model mutation (UIX6-R015/R016).
+if grep -nE '->(save|update|delete|forceDelete|insert)\(' \
+     backend/app/Http/Controllers/Admin/AdminSupportController.php \
+     backend/app/Http/Controllers/Admin/AdminObservabilityWebController.php \
+     backend/app/Http/Controllers/Admin/AdminIncidentController.php \
+     backend/app/Http/Controllers/Owner/OwnerSupportController.php 2>/dev/null | grep -q .; then
+  bad "a UIX-6 UI controller performs a direct model mutation"
+else
+  pass "UIX-6 UI controllers are read-only"
+fi
+# No raw stack trace / raw log payload rendering in the UIX-6 views (UIX6-R009).
+if git ls-files 'backend/resources/views/admin/support' 'backend/resources/views/admin/observability' \
+     'backend/resources/views/admin/incidents' 'backend/resources/views/owner/support' \
+     'backend/resources/views/support' \
+   | xargs grep -lnE 'getTraceAsString|\{!![[:space:]]*\$|storage_path\(.logs|file_get_contents\(.*logs' 2>/dev/null | grep -q .; then
+  bad "a UIX-6 view renders raw trace/log/unescaped dynamic content"
+else
+  pass "UIX-6 views render no raw trace/log/unescaped content"
+fi
+
 # 6. No tracked secret files / keys.
 if git ls-files | grep -qE '(^|/)\.env$|\.pem$|id_rsa|id_ed25519|_ed25519$|\.p12$|\.keystore$'; then
   bad "tracked secret/key file"
