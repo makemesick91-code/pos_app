@@ -46,6 +46,22 @@ All figures below are observed from GitHub Actions and the VPS on 2026-07-13.
 - Legacy `sprint*-ci`/`uix*-ci` (45) neutralized to `workflow_dispatch`; none auto-fired
   on PR #58 or on the `main` push (observed count = 1 each).
 
+### Lane D (evidence-only) live test — PR #59
+
+- This evidence PR changes only `docs/deployment/cicd-ctrl-2-deployment-evidence.md`.
+  Authoritative run `29259428832` (head `5bada5e`): classify ✓, security ✓, **evidence ✓**,
+  backend/android/foundation **skipped**, authoritative-summary ✓. A docs/evidence change
+  no longer triggers the backend suite or any Android build.
+
+### Escalation live test — throwaway PR #60 (cancelled, not merged)
+
+- A branch mixing an evidence-doc edit **and** a `scripts/ci/run_backend_governance.sh`
+  change: authoritative run `29259547163` classified `full_ci_required=true` — backend,
+  consolidated governance, foundation, and all-variant Android jobs all started while the
+  evidence job was **skipped**. The run was cancelled after the `classify` job proved
+  escalation (to avoid a needless Android build) and PR #60 was closed unmerged and its
+  branch deleted (CICD2-R019).
+
 ## Adversarial review (addressed before final candidate)
 
 Independent review found and fixed, in `c3278d7`: (1) equivalence now also requires the
