@@ -28,9 +28,13 @@ jobs:
           bash scripts/uix6_design_gate.sh
           bash scripts/uix7_android_design_gate.sh
           bash scripts/uix7_pilot_connectivity_gate.sh
+          bash scripts/uix7_runtime_closure_gate.sh
 
       - name: CICD-CTRL-2 CI architecture gate
         run: bash scripts/ci/cicd_ctrl_2_gate.sh
 
       - name: Change classifier self-tests
         run: bash tests/ci/classify_changes_test.sh
+
+      - name: UIX-7 runtime closure gate self-tests
+        run: bash tests/ci/uix7_runtime_closure_gate_test.sh

@@ -1572,7 +1572,7 @@ rule: `.claude/rules/45-support-observability-incident-governance.md`.
 32. `UIX6-R032` — Shared-VPS deployment must not change or regress DaengtisiaMS.
 33. `UIX6-R033` — GO requires observed evidence, authoritative CI success, local/origin/VPS exact match, runtime verification, and immutable previous tags.
 
-## Aish POS UIX-7 — Android Cashier Experience Remediation (UIX7-R001..UIX7-R051)
+## Aish POS UIX-7 — Android Cashier Experience Remediation (UIX7-R001..UIX7-R070)
 
 Remediation of the Android Cashier app (`com.aishtech.poslite`) cashier
 experience over existing Android/backend domain services. Modular rule:
@@ -1630,6 +1630,25 @@ experience over existing Android/backend domain services. Modular rule:
 49. `UIX7-R049` — A physical-device pilot APK must be installable, signed by an approved pilot/debug certificate, source-traceable, and verified to contain the governed pilot HTTPS API URL.
 50. `UIX7-R050` — Connection-error investigation must distinguish DNS, TLS, transport, authentication, authorization, and invalid-build-endpoint failures using observed evidence.
 51. `UIX7-R051` — UIX-7 GO remains blocked until physical-device authenticated verification, offline/reconnect verification, synthetic cleanup, and evidence closure are complete.
+52. `UIX7-R052` — Device activation must bind the authenticated Cashier, tenant, outlet, device identifier, and activation state without granting cross-tenant or elevated access.
+53. `UIX7-R053` — A transaction may be presented as successful only after the required durable local save (offline) or canonical server acknowledgement (online).
+54. `UIX7-R054` — Every transaction attempt must use a stable idempotency key (`clientReference`) preserved across retries, process restart, and reconnect.
+55. `UIX7-R055` — Rapid tap, retry, reconnect, and worker replay must produce exactly one canonical financial transaction.
+56. `UIX7-R056` — Offline transactions must survive force-stop, process death, application restart, device restart where supported, and temporary loss of connectivity.
+57. `UIX7-R057` — A local transaction may transition to synced only after canonical server acknowledgement is durably recorded.
+58. `UIX7-R058` — Cart, transaction, payment, change, receipt, history, and backend totals must match exactly using integer monetary units (whole rupiah).
+59. `UIX7-R059` — A stale previous receipt or transaction result must never be displayed as the result of the current cart.
+60. `UIX7-R060` — QRIS created or awaiting payment must never be presented as paid, confirmed, settled, or successful.
+61. `UIX7-R061` — QRIS status transitions must be monotonic, auditable, idempotent, tenant-scoped, and correlated to exactly one transaction.
+62. `UIX7-R062` — Runtime evidence must be captured from an actual physical device and must not be replaced by emulator or unit-test evidence.
+63. `UIX7-R063` — Runtime logs and screenshots must redact credentials, tokens, customer PII, payment secrets, and QR payloads.
+64. `UIX7-R064` — Accessibility verification must include TalkBack, focus order, semantic labels, touch targets, font scaling, error announcements, and the primary cashier workflows.
+65. `UIX7-R065` — All synthetic Cashier, device, product, transaction, payment, QRIS, sync queue, and test artifacts must be removed or deactivated before UIX-7 GO.
+66. `UIX7-R066` — UIX-7 GO requires local, origin, VPS, final evidence commit, and annotated tag peeled commit to exact-match.
+67. `UIX7-R067` — Any runtime-discovered source defect requires regression tests and one authoritative full CI on the final candidate.
+68. `UIX7-R068` — Evidence-only closure may use lightweight CI only when the CICD-CTRL-2 classifier proves that no executable, source, workflow, rules, dependency, schema, config, or test file changed.
+69. `UIX7-R069` — A runtime defect involving financial correctness, transaction loss, duplication, authorization, tenant isolation, QRIS false-success, or credential leakage is an automatic NO-GO.
+70. `UIX7-R070` — Physical-device runtime verification, cleanup, evidence, VPS synchronization, DMS non-regression, and tag exact-match are all mandatory for GO.
 
 ## CICD-CTRL-2 — Single Authoritative Full CI & Evidence Path Optimization Rules
 
