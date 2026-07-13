@@ -3,7 +3,7 @@
 Aish POS is a multi-tenant Android Point-of-Sale SaaS with a Laravel (PHP 8.5)
 backend in `backend/`. This file is the concise agent index; the enforceable,
 authoritative detail lives in `CLAUDE.md`, `.claude/rules/` (00–90, plus 25, 35,
-45, and 55), and `docs/PROJECT_RULES.md`. When guidance here and a modular rule
+45, 55, and 72), and `docs/PROJECT_RULES.md`. When guidance here and a modular rule
 conflict, the modular rule wins.
 
 ## Repository structure
@@ -89,6 +89,16 @@ Observability & Incident console (`/admin/support/*`, `/admin/observability`,
 - Full test suite + authoritative CI must be green before merge. Every deploy is
   bracketed by a DaengtisiaMS non-regression check (rule 80). GO tags are annotated,
   immutable, and require observed evidence + local/origin/VPS exact match (rule 90).
+
+## Authoritative CI consolidation (CICD-CTRL-2)
+- One authoritative gate: **AISH POS Authoritative PR CI** (`ci-authoritative.yml`).
+  A fail-closed classifier (`scripts/ci/classify_changes.sh`) decides full vs
+  lightweight; only strict docs/evidence take the lightweight lane. `main` runs
+  `ci-main-smoke.yml` (source-equivalence + deployability, escalating to full when
+  unproven). Legacy `sprint*-ci`/`uix*-ci` are `workflow_dispatch`-only (kept, not
+  deleted). Never weaken a required gate to turn CI green. Architecture gate:
+  `scripts/ci/cicd_ctrl_2_gate.sh`. See
+  `.claude/rules/72-authoritative-ci-consolidation.md` (CICD2-R001..R024).
 
 ## Pointers
 - `CLAUDE.md`, `.claude/rules/` (esp. 25 owner console, 35 billing console,

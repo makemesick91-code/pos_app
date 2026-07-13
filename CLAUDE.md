@@ -150,8 +150,28 @@ appear to conflict, the modular rule in `.claude/rules/` is authoritative.
   device evidence is captured — never fabricated. See
   `.claude/rules/55-android-cashier-experience.md` (UIX7-R001..R044).
 
+## Authoritative CI consolidation (CICD-CTRL-2)
+- CI is consolidated into four lanes driven by a fail-closed change classifier
+  (`scripts/ci/classify_changes.sh`). The single authoritative gate is **AISH POS
+  Authoritative PR CI** (`ci-authoritative.yml`, `on: pull_request`): exactly one
+  complete validation per final source candidate, concurrency-cancelling stale
+  SHAs, ending in a truthful `authoritative-summary` gate. `main` runs
+  `ci-main-smoke.yml` (source-equivalence + deployability, escalating to full when
+  unproven). Docs/evidence changes take a lightweight lane ONLY when the classifier
+  confirms the strict allowlist — rules, workflows, scripts, deps, schema, config,
+  tests, and source never qualify and always force full CI.
+- Shared logic lives in reusable workflows (`_backend-tests`, `_android-build`,
+  `_foundation-gates`, `_security-validation`, `_evidence-validation`). The 45
+  legacy `sprint*-ci`/`uix*-ci` workflows are neutralized to `workflow_dispatch`
+  (kept, manual-only), never deleted. Optimization removes redundant execution and
+  never weakens a required gate. `main` is not branch-protected, so the authoritative
+  gate is enforced by rule + reviewer discipline. See
+  `.claude/rules/72-authoritative-ci-consolidation.md` (CICD2-R001..R024).
+
 ## Pointers
 - Modular enforceable rules: `.claude/rules/` (00–90, plus 25 tenant-owner boundary,
+  35 billing, 45 support/observability, 55 android cashier, 72 authoritative CI
+  consolidation). Legacy line kept for continuity:
   35 billing-console integrity, 45 support/observability/incident governance, and
   55 android cashier experience). Root agent index: `AGENTS.md`.
 - Full project rules & rule-set IDs (incl. UIX3-R001..R016): `docs/PROJECT_RULES.md`.

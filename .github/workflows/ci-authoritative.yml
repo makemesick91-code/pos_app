@@ -1,0 +1,138 @@
+# =============================================================================
+# AISH POS — Authoritative PR CI  (CICD-CTRL-2, Lane B)
+# -----------------------------------------------------------------------------
+# EXACTLY ONE complete authoritative validation per final source candidate
+# (CICD2-R001). A fail-closed classifier decides the lane; concurrency cancels
+# stale SHAs (CICD2-R009/R010); the summary job is the single truthful gate.
+# This is the required check by discipline (main is not branch-protected).
+# =============================================================================
+name: AISH POS Authoritative PR CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: authoritative-pr-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  classify:
+    name: Classify change set (fail-closed)
+    runs-on: ubuntu-latest
+    outputs:
+      full_ci_required: ${{ steps.c.outputs.full_ci_required }}
+      docs_only: ${{ steps.c.outputs.docs_only }}
+      evidence_only: ${{ steps.c.outputs.evidence_only }}
+      classification: ${{ steps.c.outputs.classification }}
+      android_changed: ${{ steps.c.outputs.android_changed }}
+      backend_changed: ${{ steps.c.outputs.backend_changed }}
+      base_sha: ${{ steps.refs.outputs.base }}
+      head_sha: ${{ steps.refs.outputs.head }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Resolve base/head SHAs
+        id: refs
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "base=${{ github.event.pull_request.base.sha }}" >>"$GITHUB_OUTPUT"
+            echo "head=${{ github.event.pull_request.head.sha }}" >>"$GITHUB_OUTPUT"
+          else
+            echo "base=$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)" >>"$GITHUB_OUTPUT"
+            echo "head=$(git rev-parse HEAD)" >>"$GITHUB_OUTPUT"
+          fi
+      - name: Classify
+        id: c
+        run: bash scripts/ci/classify_changes.sh "${{ steps.refs.outputs.base }}" "${{ steps.refs.outputs.head }}"
+
+  backend:
+    name: Backend (full suite + governance)
+    needs: classify
+    if: ${{ needs.classify.outputs.full_ci_required == 'true' }}
+    uses: ./.github/workflows/_backend-tests.yml
+
+  android:
+    name: Android (all-variant build + tests)
+    needs: classify
+    if: ${{ needs.classify.outputs.full_ci_required == 'true' }}
+    uses: ./.github/workflows/_android-build.yml
+
+  foundation:
+    name: Foundation + design + CI-architecture gates
+    needs: classify
+    if: ${{ needs.classify.outputs.full_ci_required == 'true' }}
+    uses: ./.github/workflows/_foundation-gates.yml
+
+  security:
+    name: Security validation (secrets / artifacts)
+    needs: classify
+    uses: ./.github/workflows/_security-validation.yml
+
+  evidence:
+    name: Strict evidence / docs validation
+    needs: classify
+    if: ${{ needs.classify.outputs.full_ci_required != 'true' }}
+    uses: ./.github/workflows/_evidence-validation.yml
+    with:
+      base_ref: ${{ needs.classify.outputs.base_sha }}
+      head_ref: ${{ needs.classify.outputs.head_sha }}
+
+  authoritative-summary:
+    name: Authoritative summary (single required gate)
+    needs: [classify, backend, android, foundation, security, evidence]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate mandatory results
+        env:
+          CLASSIFICATION: ${{ needs.classify.outputs.classification }}
+          FULL: ${{ needs.classify.outputs.full_ci_required }}
+          R_CLASSIFY: ${{ needs.classify.result }}
+          R_BACKEND: ${{ needs.backend.result }}
+          R_ANDROID: ${{ needs.android.result }}
+          R_FOUNDATION: ${{ needs.foundation.result }}
+          R_SECURITY: ${{ needs.security.result }}
+          R_EVIDENCE: ${{ needs.evidence.result }}
+          HEAD_SHA: ${{ needs.classify.outputs.head_sha }}
+        run: |
+          set -euo pipefail
+          echo "Change classification : $CLASSIFICATION (full_ci_required=$FULL)"
+          echo "Source SHA            : $HEAD_SHA"
+          echo "results: classify=$R_CLASSIFY backend=$R_BACKEND android=$R_ANDROID foundation=$R_FOUNDATION security=$R_SECURITY evidence=$R_EVIDENCE"
+
+          fail=0
+          require_success() { # <name> <result>
+            if [ "$2" != "success" ]; then echo "::error::mandatory job '$1' result='$2' (expected success)"; fail=1; fi
+          }
+          require_skipped() { # <name> <result>
+            if [ "$2" != "skipped" ]; then echo "::error::job '$1' result='$2' (expected skipped for this classification — malformed condition?)"; fail=1; fi
+          }
+
+          # classify + security are mandatory on every path.
+          require_success classify "$R_CLASSIFY"
+          require_success security "$R_SECURITY"
+
+          if [ "$FULL" = "true" ]; then
+            require_success backend "$R_BACKEND"
+            require_success android "$R_ANDROID"
+            require_success foundation "$R_FOUNDATION"
+            require_skipped evidence "$R_EVIDENCE"
+            echo "AUTHORITATIVE FULL CI executed for $HEAD_SHA."
+          else
+            require_success evidence "$R_EVIDENCE"
+            require_skipped backend "$R_BACKEND"
+            require_skipped android "$R_ANDROID"
+            require_skipped foundation "$R_FOUNDATION"
+            echo "LIGHTWEIGHT evidence/docs validation executed for $HEAD_SHA."
+          fi
+
+          if [ "$fail" != 0 ]; then
+            echo "::error::Authoritative summary FAILED — mandatory validation incomplete."
+            exit 1
+          fi
+          echo "Authoritative summary PASSED."

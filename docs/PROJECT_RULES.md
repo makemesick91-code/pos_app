@@ -1630,3 +1630,30 @@ experience over existing Android/backend domain services. Modular rule:
 49. `UIX7-R049` — A physical-device pilot APK must be installable, signed by an approved pilot/debug certificate, source-traceable, and verified to contain the governed pilot HTTPS API URL.
 50. `UIX7-R050` — Connection-error investigation must distinguish DNS, TLS, transport, authentication, authorization, and invalid-build-endpoint failures using observed evidence.
 51. `UIX7-R051` — UIX-7 GO remains blocked until physical-device authenticated verification, offline/reconnect verification, synthetic cleanup, and evidence closure are complete.
+
+## CICD-CTRL-2 — Single Authoritative Full CI & Evidence Path Optimization Rules
+
+1. `CICD2-R001` — Exactly one complete authoritative full CI is required for each final source candidate commit.
+2. `CICD2-R002` — Development pushes use targeted validation and do not automatically duplicate authoritative full PR CI.
+3. `CICD2-R003` — A source change after a green authoritative run invalidates the previous result and requires a new authoritative run.
+4. `CICD2-R004` — Docs/evidence lightweight CI is permitted only after the fail-closed repository-owned classifier confirms a strict approved allowlist.
+5. `CICD2-R005` — Rules, workflows, scripts, dependencies, schemas, configs, tests, deployment files, and source files are never classified as lightweight documentation changes.
+6. `CICD2-R006` — Unknown, mixed, renamed, or deleted sensitive paths require full authoritative CI.
+7. `CICD2-R007` — Main post-merge smoke may avoid full-suite duplication only when tested-source equivalence is structurally proven (git tree-hash match).
+8. `CICD2-R008` — If source equivalence cannot be proven, main must escalate to full CI.
+9. `CICD2-R009` — Concurrency may cancel stale runs only when a newer authoritative run exists for the same PR.
+10. `CICD2-R010` — The sole current authoritative run must never be cancelled as a runtime-saving shortcut.
+11. `CICD2-R011` — Duplicate workflows must be consolidated through reusable workflows or retired only after dependency and required-check analysis.
+12. `CICD2-R012` — Security, tenancy, financial integrity, offline/sync, foundation, deployability, and release governance gates may not be weakened for runtime savings.
+13. `CICD2-R013` — Mandatory failures may not use continue-on-error or be converted into warnings.
+14. `CICD2-R014` — Infrastructure flake classification requires step-level evidence and a successful controlled rerun without source change.
+15. `CICD2-R015` — Cache and artifact reuse must be source-aware and must never replace required test execution.
+16. `CICD2-R016` — Untrusted pull-request code must not receive production, deployment, signing, payment, database, or SSH secrets.
+17. `CICD2-R017` — pull_request_target must not execute untrusted checked-out pull-request code.
+18. `CICD2-R018` — Evidence closure commits must prove application source equivalence to the fully tested candidate.
+19. `CICD2-R019` — A lightweight evidence PR that changes executable or governing content automatically escalates to full CI.
+20. `CICD2-R020` — The final release commit must have sufficient CI provenance, evidence validation, source synchronization, and GO-tag exact-match proof.
+21. `CICD2-R021` — Prior GO tags are immutable.
+22. `CICD2-R022` — CI optimization must be measured using observed workflow counts and runtime before and after implementation.
+23. `CICD2-R023` — CI runtime savings never override absence-of-proof governance.
+24. `CICD2-R024` — Shared-VPS source synchronization must not regress DaengtisiaMS.
