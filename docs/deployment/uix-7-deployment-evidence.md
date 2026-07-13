@@ -86,10 +86,51 @@ Procedure: `docs/deployment/uix-7-android-runtime-verification-checklist.md`.
 **This evidence is not yet captured** (no device in the build environment), so it
 is honestly recorded as pending rather than fabricated.
 
+## 7. Physical-device pilot connectivity fix (PR #56) — CODE GREEN, GO STILL DEFERRED
+The first physical-device pilot attempt failed with "Tidak dapat terhubung ke
+server". Observed root cause: the installed `app-debug.apk` uses the `debug`
+build type, which targets the **Android Emulator** host alias
+`http://10.0.2.2:8000/`. `10.0.2.2` only resolves the developer host from inside
+the emulator, so it is unreachable from a real phone. `https://aishpos.online/`
+login was independently verified HTTP 200 — this was a wrong-build-endpoint
+failure (UIX7-R050), not credentials/backend/DNS/TLS/auth.
+
+Fix (branch `feature/uix-7-pilot-api-connectivity-fix`, PR #56, off `baf8861`):
+- New installable, debug-signed **`pilot`** build variant
+  (`./gradlew :app:assemblePilot` → `app/build/outputs/apk/pilot/app-pilot.apk`)
+  targeting `https://aishpos.online/`; endpoint override applied after
+  `initWith(debug)` so it never inherits the emulator URL (UIX7-R045/R046/R049).
+- `src/main` network-security config denies cleartext with the system trust store
+  only (no trust-all, no hostname override); the `10.0.2.2`/`localhost`/`127.0.0.1`
+  cleartext exceptions were moved to the debug-only source set
+  `src/debug/res/xml/` so pilot/release never inherit them (UIX7-R047/R048).
+- HTTP logging gated to `BuildConfig.BUILD_TYPE == "debug"` (not `BuildConfig.DEBUG`)
+  so the debuggable pilot variant logs nothing against the live backend (UIX7-R047).
+- Machine-verifiable gates: `ApiBaseUrlVariantTest` (per-variant generated
+  BuildConfig assertion) + `scripts/uix7_pilot_connectivity_gate.sh`; `uix7-ci`
+  now builds `assemblePilot`, runs `testDebug/Pilot/ReleaseUnitTest`, asserts the
+  generated BuildConfig endpoint per variant, and uploads the pilot APK.
+- Foundation rules UIX7-R045..R051 added to rule 55, PROJECT_RULES, and the
+  foundation doc; operator runtime checklist §0 updated to build/install via
+  `assemblePilot`.
+
+Authoritative CI (PR #56 head): **330 checks passed, 0 failed** after re-running a
+single transient KSP plugin-portal resolution flake (Sprint 16 Android job) that
+was unrelated to this change (root `android/build.gradle.kts`, unchanged). UIX-7
+CI `UIX-7 Android build & unit tests` and `... foundation + design gate` both
+`completed / success` on JDK 21 with the real Android SDK. Merged to `main` as
+`91a2fa4`.
+
+**On-device verification is NOT part of this evidence** — this environment has no
+Android SDK/JDK 21/adb/device, so the signed pilot APK build and the physical
+login/sale/offline/QRIS/reconnect verification, plus synthetic-data cleanup, remain
+operator-performed per §6 and the checklist. Not fabricated.
+
 ## GO / NO-GO decision
 **NO-GO (deferred).** Everything reachable without a device is green:
-authoritative CI (330/0), merge to `main`, exact local/origin/VPS match at
-`76facbe`, backend/HTTPS runtime healthy, runtime ownership preserved, and
+authoritative CI (330/0, incl. the PR #56 pilot-connectivity fix — see §7), merge
+to `main` (now `91a2fa4`), exact local/origin/VPS match, backend/HTTPS runtime
+healthy, runtime ownership preserved, and
 DaengtisiaMS non-regressed. The single open release blocker is the authenticated
 on-device runtime verification (UIX7-R039). Per rule 90 / UIX7-R044, absence of
 that observed evidence is NO-GO, so the annotated GO tag
