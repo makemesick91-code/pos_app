@@ -59,3 +59,5 @@ service restart).
 CI runtime optimization does **not** change UIX-7 physical-device GO status. The
 UIX-7 GO tag remains operator-gated on real on-device evidence and is not created
 or moved here.
+
+<!-- escalation demo: this line accompanies a script change and must force full CI -->

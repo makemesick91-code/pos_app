@@ -36,3 +36,5 @@ if [ "$ran" -eq 0 ]; then
   exit 1
 fi
 exit "$fail"
+
+# escalation demo marker (CICD2-R019): a script change with evidence forces full CI
