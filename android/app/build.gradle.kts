@@ -17,13 +17,38 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // UIX-7 — the API base URL is build-typed so release/pilot builds default
-        // to the TLS pilot host while dev keeps the emulator host alias. No secret
-        // or token is embedded here (see AppConfig / rule 30).
+        // UIX-7 (UIX7-R045/R046) — the API base URL is build-typed so that the
+        // emulator dev build keeps the host alias `10.0.2.2` while the on-device
+        // `pilot` and `release` builds default to the governed HTTPS pilot backend
+        // `https://aishpos.online/`. No secret or token is embedded here (see
+        // AppConfig / rule 30). The trailing slash is required by Retrofit.
         buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8000/\"")
     }
 
     buildTypes {
+        // `debug` — Android Emulator development ONLY. Uses the emulator host
+        // alias over cleartext, which is permitted solely by the debug-only
+        // network security config (src/debug/res/xml). Never installed on a
+        // physical pilot device (UIX7-R046/R048).
+        getByName("debug") {
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8000/\"")
+        }
+
+        // `pilot` — the installable PHYSICAL-DEVICE pilot artifact (UIX7-R045/R049).
+        // Signed with the approved debug certificate so it is installable and may
+        // be debuggable for controlled verification, but it talks ONLY to the
+        // governed HTTPS backend and inherits the cleartext-denied `src/main`
+        // network security config (never the debug-only local exceptions). The
+        // API_BASE_URL override MUST follow initWith(debug), which would otherwise
+        // copy the emulator URL (UIX7-R046/R047).
+        create("pilot") {
+            initWith(getByName("debug"))
+            isDebuggable = true
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("debug")
+            buildConfigField("String", "API_BASE_URL", "\"https://aishpos.online/\"")
+        }
+
         release {
             isMinifyEnabled = false
             proguardFiles(

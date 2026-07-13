@@ -138,6 +138,12 @@ appear to conflict, the modular rule in `.claude/rules/` is authoritative.
   guard. Tokens/tenant DB are not backed up (`allowBackup=false`); cleartext HTTP
   is denied by default (release/pilot → `https://aishpos.online`). No credentials/
   tokens/PII in logs, screenshots, or test artifacts.
+- Endpoints are build-variant-scoped: only the emulator `debug` build uses
+  `http://10.0.2.2:8000/` (with debug-only cleartext exceptions in
+  `src/debug/res/xml`); the installable, debug-signed `pilot` variant and
+  `release` target `https://aishpos.online/` over TLS-only, no trust-all, and no
+  HTTP logging. Physical-device pilot verification uses `assemblePilot`
+  (UIX7-R045..R051).
 - This environment cannot build/run Android (no SDK, JDK 25); CI (JDK 21) is the
   build/test gate. On-device authenticated runtime verification against
   `aishpos.online` and the GO tag are operator-performed and deferred until real

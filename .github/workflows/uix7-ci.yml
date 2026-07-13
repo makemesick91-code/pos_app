@@ -17,9 +17,12 @@ jobs:
       - name: UIX-7 Android cashier design gate (chains UIX-6/5/4/3/2/1)
         run: bash scripts/uix7_android_design_gate.sh
 
-      - name: UIX-7 rules present (UIX7-R001..R044)
+      - name: UIX-7 pilot connectivity & network-security gate (UIX7-R045..R051)
+        run: bash scripts/uix7_pilot_connectivity_gate.sh
+
+      - name: UIX-7 rules present (UIX7-R001..R051)
         run: |
-          for i in $(seq -w 1 44); do
+          for i in $(seq -w 1 51); do
             grep -q "UIX7-R0$i" docs/PROJECT_RULES.md
             grep -q "UIX7-R0$i" docs/foundation/uix-7-android-cashier-experience-remediation.md
             grep -q "UIX7-R0$i" .claude/rules/55-android-cashier-experience.md
@@ -49,17 +52,42 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
-      - name: Build debug APK
+      - name: Build debug APK (emulator dev — http://10.0.2.2:8000/)
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: Build release APK (pilot artifact — HTTPS base URL, cleartext denied)
+      - name: Build pilot APK (physical-device — HTTPS aishpos.online, cleartext denied)
+        working-directory: android
+        run: ./gradlew assemblePilot --no-daemon --stacktrace
+
+      - name: Build release APK (production — HTTPS base URL, cleartext denied)
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon --stacktrace
 
-      - name: Unit tests (incl. RupiahMoney + offline-sync recovery)
+      - name: Unit tests — all variants (incl. variant-aware endpoint contract)
         working-directory: android
-        run: ./gradlew testDebugUnitTest --no-daemon --stacktrace
+        run: ./gradlew testDebugUnitTest testPilotUnitTest testReleaseUnitTest --no-daemon --stacktrace
+
+      - name: Assert generated BuildConfig endpoints per variant (UIX7-R046/R049)
+        working-directory: android
+        run: |
+          set -euo pipefail
+          ./gradlew :app:generateDebugBuildConfig :app:generatePilotBuildConfig :app:generateReleaseBuildConfig --no-daemon --stacktrace
+          check() { # <variant-dir> <expected-url> <forbid-local:true|false>
+            local dir="$1" want="$2" forbid="$3"
+            local cfg; cfg=$(find app/build -path "*/$dir/*BuildConfig.java" | head -1)
+            [ -n "$cfg" ] || { echo "::error::no BuildConfig for $dir"; exit 1; }
+            echo "Inspecting $dir BuildConfig: $cfg"
+            grep -q "API_BASE_URL = \"$want\"" "$cfg" \
+              || { echo "::error::$dir BuildConfig endpoint != $want"; exit 1; }
+            if [ "$forbid" = "true" ] && grep -Eq '10\.0\.2\.2|localhost|127\.0\.0\.1' "$cfg"; then
+              echo "::error::$dir BuildConfig leaks an emulator/local host"; exit 1
+            fi
+          }
+          check debug   "http://10.0.2.2:8000/"   false
+          check pilot   "https://aishpos.online/"  true
+          check release "https://aishpos.online/"  true
+          echo "BuildConfig endpoint contract verified for debug/pilot/release."
 
       - name: Record pilot artifact traceability (UIX7-R038)
         working-directory: android
@@ -75,6 +103,7 @@ jobs:
           name: uix7-pilot-apks-${{ github.sha }}
           path: |
             android/app/build/outputs/apk/debug/*.apk
+            android/app/build/outputs/apk/pilot/*.apk
             android/app/build/outputs/apk/release/*.apk
           if-no-files-found: warn
 
