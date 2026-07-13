@@ -61,6 +61,23 @@ jobs:
         working-directory: android
         run: ./gradlew testDebugUnitTest --no-daemon --stacktrace
 
+      - name: Record pilot artifact traceability (UIX7-R038)
+        working-directory: android
+        run: |
+          echo "source_commit=${GITHUB_SHA}"
+          echo "package_id=com.aishtech.poslite versionName=0.1.0 versionCode=1"
+          echo "== APK SHA-256 =="
+          find app/build/outputs/apk -name '*.apk' -print -exec sha256sum {} \;
+
+      - name: Upload pilot APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: uix7-pilot-apks-${{ github.sha }}
+          path: |
+            android/app/build/outputs/apk/debug/*.apk
+            android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: warn
+
       - name: No secret leakage in Android sources
         run: |
           ! grep -REn 'BEARER [A-Za-z0-9]|api[_-]?key\s*=\s*"[A-Za-z0-9]{16}|password\s*=\s*"' android/app/src/main || true
