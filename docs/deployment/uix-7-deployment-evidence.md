@@ -55,19 +55,22 @@ required and the Aish PHP runtime is byte-identical to the UIX-6 build.
   fully non-regressed (UIX7-R043).
 
 ## 5. Pilot artifact traceability (UIX7-R038)
-Built by CI (`uix7-ci.yml` → `android-build-test`, JDK 21) on the final commit:
+Built by CI (`uix7-ci.yml` → `android-build-test`, JDK 21) and uploaded as
+artifact `uix7-pilot-apks-<sha>`. Hashes below are from the evidence-PR #55
+`uix7-ci` run (GitHub `pull_request` test-merge `source_commit ea55e7a`, whose
+tree equals the post-merge `main`); the same build is reproduced by `main`'s
+`uix7-ci` after this PR merges.
 ```
-source_commit : 76facbe07b0c05f93a99e5f1fcb508b707e92d94
 package_id    : com.aishtech.poslite
 version_name  : 0.1.0
 version_code  : 1
-variants      : assembleDebug (app-debug.apk, debug-signed, installable)
-                assembleRelease (app-release-unsigned.apk)
-sha256        : recorded in the "Record pilot artifact traceability" CI step and
-                uploaded as artifact "uix7-pilot-apks-<sha>" on this evidence PR's
-                uix7-ci run (see step log). The operator's installed/signed pilot
-                APK hash is captured in the on-device checklist §Artifact.
+release APK   : app-release-unsigned.apk
+  sha256      : a3a594ef0990fe4460b7d326d23d9e995a7b6fe1db8a5620843a902f18ec2103
+debug APK     : app-debug.apk (debug-signed, installable)
+  sha256      : e14fe3613b167ea90a6f156b9026aaabce1b7f933ddfd27c71641393aca3ad3f
 ```
+The operator's installed/signed pilot APK hash is captured separately in the
+on-device checklist §Artifact (that is the artifact GO ultimately certifies).
 
 ## 6. On-device runtime verification — DEFERRED (operator)
 Required by UIX7-R039/R044 and GO items 45–53: install an APK on an approved
