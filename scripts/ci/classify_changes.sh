@@ -199,8 +199,11 @@ CLASSIFICATION="full_ci"
 [ "$evidence_only" = true ] && CLASSIFICATION="evidence_only"
 
 emit() {
-  printf '%s=%s\n' "$1" "$2"
-  [ -n "${GITHUB_OUTPUT:-}" ] && printf '%s=%s\n' "$1" "$2" >>"$GITHUB_OUTPUT"
+  # Strip CR/LF so a crafted path in a value can never inject an extra
+  # key=value line into $GITHUB_OUTPUT (defense-in-depth; git also C-quotes paths).
+  local v="${2//$'\n'/ }"; v="${v//$'\r'/ }"
+  printf '%s=%s\n' "$1" "$v"
+  [ -n "${GITHUB_OUTPUT:-}" ] && printf '%s=%s\n' "$1" "$v" >>"$GITHUB_OUTPUT"
 }
 
 emit docs_only "$docs_only"

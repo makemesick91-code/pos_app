@@ -58,16 +58,32 @@ if [ -z "$pr_head_tree" ]; then
   emit equivalent false; emit reason "$REASON"; emit pr_number "$pr_number"; exit 0
 fi
 
-if [ "$head_tree" = "$pr_head_tree" ]; then
+if [ "$head_tree" != "$pr_head_tree" ]; then
+  emit equivalent false
+  emit reason "tree-mismatch(main-tree=$head_tree pr-head-tree=$pr_head_tree)"
+  emit pr_number "$pr_number"; emit pr_head_sha "$pr_head_sha"
+  exit 0
+fi
+
+# Tree matches — but equivalence to the *tested* candidate also requires that the
+# authoritative PR CI actually concluded success for pr_head_sha. Without this a
+# cancelled/never-finished candidate (concurrency cancel-in-progress) could reach
+# a "green" main via the equivalent-skip path (adversarial finding; CICD2-R007).
+auth_conclusion="$(gh api "repos/$REPO/actions/runs?head_sha=$pr_head_sha&per_page=100" \
+  --jq 'first(.workflow_runs[] | select(.name=="AISH POS Authoritative PR CI") | .conclusion) // "none"' \
+  2>/dev/null || echo 'api-error')"
+
+if [ "$auth_conclusion" = "success" ]; then
   equivalent=true
-  REASON="tree-match:$head_tree"
+  REASON="tree-match+authoritative-ci-success:$head_tree"
 else
   equivalent=false
-  REASON="tree-mismatch(main-tree=$head_tree pr-head-tree=$pr_head_tree)"
+  REASON="authoritative-ci-not-green(conclusion=$auth_conclusion) — escalating"
 fi
 
 emit equivalent "$equivalent"
 emit reason "$REASON"
 emit pr_number "$pr_number"
 emit pr_head_sha "$pr_head_sha"
+emit authoritative_conclusion "$auth_conclusion"
 exit 0
