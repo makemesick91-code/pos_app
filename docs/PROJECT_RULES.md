@@ -1761,9 +1761,49 @@ UIX-8C-02 — Premium design-system, responsive shell & accessibility foundation
 59. `UIX8C-R059` — Any Android runtime visual change requires a new final APK and new physical evidence after code freeze.
 60. `UIX8C-R060` — A sprint-scoped implementation GO tag never implies UIX-7 or UIX-8 runtime GO.
 
-Enforcement: `scripts/uix8c_foundation_gate.sh` and `scripts/uix8c_design_system_gate.sh` (both
+### UIX-8C-03 — Premium cashier home, catalog, search, category & cart (UIX8C-R061..R095)
+
+61. `UIX8C-R061` — Cashier Home is the canonical operational surface for Android cashier users.
+62. `UIX8C-R062` — Cashier Home must display canonical tenant, outlet, cashier, device, and connectivity context (from `auth/me`; missing renders "Tidak tersedia"; online only when server-resolved).
+63. `UIX8C-R063` — Android UI must never trust raw client-supplied tenant or outlet identifiers for authorization.
+64. `UIX8C-R064` — Cashier UI must never expose platform-admin or owner controls.
+65. `UIX8C-R065` — Product catalog data remains tenant and outlet scoped.
+66. `UIX8C-R066` — Product loading, loaded, empty, no-result, unavailable, offline-cached, and error states remain distinct.
+67. `UIX8C-R067` — Loading state must never be displayed as an empty catalog.
+68. `UIX8C-R068` — Search no-result must never be displayed as an empty catalog.
+69. `UIX8C-R069` — Backend error must not silently erase an existing valid cart.
+70. `UIX8C-R070` — Offline cached catalog must be labelled truthfully.
+71. `UIX8C-R071` — Product stock and availability status must be textual and not color-only.
+72. `UIX8C-R072` — An unavailable or out-of-stock product cannot be added to the cart.
+73. `UIX8C-R073` — Product price uses the canonical whole-Rupiah formatter.
+74. `UIX8C-R074` — Search and category filtering must not mutate cart content.
+75. `UIX8C-R075` — Clearing search or category filters restores the canonical catalog state.
+76. `UIX8C-R076` — Cart add, increment, decrement, remove, and clear operations remain deterministic.
+77. `UIX8C-R077` — Cart quantities must never become zero or negative inside a valid cart row.
+78. `UIX8C-R078` — Cart totals use canonical whole-Rupiah integer calculations.
+79. `UIX8C-R079` — UI must not duplicate pricing, discount, tax, stock, entitlement, or payment business rules.
+80. `UIX8C-R080` — Clear-cart is destructive and requires explicit confirmation.
+81. `UIX8C-R081` — Cancelling clear-cart preserves the cart unchanged.
+82. `UIX8C-R082` — Configuration changes must preserve valid cart state.
+83. `UIX8C-R083` — Expected process recreation must restore valid cart state where supported.
+84. `UIX8C-R084` — API loading or error transitions must preserve a valid existing cart.
+85. `UIX8C-R085` — Checkout CTA is disabled or unavailable when the cart is empty or invalid.
+86. `UIX8C-R086` — Checkout CTA remains visible or scroll-reachable at 130% font scale.
+87. `UIX8C-R087` — Product catalog remains visible or scroll-reachable at 130% font scale.
+88. `UIX8C-R088` — Cart, totals, and quantity controls remain visible or scroll-reachable at 130% font scale.
+89. `UIX8C-R089` — Product, category, tenant, outlet, and cashier long names wrap or ellipsize safely.
+90. `UIX8C-R090` — Product and cart interactive targets remain at least 48dp.
+91. `UIX8C-R091` — Product, quantity, remove, search, category, and checkout controls have meaningful accessibility semantics.
+92. `UIX8C-R092` — Focus order follows context, search, categories, products, cart, totals, and checkout.
+93. `UIX8C-R093` — Cashier screen rendering must remain lightweight and avoid unbounded layout work.
+94. `UIX8C-R094` — Cashier catalog/cart regression is a sprint release blocker.
+95. `UIX8C-R095` — UIX-8C-03 implementation GO does not imply UIX-7/UIX-8 runtime GO (UIX-7 stays NO-GO/DEFERRED, UIX-8 IMPLEMENTATION COMPLETE/DEFERRED, R11 out of scope).
+
+Enforcement: `scripts/uix8c_foundation_gate.sh`, `scripts/uix8c_design_system_gate.sh`, and
+`scripts/uix8c_cashier_catalog_cart_gate.sh` (all
 fail-closed) + `scripts/tests/uix8c_foundation_gate_test.sh` +
-`scripts/tests/uix8c_design_system_gate_test.sh`, wired into
+`scripts/tests/uix8c_design_system_gate_test.sh` +
+`scripts/tests/uix8c_cashier_catalog_cart_gate_test.sh`, wired into
 `.github/workflows/_foundation-gates.yml`, plus the `5i` block in
 `scripts/verify_application_foundation_rules.sh`. The immutable failed physical run is
 `docs/deployment/uix-8c-physical-run-run-97fbb64-2af94aa.json` (R01 PENDING, R11 FAIL, R18 FAIL —

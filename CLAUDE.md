@@ -269,6 +269,24 @@ appear to conflict, the modular rule in `.claude/rules/` is authoritative.
   CTA stay visible or scroll-reachable at 100/115/130% font). Enforced by the
   fail-closed `scripts/uix8c_design_system_gate.sh` (+ self-tests) and ADR 0005.
   It changes no backend/Room/financial behaviour and does not fix R11.
+- UIX-8C-03 (premium cashier home, catalog, search, category & cart) rebuilds the
+  cashier operational surface on the UIX-8C-02 design system (UIX8C-R061..R095):
+  a canonical context header (business/outlet/cashier/device + truthful
+  online/offline) fed only by authenticated `auth/me` — never client-supplied
+  tenant/outlet (`CashierContextPresenter`, missing → "Tidak tersedia"); a
+  tenant/outlet-scoped product catalog with distinct loading/loaded/empty/
+  no-result/offline-cached/error states (loading≠empty, no-result≠empty, error
+  never clears the cart); a product search with an explicit clear; a category
+  filter (`CatalogRepository.search(query, categoryId)`, `CategoryOption`,
+  `CategoryFilterAdapter`) that never mutates the cart and restores the catalog
+  when cleared; and a deterministic integer-exact (`RupiahMoney`, `Long`) cart
+  with clear-cart confirmation and a checkout CTA that stays scroll-reachable at
+  130% font and only hands off to the existing governed payment sheet. Enforced
+  by the fail-closed `scripts/uix8c_cashier_catalog_cart_gate.sh` (+ self-tests).
+  It changes no backend/`SaleService`/Room/payment-idempotency behaviour, does
+  NOT fix R11, and its sprint tag
+  `uix-8c-03-premium-cashier-catalog-cart-go` never asserts UIX-7/UIX-8 runtime
+  closure.
 
 ## Authoritative CI consolidation (CICD-CTRL-2)
 - CI is consolidated into four lanes driven by a fail-closed change classifier
