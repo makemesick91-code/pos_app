@@ -68,6 +68,40 @@ class OfflineSaleRepositoryTest {
         assertTrue(db.items.all { it.offlineSaleLocalId == sale.localId })
     }
 
+    // UIX8C-R097 — a supplied stable clientReference is REUSED (not regenerated),
+    // so a governed online→offline fallback and the eventual sync dedupe on the
+    // same key as the original online attempt.
+    @Test
+    fun `createOfflineCashSale reuses a supplied client reference`() = runTest {
+        val db = FakeOfflineDb()
+        val result = repo(db, ref = { "should-not-be-used" }).createOfflineCashSale(
+            items = listOf(CartItem(1L, "Kopi", 10000.0, 1)),
+            paidAmount = 10000L,
+            clientReference = "stable-online-ref-777",
+        )
+
+        result as OfflineSaleRepository.SaveResult.Saved
+        assertEquals("stable-online-ref-777", result.clientReference)
+        assertEquals("stable-online-ref-777", db.sales.values.single().clientReference)
+    }
+
+    // UIX8C-R109 — a repeated fallback with the SAME reference (rapid taps / retry)
+    // reconciles to the one existing durable row; NO duplicate is created.
+    @Test
+    fun `repeated fallback with same reference creates one row`() = runTest {
+        val db = FakeOfflineDb()
+        val repository = repo(db)
+        val cart = listOf(CartItem(1L, "Kopi", 10000.0, 1))
+
+        val first = repository.createOfflineCashSale(cart, 10000L, clientReference = "dupe-ref-1")
+        val second = repository.createOfflineCashSale(cart, 10000L, clientReference = "dupe-ref-1")
+
+        first as OfflineSaleRepository.SaveResult.Saved
+        second as OfflineSaleRepository.SaveResult.Saved
+        assertEquals(first.localId, second.localId)
+        assertEquals(1, db.sales.size)
+    }
+
     @Test
     fun `empty cart is rejected and stores nothing`() = runTest {
         val db = FakeOfflineDb()

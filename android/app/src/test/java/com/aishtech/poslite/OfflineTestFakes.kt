@@ -59,10 +59,18 @@ class FakeOfflineDb : OfflineSaleDao(), OfflineSaleItemDao {
     private var itemSeq = 0L
 
     override suspend fun insertSale(sale: LocalOfflineSaleEntity): Long {
+        // Mirror the unique index on clientReference so tests exercise the real
+        // conflict/idempotency behaviour (UIX8C-R109).
+        if (sales.values.any { it.clientReference == sale.clientReference }) {
+            throw IllegalStateException("UNIQUE constraint failed: offline_sales.clientReference")
+        }
         val id = ++saleSeq
         sales[id] = sale.copy(localId = id)
         return id
     }
+
+    override suspend fun findByClientReference(clientReference: String): LocalOfflineSaleEntity? =
+        sales.values.firstOrNull { it.clientReference == clientReference }
 
     override suspend fun insertItems(items: List<LocalOfflineSaleItemEntity>) {
         items.forEach { this.items.add(it.copy(localId = ++itemSeq)) }
@@ -149,8 +157,13 @@ class FakeSyncApi(
     val capturedRequests = mutableListOf<CreateSaleRequestDto>()
     private var index = 0
 
+    /** When set, createSale throws this instead of returning a response, so tests
+     *  can exercise transport-failure classification (UIX8C-R098/R103). */
+    var throwOnCreate: Throwable? = null
+
     override suspend fun createSale(request: CreateSaleRequestDto): Response<SaleResponse> {
         capturedRequests.add(request)
+        throwOnCreate?.let { throw it }
         val response = responses[minOf(index, responses.lastIndex)]
         index++
         return response

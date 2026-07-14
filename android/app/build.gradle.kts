@@ -110,6 +110,9 @@ dependencies {
     // Unit tests (pure JVM: cart + catalog mapping).
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+    // UIX-8C-04 — InstantTaskExecutorRule so ViewModel LiveData checkout/fallback
+    // state can be asserted on the JVM (test-only; no app/runtime dependency).
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
 
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
