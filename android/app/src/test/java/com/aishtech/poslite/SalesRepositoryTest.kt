@@ -146,4 +146,37 @@ class SalesRepositoryTest {
         assertTrue(result is ResultState.Error)
         assertEquals(null, api.captured)
     }
+
+    // UIX7-R054/R055 — an online checkout given an idempotency key must put it on
+    // the wire as client_reference (with the ANDROID_ONLINE source) so the backend
+    // dedupes a retry after a lost response instead of creating a second sale.
+    @Test
+    fun `checkout sends the client_reference and online source when given one`() = runTest {
+        val api = FakeApi(Response.success(SaleResponse(data = sampleSale())))
+        val repo = SalesRepository(api)
+
+        repo.checkoutCash(
+            listOf(CartItem(1L, "Kopi", 10000.0, 2)),
+            paidAmount = 25000.0,
+            clientReference = "online-ref-abc-123",
+        )
+
+        val request = api.captured!!
+        assertEquals("online-ref-abc-123", request.clientReference)
+        assertEquals("ANDROID_ONLINE", request.source)
+    }
+
+    // Backward compatibility: with no key, the request stays reference-less (the
+    // pre-fix online behaviour) so unrelated callers are unaffected.
+    @Test
+    fun `checkout without a reference sends a null reference`() = runTest {
+        val api = FakeApi(Response.success(SaleResponse(data = sampleSale())))
+        val repo = SalesRepository(api)
+
+        repo.checkoutCash(listOf(CartItem(1L, "Kopi", 10000.0, 1)), paidAmount = 10000.0)
+
+        val request = api.captured!!
+        assertEquals(null, request.clientReference)
+        assertEquals(null, request.source)
+    }
 }
