@@ -10,9 +10,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.aishtech.poslite.R
 import com.aishtech.poslite.core.ServiceLocator
+import com.aishtech.poslite.core.device.DeviceInfoProvider
 import com.aishtech.poslite.core.money.RupiahMoney
 import com.aishtech.poslite.data.repository.CartRepository
 import com.aishtech.poslite.databinding.ActivityCashierBinding
@@ -31,6 +33,7 @@ class CashierActivity : AppCompatActivity(), PaymentSheetFragment.Host {
     private lateinit var binding: ActivityCashierBinding
     private lateinit var viewModel: CashierViewModel
     private lateinit var adapter: ProductListAdapter
+    private lateinit var categoryAdapter: CategoryFilterAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,6 +53,9 @@ class CashierActivity : AppCompatActivity(), PaymentSheetFragment.Host {
                         cart = CartRepository(),
                         offline = ServiceLocator.offlineSaleRepository(context),
                         stock = ServiceLocator.stockRepository(context),
+                        auth = ServiceLocator.authRepository(context),
+                        deviceName = DeviceInfoProvider.deviceName(),
+                        allCategoriesLabel = getString(R.string.cashier_category_all),
                     ) as T
             },
         )[CashierViewModel::class.java]
@@ -95,15 +101,29 @@ class CashierActivity : AppCompatActivity(), PaymentSheetFragment.Host {
             }
             override fun afterTextChanged(s: Editable?) = Unit
         })
+        // UIX8C-R075 — clearing the search restores the catalog under the current
+        // category. Clears the field (which re-runs search("") via the watcher).
+        binding.buttonClearSearch.setOnClickListener { binding.inputSearch.text?.clear() }
+        // UIX8C-R069 — retry re-runs the current filter without touching the cart.
+        binding.buttonRetryProducts.setOnClickListener { viewModel.retry() }
 
         viewModel.search("")
         viewModel.refreshStock()
+        viewModel.loadCategories()
+        viewModel.loadContext()
     }
 
     private fun setupList() {
         adapter = ProductListAdapter(onAdd = { viewModel.addToCart(it) })
         binding.listProducts.layoutManager = LinearLayoutManager(this)
         binding.listProducts.adapter = adapter
+
+        // UIX8C-R074 — horizontal category filter. Selecting re-queries products
+        // only; it never mutates the cart.
+        categoryAdapter = CategoryFilterAdapter(onSelect = { viewModel.selectCategory(it.id) })
+        binding.listCategories.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.listCategories.adapter = categoryAdapter
     }
 
     private fun observe() {
@@ -143,8 +163,32 @@ class CashierActivity : AppCompatActivity(), PaymentSheetFragment.Host {
             if (syncing) binding.textSyncStatus.text = getString(R.string.cashier_syncing)
         }
         viewModel.checkout.observe(this) { state -> renderCheckout(state) }
+        // UIX8C-R061/R062 — canonical cashier context header.
+        viewModel.context.observe(this) { renderContext(it) }
+        // UIX8C-R074 — category filter chips.
+        viewModel.categories.observe(this) { categoryAdapter.submitList(it) }
 
         viewModel.refreshSyncCounts()
+    }
+
+    // UIX8C-R062 — bind the canonical business/outlet/cashier/device context and a
+    // truthful online/offline chip (text + colour token, never colour alone).
+    private fun renderContext(context: CashierContext) {
+        val header = binding.cashierContext
+        header.textContextBusiness.text = context.businessName
+        header.textContextOutlet.text = context.outletName
+        header.textContextCashier.text = context.cashierLine
+        header.textContextDevice.text = context.deviceName
+        val chip = header.chipNetwork
+        if (context.online) {
+            chip.text = getString(R.string.ctx_network_online)
+            chip.backgroundTintList = ContextCompat.getColorStateList(this, R.color.state_online_bg)
+            chip.setTextColor(ContextCompat.getColor(this, R.color.state_online_fg))
+        } else {
+            chip.text = getString(R.string.ctx_network_offline)
+            chip.backgroundTintList = ContextCompat.getColorStateList(this, R.color.state_offline_bg)
+            chip.setTextColor(ContextCompat.getColor(this, R.color.state_offline_fg))
+        }
     }
 
     private fun renderCheckout(state: CashierViewModel.CheckoutState) {
@@ -252,29 +296,36 @@ class CashierActivity : AppCompatActivity(), PaymentSheetFragment.Host {
     private fun renderProducts(state: CashierViewModel.ProductsState) {
         val progress = binding.progressProducts
         val empty = binding.textEmpty
+        val retry = binding.buttonRetryProducts
         when (state) {
             CashierViewModel.ProductsState.Loading -> {
                 progress.visibility = View.VISIBLE
                 empty.visibility = View.GONE
+                retry.visibility = View.GONE
             }
             is CashierViewModel.ProductsState.Loaded -> {
                 progress.visibility = View.GONE
                 empty.visibility = View.GONE
+                retry.visibility = View.GONE
             }
             CashierViewModel.ProductsState.EmptyCatalog -> {
                 progress.visibility = View.GONE
                 empty.text = getString(R.string.cashier_empty)
                 empty.visibility = View.VISIBLE
+                retry.visibility = View.GONE
             }
             is CashierViewModel.ProductsState.NoMatch -> {
                 progress.visibility = View.GONE
                 empty.text = getString(R.string.cashier_products_no_match)
                 empty.visibility = View.VISIBLE
+                retry.visibility = View.GONE
             }
             is CashierViewModel.ProductsState.Error -> {
                 progress.visibility = View.GONE
                 empty.text = getString(R.string.cashier_products_error)
                 empty.visibility = View.VISIBLE
+                // UIX8C-R069 — offer an explicit retry in the error state.
+                retry.visibility = View.VISIBLE
             }
         }
     }

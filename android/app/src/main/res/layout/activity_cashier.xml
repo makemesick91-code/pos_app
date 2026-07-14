@@ -19,11 +19,14 @@
     android:padding="@dimen/space_lg">
 
     <!-- ===== Zone 1 — fixed compact header ===== -->
-    <TextView
-        android:layout_width="wrap_content"
+    <!-- UIX8C-R061/R062 — canonical cashier context (business/outlet/cashier/
+         device + network), fed only by auth/me. -->
+    <include
+        android:id="@+id/cashierContext"
+        layout="@layout/component_cashier_context_header"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/cashier_title"
-        android:textAppearance="@style/TextAppearance.Aish.PageTitle" />
+        android:layout_marginBottom="@dimen/space_sm" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -96,18 +99,50 @@
 
     </LinearLayout>
 
-    <EditText
-        android:id="@+id/inputSearch"
-        style="@style/Widget.Aish.EditText"
+    <!-- Search row: field + explicit clear control (UIX8C-R090 >= 48dp,
+         accessible via cd_search_clear). Clearing restores the catalog. -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="@dimen/input_height"
         android:layout_marginTop="@dimen/space_sm"
-        android:hint="@string/cashier_search_hint"
-        android:contentDescription="@string/cd_search_products"
-        android:inputType="text"
-        android:maxLines="1"
-        android:autofillHints="" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <EditText
+            android:id="@+id/inputSearch"
+            style="@style/Widget.Aish.EditText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:minHeight="@dimen/input_height"
+            android:hint="@string/cashier_search_hint"
+            android:contentDescription="@string/cd_search_products"
+            android:inputType="text"
+            android:maxLines="1"
+            android:autofillHints="" />
+
+        <Button
+            android:id="@+id/buttonClearSearch"
+            style="@style/Widget.Aish.Button.Tertiary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_sm"
+            android:minWidth="@dimen/touch_target_min"
+            android:minHeight="@dimen/touch_target_min"
+            android:contentDescription="@string/cd_search_clear"
+            android:text="@string/cashier_search_clear" />
+
+    </LinearLayout>
+
+    <!-- Category filter row (UIX8C-R074/R075) — horizontal, bounded, does not
+         mutate the cart. Single-line height so it stays compact at 130% font. -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/listCategories"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_sm"
+        android:clipToPadding="false"
+        android:contentDescription="@string/cd_category_filter" />
 
     <!-- ===== Zone 2 — weighted product region (internal scroll) ===== -->
     <FrameLayout
@@ -130,17 +165,37 @@
             android:layout_gravity="center"
             android:visibility="gone" />
 
-        <TextView
-            android:id="@+id/textEmpty"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:gravity="center"
-            android:padding="@dimen/space_lg"
-            android:text="@string/cashier_empty"
-            android:textAppearance="@style/TextAppearance.Aish.Body"
-            android:textColor="@color/text_secondary"
-            android:visibility="gone" />
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/textEmpty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:padding="@dimen/space_lg"
+                android:text="@string/cashier_empty"
+                android:textAppearance="@style/TextAppearance.Aish.Body"
+                android:textColor="@color/text_secondary"
+                android:visibility="gone" />
+
+            <!-- UIX8C-R069 error recovery — retry re-runs the current filter and
+                 never clears the cart. Shown only in the error state. -->
+            <Button
+                android:id="@+id/buttonRetryProducts"
+                style="@style/Widget.Aish.Button.Secondary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/touch_target_min"
+                android:contentDescription="@string/cd_retry_products"
+                android:text="@string/cashier_retry"
+                android:visibility="gone" />
+
+        </LinearLayout>
 
     </FrameLayout>
 
