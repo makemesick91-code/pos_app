@@ -203,6 +203,13 @@ for i in $(seq -w 1 44); do
      && grep -q "$id" docs/PROJECT_RULES.md; then :; else missing_uix7="$missing_uix7 $id"; fi
 done
 [ -z "$missing_uix7" ] && pass "UIX7-R001..R044 fully persisted" || bad "UIX-7 rule ids not fully persisted:$missing_uix7"
+# UIX-7 physical-device operator runtime tooling is permanent release tooling.
+[ -x scripts/uix7_operator_runner.sh ] && pass "UIX-7 physical-device operator runner present" || bad "missing scripts/uix7_operator_runner.sh"
+[ -x scripts/tests/uix7_operator_runner_test.sh ] && pass "UIX-7 operator runner tests present" || bad "missing scripts/tests/uix7_operator_runner_test.sh"
+[ -f docs/deployment/uix-7-physical-device-operator-runbook.md ] && pass "UIX-7 physical-device operator runbook present" || bad "missing UIX-7 physical-device operator runbook"
+# The operator runner is UIX-7-schema-native (scenarios, not the UIX-8 rows schema).
+grep -q '"scenarios"' scripts/uix7_operator_runner.sh && ! grep -qE '\["rows"\]|d\["rows"\]' scripts/uix7_operator_runner.sh \
+  && pass "operator runner uses the UIX-7 scenarios schema" || bad "operator runner must use the UIX-7 scenarios schema"
 # Canonical whole-rupiah money type exists (UIX7-R018/R019).
 [ -f android/app/src/main/java/com/aishtech/poslite/core/money/RupiahMoney.kt ] && pass "RupiahMoney canonical money type present" || bad "missing RupiahMoney money type"
 # Cleartext denied by default + backup disabled (UIX7-R006/R026/R027).
