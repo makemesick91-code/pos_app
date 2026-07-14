@@ -1810,3 +1810,50 @@ fail-closed) + `scripts/tests/uix8c_foundation_gate_test.sh` +
 never flipped to PASS). A sprint-scoped `uix-8c-NN-<slug>-go` tag records only that sprint's
 implementation closure. UIX-7 stays `NO-GO — GO DEFERRED`; UIX-8 stays
 `IMPLEMENTATION COMPLETE — GO DEFERRED`.
+
+### UIX-8C-04 — Offline CASH durability & idempotent recovery (UIX8C-R096..R130)
+
+96. `UIX8C-R096` — Offline payment capability is CASH-only; QRIS and every server-confirmed payment method remain online-only.
+97. `UIX8C-R097` — Every logical checkout owns one stable `clientReference` minted once and reused across the online attempt, local fallback, process restart, reconnect, and worker replay.
+98. `UIX8C-R098` — Eligible transport and temporary-unavailability failures may trigger governed offline CASH fallback.
+99. `UIX8C-R099` — HTTP 400 validation failure must never be converted into offline success.
+100. `UIX8C-R100` — HTTP 401 authentication failure must never be converted into offline success.
+101. `UIX8C-R101` — HTTP 403 authorization, entitlement, tenant, outlet, cashier, or device rejection must never be converted into offline success.
+102. `UIX8C-R102` — HTTP 409 and other canonical conflicts follow explicit domain policy and must not silently queue as a new offline transaction.
+103. `UIX8C-R103` — Unknown programming, mapping, serialization, or data-integrity errors must not silently enter offline fallback; TLS certificate/hostname/trust validation failure is a security error and never an offline condition.
+104. `UIX8C-R104` — Offline CASH fallback requires complete canonical tenant, outlet, cashier, device, cart, tender, and money context.
+105. `UIX8C-R105` — An offline transaction is successful to the operator only after one durable local database commit.
+106. `UIX8C-R106` — The local offline save is atomic across transaction header, items, payment metadata, totals, `clientReference`, and sync state.
+107. `UIX8C-R107` — Cart clearing occurs only after canonical online acknowledgement or a successful durable local save.
+108. `UIX8C-R108` — Local persistence failure preserves the complete cart and presents a truthful failure.
+109. `UIX8C-R109` — Repeated taps or repeated fallback handling create at most one local transaction for the same `clientReference`.
+110. `UIX8C-R110` — Local transaction states PENDING, SYNCING, SYNCED, FAILED, and CONFLICT remain distinct.
+111. `UIX8C-R111` — A local transaction becomes SYNCED only after canonical server acknowledgement and durable recording of the server result.
+112. `UIX8C-R112` — Process death after local commit must not lose the transaction.
+113. `UIX8C-R113` — Application restart restores the same pending transaction and `clientReference`.
+114. `UIX8C-R114` — Device reconnect reuses the existing local transaction instead of creating a new logical checkout.
+115. `UIX8C-R115` — WorkManager retry is bounded and follows governed network constraints and backoff.
+116. `UIX8C-R116` — Worker replay is idempotent and cannot duplicate a sale, payment, sale item, or inventory movement.
+117. `UIX8C-R117` — Orphan SYNCING rows recover to a safe retryable state without fabricating server acknowledgement.
+118. `UIX8C-R118` — A backend replay of the same tenant-scoped `clientReference` returns or reconciles the canonical transaction without a second financial mutation.
+119. `UIX8C-R119` — One logical checkout produces exactly one canonical sale.
+120. `UIX8C-R120` — One logical checkout produces exactly one canonical payment.
+121. `UIX8C-R121` — Sale items, quantities, unit prices, and whole-Rupiah totals remain exact across offline persistence and sync.
+122. `UIX8C-R122` — Inventory side effects remain idempotent and cannot duplicate during replay.
+123. `UIX8C-R123` — Printer, receipt rendering, analytics, or UI presentation failures do not alter financial authority.
+124. `UIX8C-R124` — Offline queued UI states are truthful and must not claim server synchronization.
+125. `UIX8C-R125` — A stale previous success or receipt must never be displayed for the current offline checkout.
+126. `UIX8C-R126` — Logout, account switch, or device switch must not silently discard unsynced transactions.
+127. `UIX8C-R127` — Runtime logs, exceptions, and evidence must not expose credentials, tokens, customer PII, or payment secrets.
+128. `UIX8C-R128` — Offline durability, duplicate transaction, payment duplication, inventory duplication, or transaction loss is an automatic release NO-GO.
+129. `UIX8C-R129` — Source remediation does not rewrite the historical failed physical R11 evidence; a new physical campaign is mandatory after final code freeze.
+130. `UIX8C-R130` — UIX-8C-04 implementation GO confirms source remediation and automated verification only; it does not imply UIX-7 or UIX-8 runtime GO.
+
+Enforcement (UIX-8C-04): `scripts/uix8c_offline_cash_durability_gate.sh` (fail-closed) +
+`scripts/tests/uix8c_offline_cash_durability_gate_test.sh`, wired into
+`.github/workflows/_foundation-gates.yml`, plus the extended R001..R130 persistence loops in
+`scripts/uix8c_foundation_gate.sh` and `scripts/verify_application_foundation_rules.sh`. The
+sprint-scoped tag `uix-8c-04-offline-cash-durability-idempotent-recovery-go` records source
+remediation + automated verification only and never asserts UIX-7/UIX-8 runtime closure; the
+historical failed physical run `run-97fbb64-2af94aa` (R11 FAIL) stays immutable and a fresh
+physical R11 revalidation remains mandatory after final code freeze.

@@ -275,6 +275,101 @@ never weaken — rules 55/56/57/58/59 and UIX8C-R001..R060.
   GO. UIX-7 stays `NO-GO — GO DEFERRED` and UIX-8 stays `IMPLEMENTATION COMPLETE
   — GO DEFERRED`; R11 offline CASH durability stays UNRESOLVED / out of scope.
 
+## UIX-8C-04 — Offline CASH durability & idempotent recovery
+Introduced by UIX-8C-04 (the P1 financial-integrity fix for the physical R11
+failure: an eligible online CASH checkout that cannot reach the backend must
+degrade to a durable local transaction instead of a hard failure that persists
+nothing). These rules are the permanent offline-durability / transport-safety /
+idempotency baseline for every subsequent Android sprint and extend — never
+weaken — rules 55/56/57/58/59 and UIX8C-R001..R095. Business truth stays in the
+backend `App\Services\*` domains and the app's canonical repositories; the
+cashier persists and replays only — never a second pricing/payment/QRIS/
+settlement/sync engine.
+
+### Transport classification & offline eligibility
+- **UIX8C-R096** — Offline payment capability is CASH-only; QRIS and every
+  server-confirmed payment method remain online-only.
+- **UIX8C-R097** — Every logical checkout owns one stable `clientReference`
+  minted once and reused across the online attempt, the local fallback, process
+  restart, reconnect, and worker replay.
+- **UIX8C-R098** — Eligible transport and temporary-unavailability failures may
+  trigger governed offline CASH fallback.
+- **UIX8C-R099** — HTTP 400 validation failure must never be converted into
+  offline success.
+- **UIX8C-R100** — HTTP 401 authentication failure must never be converted into
+  offline success.
+- **UIX8C-R101** — HTTP 403 authorization, entitlement, tenant, outlet, cashier,
+  or device rejection must never be converted into offline success.
+- **UIX8C-R102** — HTTP 409 and other canonical conflicts follow explicit domain
+  policy and must not silently queue as a new offline transaction.
+- **UIX8C-R103** — Unknown programming, mapping, serialization, or
+  data-integrity errors must not silently enter offline fallback; TLS
+  certificate/hostname/trust validation failure is a security error and is never
+  an offline condition.
+- **UIX8C-R104** — Offline CASH fallback requires complete canonical tenant,
+  outlet, cashier, device, cart, tender, and money context.
+
+### Durable local persistence & cart-clear semantics
+- **UIX8C-R105** — An offline transaction is successful to the operator only
+  after one durable local database commit.
+- **UIX8C-R106** — The local offline save is atomic across transaction header,
+  items, payment metadata, totals, `clientReference`, and sync state.
+- **UIX8C-R107** — Cart clearing occurs only after canonical online
+  acknowledgement or a successful durable local save.
+- **UIX8C-R108** — Local persistence failure preserves the complete cart and
+  presents a truthful failure.
+- **UIX8C-R109** — Repeated taps or repeated fallback handling create at most one
+  local transaction for the same `clientReference`.
+
+### Sync state & recovery
+- **UIX8C-R110** — Local transaction states PENDING, SYNCING, SYNCED, FAILED, and
+  CONFLICT remain distinct.
+- **UIX8C-R111** — A local transaction becomes SYNCED only after canonical server
+  acknowledgement and durable recording of the server result.
+- **UIX8C-R112** — Process death after local commit must not lose the
+  transaction.
+- **UIX8C-R113** — Application restart restores the same pending transaction and
+  `clientReference`.
+- **UIX8C-R114** — Device reconnect reuses the existing local transaction instead
+  of creating a new logical checkout.
+- **UIX8C-R115** — WorkManager retry is bounded and follows governed network
+  constraints and backoff.
+- **UIX8C-R116** — Worker replay is idempotent and cannot duplicate a sale,
+  payment, sale item, or inventory movement.
+- **UIX8C-R117** — Orphan SYNCING rows recover to a safe retryable state without
+  fabricating server acknowledgement.
+
+### Backend idempotency & financial integrity
+- **UIX8C-R118** — A backend replay of the same tenant-scoped `clientReference`
+  returns or reconciles the canonical transaction without a second financial
+  mutation.
+- **UIX8C-R119** — One logical checkout produces exactly one canonical sale.
+- **UIX8C-R120** — One logical checkout produces exactly one canonical payment.
+- **UIX8C-R121** — Sale items, quantities, unit prices, and whole-Rupiah totals
+  remain exact across offline persistence and sync.
+- **UIX8C-R122** — Inventory side effects remain idempotent and cannot duplicate
+  during replay.
+- **UIX8C-R123** — Printer, receipt rendering, analytics, or UI presentation
+  failures do not alter financial authority.
+
+### Truthful state, safety & evidence
+- **UIX8C-R124** — Offline queued UI states are truthful and must not claim server
+  synchronization.
+- **UIX8C-R125** — A stale previous success or receipt must never be displayed for
+  the current offline checkout.
+- **UIX8C-R126** — Logout, account switch, or device switch must not silently
+  discard unsynced transactions.
+- **UIX8C-R127** — Runtime logs, exceptions, and evidence must not expose
+  credentials, tokens, customer PII, or payment secrets.
+- **UIX8C-R128** — Offline durability, duplicate transaction, payment
+  duplication, inventory duplication, or transaction loss is an automatic release
+  NO-GO.
+- **UIX8C-R129** — Source remediation does not rewrite the historical failed
+  physical R11 evidence; a new physical campaign is mandatory after final code
+  freeze.
+- **UIX8C-R130** — UIX-8C-04 implementation GO confirms source remediation and
+  automated verification only; it does not imply UIX-7 or UIX-8 runtime GO.
+
 ## Scope guard for UIX-8C-01
 - UIX-8C-01 does not fix R11 (offline CASH durability), does not perform a broad
   runtime visual rebuild, does not modify runtime evidence/manifest state, does
@@ -305,6 +400,24 @@ never weaken — rules 55/56/57/58/59 and UIX8C-R001..R060.
   `uix-8c-03-premium-cashier-catalog-cart-go` under UIX8C-R002. Full per-screen
   rebuilds continue in UIX-8C-04..09.
 
+## Scope guard for UIX-8C-04
+- UIX-8C-04 fixes the P1 offline CASH durability defect behind the physical R11
+  failure (UIX8C-R096..R130): a typed transport classifier, a governed
+  online→offline CASH fallback, atomic durable Room persistence, a stable
+  `clientReference` reused across the online attempt/fallback/restart/reconnect/
+  worker replay, cart-clear-only-after-durability, bounded WorkManager retry,
+  orphan-SYNCING recovery, and backend idempotency regression coverage. It does
+  NOT change `SaleService`/backend financial behaviour beyond adding tests (the
+  backend already dedupes), does NOT rebuild the premium payment/receipt/history
+  screens (only the truthful offline-queued state), does NOT enable QRIS offline,
+  does NOT run a physical campaign, does NOT flip the historical R11 evidence to
+  PASS, and does NOT create a UIX-7 or UIX-8 GO tag. It MAY create the
+  sprint-scoped tag `uix-8c-04-offline-cash-durability-idempotent-recovery-go`
+  under UIX8C-R002; that tag confirms source remediation + automated verification
+  only and never asserts UIX-7/UIX-8 runtime closure (UIX8C-R130). A fresh
+  physical-device revalidation of R11 remains mandatory after final code freeze
+  (UIX8C-R129). Premium payment UX continues in UIX-8C-05.
+
 ## ADR requirement
 A material change to the delivery-train architecture, navigation graph, screen
 state architecture, component architecture, adaptive layout, receipt/payment
@@ -312,11 +425,24 @@ state machine, or accessibility strategy requires an ADR under `docs/adr/`.
 UIX-8C-01 is recorded by
 `docs/adr/0004-uix-8c-full-premium-rebuild.md`; the UIX-8C-02 design-system
 hardening, responsive cashier shell, and sprint-tag governance refinement are
-recorded by `docs/adr/0005-uix-8c-02-premium-design-system-hardening.md`.
+recorded by `docs/adr/0005-uix-8c-02-premium-design-system-hardening.md`. The
+UIX-8C-04 offline CASH durability & idempotent-recovery remediation is recorded
+by `docs/adr/0006-uix-8c-04-offline-cash-durability.md`.
 
 ## Enforcement
 - `scripts/verify_application_foundation_rules.sh` checks this rule file exists
-  and that `UIX8C-R001..R095` are persisted.
+  and that `UIX8C-R001..R130` are persisted.
+- `scripts/uix8c_offline_cash_durability_gate.sh` (fail-closed) enforces the
+  UIX-8C-04 offline CASH durability baseline (UIX8C-R096..R130): rule
+  persistence, the root-cause/architecture/test-matrix/threat-model docs, the
+  typed transport classifier, the prohibition of a broad catch-all offline
+  fallback, QRIS-offline prohibition, the atomic Room transaction path, the
+  cart-clear-after-durable-save contract, the stable-`clientReference` path,
+  bounded WorkManager retry, orphan-SYNCING recovery, the Android + backend
+  idempotency tests, no floating-point money on the offline path, the immutable
+  failed physical run, UIX-7/UIX-8 deferred status, no premature closure tag, and
+  the sprint-tag semantics. Its self-tests are
+  `scripts/tests/uix8c_offline_cash_durability_gate_test.sh`.
 - `scripts/uix8c_cashier_catalog_cart_gate.sh` (fail-closed) enforces the
   UIX-8C-03 cashier/catalog/cart baseline (UIX8C-R061..R095): rule persistence,
   the canonical context component + include, the category filter + adapter, the
