@@ -1,5 +1,14 @@
 # UIX-7 — Physical-Device Runtime Closure & GO Evidence
 
+> **Historical record (immutable).** Superseded as the *current* closure record by
+> `docs/deployment/uix-7-runtime-evidence-governance-closure.md` under Android
+> Runtime Evidence Governance policy v1.0.0 (`docs/governance/android-runtime-evidence-governance.md`).
+> The physical-device evidence below (rows 1–10) is retained and remains valid.
+> The `PENDING` rows below were re-classified as hardware-independent and are now
+> tracked in the structured manifest `docs/deployment/uix-7-runtime-evidence.json`;
+> they are no longer physical-device-required, but their emulator evidence is not
+> yet captured. This file is not edited further.
+
 Canonical evidence record for the UIX-7 Android Cashier physical-device runtime
 closure (UIX7-R052..UIX7-R070). Machine-validated by
 `scripts/uix7_runtime_closure_gate.sh` (structural always; closure assertions

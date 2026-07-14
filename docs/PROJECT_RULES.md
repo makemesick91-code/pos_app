@@ -1572,7 +1572,7 @@ rule: `.claude/rules/45-support-observability-incident-governance.md`.
 32. `UIX6-R032` — Shared-VPS deployment must not change or regress DaengtisiaMS.
 33. `UIX6-R033` — GO requires observed evidence, authoritative CI success, local/origin/VPS exact match, runtime verification, and immutable previous tags.
 
-## Aish POS UIX-7 — Android Cashier Experience Remediation (UIX7-R001..UIX7-R070)
+## Aish POS UIX-7 — Android Cashier Experience Remediation (UIX7-R001..UIX7-R080)
 
 Remediation of the Android Cashier app (`com.aishtech.poslite`) cashier
 experience over existing Android/backend domain services. Modular rule:
@@ -1640,7 +1640,7 @@ experience over existing Android/backend domain services. Modular rule:
 59. `UIX7-R059` — A stale previous receipt or transaction result must never be displayed as the result of the current cart.
 60. `UIX7-R060` — QRIS created or awaiting payment must never be presented as paid, confirmed, settled, or successful.
 61. `UIX7-R061` — QRIS status transitions must be monotonic, auditable, idempotent, tenant-scoped, and correlated to exactly one transaction.
-62. `UIX7-R062` — Runtime evidence must be captured from an actual physical device and must not be replaced by emulator or unit-test evidence.
+62. `UIX7-R062` — Runtime evidence source is governed by scenario classification (`docs/governance/android-runtime-evidence-governance.md`): hardware-dependent/OEM-specific rows must be captured on a physical device; hardware-independent rows may use authoritative, source-attributed, commit-bound controlled emulator evidence. Emulator evidence must never be labelled physical, and unit-test evidence substitutes for neither.
 63. `UIX7-R063` — Runtime logs and screenshots must redact credentials, tokens, customer PII, payment secrets, and QR payloads.
 64. `UIX7-R064` — Accessibility verification must include TalkBack, focus order, semantic labels, touch targets, font scaling, error announcements, and the primary cashier workflows.
 65. `UIX7-R065` — All synthetic Cashier, device, product, transaction, payment, QRIS, sync queue, and test artifacts must be removed or deactivated before UIX-7 GO.
@@ -1648,7 +1648,17 @@ experience over existing Android/backend domain services. Modular rule:
 67. `UIX7-R067` — Any runtime-discovered source defect requires regression tests and one authoritative full CI on the final candidate.
 68. `UIX7-R068` — Evidence-only closure may use lightweight CI only when the CICD-CTRL-2 classifier proves that no executable, source, workflow, rules, dependency, schema, config, or test file changed.
 69. `UIX7-R069` — A runtime defect involving financial correctness, transaction loss, duplication, authorization, tenant isolation, QRIS false-success, or credential leakage is an automatic NO-GO.
-70. `UIX7-R070` — Physical-device runtime verification, cleanup, evidence, VPS synchronization, DMS non-regression, and tag exact-match are all mandatory for GO.
+70. `UIX7-R070` — Runtime verification (physical for hardware-dependent rows, authoritative emulator or physical for hardware-independent rows), cleanup, evidence, VPS synchronization, DMS non-regression, and tag exact-match are all mandatory for GO.
+71. `UIX7-R071` — Every runtime scenario carries exactly one hardware `classification` and every evidence row names its `evidence_source`.
+72. `UIX7-R072` — Controlled emulator evidence may be authoritative for hardware-independent scenarios (persistence, sync, idempotency, receipt/history parity, accessibility, logs).
+73. `UIX7-R073` — Physical-device evidence remains required for hardware-dependent and OEM-specific scenarios; emulator evidence there is a blocking failure.
+74. `UIX7-R074` — Mixed physical/emulator evidence is permitted; each row is judged against its own classification.
+75. `UIX7-R075` — Emulator evidence must never be relabelled or aggregated as physical-device evidence; the source field is immutable and auditable.
+76. `UIX7-R076` — Every authoritative row is bound to the exact candidate commit, app version, APK SHA-256, variant, environment, timestamp, and method; missing/stale binding is a blocking failure.
+77. `UIX7-R077` — Authoritative runtime evidence uses a release-equivalent APK on a supported emulator API; debug-only behavior is never the sole GO proof.
+78. `UIX7-R078` — The closure gate validates a structured evidence manifest (not a bare `PASS` search), fails closed on any incomplete row, and has regression tests.
+79. `UIX7-R079` — The policy is not retroactive; a FAIL/BLOCKED/PENDING row stays so until genuine classified evidence is captured.
+80. `UIX7-R080` — This runtime-evidence foundation is the mandatory baseline for every subsequent Android sprint, including UIX-8.
 
 ## CICD-CTRL-2 — Single Authoritative Full CI & Evidence Path Optimization Rules
 

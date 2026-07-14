@@ -171,8 +171,13 @@ presents and orchestrates only.
   confirmed, settled, or successful.
 - UIX7-R061 — QRIS status transitions must be monotonic, auditable, idempotent,
   tenant-scoped, and correlated to exactly one transaction.
-- UIX7-R062 — Runtime evidence must be captured from an actual physical device
-  and must not be replaced by emulator or unit-test evidence.
+- UIX7-R062 — Runtime evidence source is governed by scenario classification
+  (`docs/governance/android-runtime-evidence-governance.md`). Hardware-dependent
+  and OEM-specific scenarios MUST be captured on an actual physical device.
+  Hardware-independent scenarios MAY use controlled Android **emulator** evidence
+  as authoritative, provided it is source-attributed, commit-bound, and auditable.
+  Emulator evidence MUST NEVER be labelled or represented as physical-device
+  evidence, and unit-test evidence is never a substitute for either.
 - UIX7-R063 — Runtime logs and screenshots must redact credentials, tokens,
   customer PII, payment secrets, and QR payloads.
 - UIX7-R064 — Accessibility verification must include TalkBack, focus order,
@@ -191,6 +196,44 @@ presents and orchestrates only.
 - UIX7-R069 — A runtime defect involving financial correctness, transaction
   loss, duplication, authorization, tenant isolation, QRIS false-success, or
   credential leakage is an automatic NO-GO.
-- UIX7-R070 — Physical-device runtime verification, cleanup, evidence, VPS
-  synchronization, DMS non-regression, and tag exact-match are all mandatory for
-  GO.
+- UIX7-R070 — Runtime verification (physical for hardware-dependent rows,
+  authoritative emulator or physical for hardware-independent rows), cleanup,
+  evidence, VPS synchronization, DMS non-regression, and tag exact-match are all
+  mandatory for GO.
+
+## Runtime evidence source governance (emulator-evidence unblock, UIX7-R071..R080)
+
+Formalises `docs/governance/android-runtime-evidence-governance.md` (policy
+v1.0.0). Extends, and does not weaken, UIX7-R052..R070.
+
+- UIX7-R071 — Every runtime scenario MUST carry exactly one hardware
+  `classification` (`hardware_independent` / `hardware_neutral` /
+  `hardware_dependent` / `oem_specific`) and every evidence row MUST name its
+  `evidence_source` (physical / emulator / automated_test / database / ci / vps).
+- UIX7-R072 — Controlled emulator evidence MAY be authoritative for
+  `hardware_independent` scenarios (offline durable save, process-kill
+  restoration, reconnect, idempotent sync, receipt/history parity, accessibility
+  semantics, crash/ANR/log/cleartext inspection).
+- UIX7-R073 — Physical-device evidence REMAINS REQUIRED for `hardware_dependent`
+  and `oem_specific` scenarios (camera/scanner, Bluetooth/USB printer, NFC,
+  biometric, hardware keystore, physical payment peripheral, OEM background
+  restrictions). Emulator evidence for such a row is a BLOCKING gate failure.
+- UIX7-R074 — Mixed evidence (physical for some rows, emulator for others) is
+  permitted; each row is judged against its own classification.
+- UIX7-R075 — Emulator evidence MUST NEVER be relabelled, represented, or
+  aggregated as physical-device evidence; the source field is immutable and
+  auditable.
+- UIX7-R076 — Every authoritative runtime row MUST be bound to the exact
+  candidate commit SHA, app version, APK SHA-256, build variant, environment,
+  timestamp, and verification method; a missing/empty binding is a BLOCKING gate
+  failure and stale (commit-mismatched) evidence is rejected.
+- UIX7-R077 — Authoritative runtime evidence MUST use a release-equivalent APK on
+  an app-supported emulator API; debug-only behavior is never the sole GO proof.
+- UIX7-R078 — The closure gate MUST validate a structured, machine-parseable
+  evidence manifest (not a bare `PASS` string search), MUST fail closed on any
+  incomplete/ambiguous row, and MUST have regression tests.
+- UIX7-R079 — This policy is NOT retroactive: it never converts previously-absent
+  evidence into a PASS, and a `FAIL`/`BLOCKED`/`PENDING` row stays so until
+  genuine classified evidence is captured.
+- UIX7-R080 — This runtime-evidence foundation is the mandatory baseline for
+  every subsequent Android sprint, including UIX-8.
