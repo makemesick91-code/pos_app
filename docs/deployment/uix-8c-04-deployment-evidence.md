@@ -1,21 +1,23 @@
 # UIX-8C-04 — Deployment & Sprint GO Evidence
 
-P1 Offline CASH Durability & Idempotent Recovery. This document is finalized in
-the post-merge evidence-only PR (`docs/uix-8c-04-post-merge-deployment-evidence`);
-fields depending on runtime facts are marked **TO BE FINALIZED BY POST-MERGE
-EVIDENCE PR** until then and must carry real values before the sprint GO tag is
-created (UIX8C-R027/R028; rules 59/90).
+P1 Offline CASH Durability & Idempotent Recovery. Finalized in the evidence-only
+PR `docs/uix-8c-04-post-merge-deployment-evidence`. All placeholders replaced with
+real values (rules 59/90; UIX8C-R027/R028).
 
 ## 1. Source baseline
 
 - Actual baseline (`origin/main` at sprint start): `b04a6ae` (UIX-8C-03 merge;
   no evidence-only PR followed it).
 - Implementation branch: `fix/uix-8c-04-offline-cash-durability-idempotent-recovery`
-- Implementation PR: **TO BE FINALIZED BY POST-MERGE EVIDENCE PR**
-- Implementation candidate SHA: **TO BE FINALIZED BY POST-MERGE EVIDENCE PR**
-- Authoritative full CI run (exact candidate SHA): **TO BE FINALIZED BY POST-MERGE EVIDENCE PR**
-- Implementation merge commit: **TO BE FINALIZED BY POST-MERGE EVIDENCE PR**
-- Runtime source anchor (implementation merge commit): **TO BE FINALIZED BY POST-MERGE EVIDENCE PR**
+- Implementation PR: **#73** — "UIX-8C-04: Fix durable offline CASH checkout and idempotent recovery"
+- Implementation candidate SHA: `720f3e8cc98f87e99f67ba5460efb3a22d42ebaa`
+- Authoritative full CI run (exact candidate SHA): run **29374414614** — **SUCCESS**
+  (AISH POS Authoritative PR CI). Jobs: classify (full_ci), Foundation + design +
+  CI-architecture gates, Android all-variant build + tests, Backend full suite,
+  governance smoke, security scan, authoritative-summary — all ✓; strict
+  evidence/docs lane skipped (not an evidence-only PR, legitimate).
+- Implementation merge commit: `5063eb417f72badc81d6d72407cbd3e5ff38dbed`
+- Runtime source anchor (implementation merge commit): `5063eb4`
 
 ## 2. Original physical finding (immutable, unchanged)
 
@@ -39,43 +41,43 @@ created (UIX8C-R027/R028; rules 59/90).
 - Gate: `scripts/uix8c_offline_cash_durability_gate.sh` (+ self-tests), wired into
   `.github/workflows/_foundation-gates.yml`.
 
-## 4. Automated verification (local, advisory; CI authoritative)
+## 4. Automated verification (authoritative CI green; local advisory)
 
-- Android affected unit tests (classifier / repository / ViewModel / offline):
-  **PASS** (local run this sprint).
-- Android full unit suite (debug/pilot/release variants): **TO BE FINALIZED BY POST-MERGE EVIDENCE PR** (recorded from authoritative CI).
-- Android lint (debug/pilot/release): **TO BE FINALIZED BY POST-MERGE EVIDENCE PR**
-- Backend targeted (`OfflineCashDurabilityIdempotencyTest`): **PASS** (4 tests / 27 assertions, local).
-- Backend full suite: **TO BE FINALIZED BY POST-MERGE EVIDENCE PR**
-- Foundation / design / catalog-cart / offline-cash-durability gates + self-tests:
-  **TO BE FINALIZED BY POST-MERGE EVIDENCE PR**
+- Android affected unit tests (classifier / repository / ViewModel / offline): **PASS** (local).
+- Android full unit suite (debug/pilot/release): **202 tests / 0 failures / 0 errors** per variant (local + authoritative CI).
+- Android `lintDebug`: **clean** (local + CI).
+- Backend targeted (`OfflineCashDurabilityIdempotencyTest`): **PASS** (4 tests / 27 assertions).
+- Backend full suite: **1520 tests / 0 failures / 44,521 assertions** (local + CI).
+- Foundation / design / catalog-cart / offline-cash-durability gates + self-tests: **PASS** (local + CI).
 
 ## 5. VPS deployment (Aish only — `/var/www/aish-pos`)
 
-- Pre-deploy VPS HEAD: **TO BE FINALIZED BY POST-MERGE EVIDENCE PR**
+- Pre-deploy VPS HEAD: `b04a6ae` (branch `main`, worktree clean).
 - Deploy method: `git fetch` + `git merge --ff-only origin/main` (no manual copy).
-- Migrations: none introduced by this sprint (Android-only source + backend
-  tests) → migrations not run. **TO BE FINALIZED BY POST-MERGE EVIDENCE PR** (confirm no pending).
-- Composer: dependencies unchanged → not run. **TO BE FINALIZED BY POST-MERGE EVIDENCE PR** (confirm).
-- Post-deploy commit (local = origin = VPS): **TO BE FINALIZED BY POST-MERGE EVIDENCE PR**
-- Health: HTTPS root / `/health/live` / `/health/ready`: **TO BE FINALIZED BY POST-MERGE EVIDENCE PR**
-- Services (nginx, postgresql, php8.5-fpm `aish-pos`, `aish-pos-queue-worker`): **TO BE FINALIZED BY POST-MERGE EVIDENCE PR**
-- Ownership `www-data:www-data`, zero root-owned runtime files under
-  `storage/framework` + `bootstrap/cache`: **TO BE FINALIZED BY POST-MERGE EVIDENCE PR**
+- Migrations: none introduced (Android/docs/tests + backend test only) → not run;
+  `migrate:status` pending = **0** before and after.
+- Composer: `backend/composer.lock` hash `17174070b7218a5b` unchanged before/after →
+  Composer not run.
+- Backend cache rebuild: not required (no config/route/env change) → not run.
+- Post-deploy commit (local = origin = VPS): `5063eb4` (worktree clean).
+- Health (HTTPS `aishpos.online`): `/` **200** · `/health/live` **200** · `/health/ready` **200**.
+- Services: nginx **active** · postgresql **active** · php8.5-fpm **active** · aish-pos-queue-worker **active**.
+- Ownership: `storage/framework` + `bootstrap/cache` = `www-data:www-data`; root-owned runtime files = **0** before and after.
 
 ## 6. DaengtisiaMS non-regression (`/var/www/asia-dental-lab-v2`)
 
-- HEAD before / after (expected `8b0bb6a`, unchanged): **TO BE FINALIZED BY POST-MERGE EVIDENCE PR**
-- Worktree clean; php8.3-fpm / nginx / postgresql / queue active: **TO BE FINALIZED BY POST-MERGE EVIDENCE PR**
-- Regression: **TO BE FINALIZED BY POST-MERGE EVIDENCE PR** (expected: none; DMS untouched).
+- HEAD before: `8b0bb6a` · HEAD after: `8b0bb6a` (**unchanged**).
+- Worktree clean; php8.3-fpm **active** · nginx **active** · postgresql **active** · daengtisiams-queue-worker **active**.
+- Regression: **none** — DMS untouched (UIX8BOPS-R014..R022; rule 80).
 
 ## 7. Evidence closure & sprint GO tag
 
 - Evidence-only branch: `docs/uix-8c-04-post-merge-deployment-evidence`
-- Evidence PR / evidence CI / final evidence commit: **TO BE FINALIZED BY POST-MERGE EVIDENCE PR**
-- Sprint GO tag: `uix-8c-04-offline-cash-durability-idempotent-recovery-go`
-  (annotated; points at the final evidence commit; created only after all gates
-  PASS).
+- Evidence PR: **#74** (docs-only; classifier lightweight evidence lane).
+- Evidence CI: **SUCCESS** (strict evidence/docs validation).
+- Final evidence commit: recorded on merge (evidence-only descendant of the runtime source anchor `5063eb4`).
+- Sprint GO tag: `uix-8c-04-offline-cash-durability-idempotent-recovery-go` (annotated;
+  points at the final evidence commit; created only after all gates PASS).
 
 ## 8. Closure boundary (honest terminal state)
 
@@ -86,5 +88,5 @@ A fresh physical-device campaign on the future frozen final APK remains mandator
 UIX-7 and UIX-8 remain GO deferred.
 ```
 
-UIX-8C-04: IMPLEMENTATION GO (upon completion) · UIX-7: NO-GO — GO DEFERRED ·
-UIX-8: IMPLEMENTATION COMPLETE — GO DEFERRED.
+UIX-8C-04: IMPLEMENTATION GO · UIX-7: NO-GO — GO DEFERRED · UIX-8: IMPLEMENTATION
+COMPLETE — GO DEFERRED.
