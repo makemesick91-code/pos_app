@@ -2,7 +2,7 @@
 
 This is the foundation narrative for the UIX-8C delivery train. The enforceable
 rule set lives in `.claude/rules/61-android-cashier-full-premium-delivery-foundation.md`
-(UIX8C-R001..R030) and is persisted in `docs/PROJECT_RULES.md`. This document
+(UIX8C-R001..R060) and is persisted in `docs/PROJECT_RULES.md`. This document
 never overrides the modular rule; on any apparent conflict the modular rule is
 authoritative.
 
@@ -28,16 +28,22 @@ Immutable failed physical run (preserved verbatim, UIX8C-R003):
   durable), R18 **FAIL** (layout collapse at 130% font). These are never edited
   into PASS (UIX8C-R003/R030).
 
-## The 30 foundation rules (summary)
+## The 60 foundation rules (summary)
 
 Delivery-train governance (R001–R005, R024–R025), screen/state foundation
 (R006–R008, R023), financial/transaction integrity (R009–R016), visual &
-accessibility (R017–R022), and evidence/release discipline (R026–R030). Full
+accessibility (R017–R022), evidence/release discipline (R026–R030), and the
+UIX-8C-02 premium design-system / responsive-shell / accessibility foundation
+(R031–R060: visual system R031–R034, font-scale resilience R035–R041, layout
+integrity R042–R044/R049, accessibility R045–R048, component & money
+presentation R050–R055, evidence & sprint-tag discipline R056–R060). Full
 authoritative text: `.claude/rules/61-android-cashier-full-premium-delivery-foundation.md`.
 
 Key non-negotiables:
 
-- UIX8C-R002 — no separate UIX-8C GO tag.
+- UIX8C-R002 — no single **umbrella/final** UIX-8C GO tag; each implementation
+  sprint MAY carry an immutable annotated **sprint-scoped** `uix-8c-NN-<slug>-go`
+  tag that never asserts UIX-7/UIX-8 runtime closure (see UIX8C-R060).
 - UIX8C-R003 — historical failed physical evidence is immutable.
 - UIX8C-R009 — whole-Rupiah integer money is mandatory.
 - UIX8C-R012/R013/R014 — governed offline CASH fallback; canonical HTTP
@@ -64,11 +70,35 @@ It changes **no runtime code**, runs **no physical campaign**, modifies **no
 runtime evidence/manifest**, builds **no closure APK**, and creates **no GO
 tag** (scope guard, rule 61).
 
+## Scope of UIX-8C-02 (design-system hardening)
+
+UIX-8C-02 hardens the premium visual foundation the remaining screen sprints
+build on. It delivers, **without** a runtime/financial behaviour change:
+
+1. The permanent rule set UIX8C-R031..R060 (rule 61) and its persistence.
+2. Centralized premium design tokens — colour/typography/spacing/shape/elevation/
+   motion (`res/values/colors.xml|dimens.xml|styles.xml|themes.xml|shapes.xml`).
+3. A reusable, accessible component library (`Widget.Aish.*`, `TextAppearance.Aish.*`,
+   `component_state_*`, cashier context header) — token-driven, no per-screen copies.
+4. A hardened **responsive cashier shell** that fixes the structural R18 large-font
+   failure: the cashier and payment surfaces keep context, product, cart, total,
+   and the checkout CTA visible or scroll-reachable at 100/115/130% font.
+5. Design-system + font-scale + accessibility regression tests, and a fail-closed
+   `scripts/uix8c_design_system_gate.sh` (+ self-tests) wired into CI.
+6. ADR 0005 (`docs/adr/0005-uix-8c-02-premium-design-system-hardening.md`).
+
+It does **not** fix R11, change `SaleService`/backend/Room semantics, alter
+runtime evidence, run a physical campaign, or create a UIX-7/UIX-8 GO tag. It MAY
+create the sprint-scoped tag `uix-8c-02-premium-design-system-hardening-go`
+(UIX8C-R002/R060), which records only this sprint's implementation closure.
+
 ## How closure will happen
 
 The implementation train (UIX-8C-02..09) remediates the screens and the failed
-findings; each sprint is exact-SHA CI-gated (UIX8C-R027/R028). After code freeze
-(UIX8C-R005/R024) a fresh APK (UIX8C-R004) drives the physical campaign; closure
-is recorded against the existing UIX-7/UIX-8 GO discipline (rules 55/56/59/90) —
-UIX-8C mints no tag of its own (UIX8C-R002). Absence of proof stays NO-GO
-(UIX8C-R030).
+findings; each sprint is exact-SHA CI-gated (UIX8C-R027/R028) and MAY carry its
+own immutable annotated **sprint-scoped** GO tag (UIX8C-R002). After code freeze
+(UIX8C-R005/R024) a fresh APK (UIX8C-R004) drives the physical campaign; genuine
+UIX-7/UIX-8 closure is recorded against the existing UIX-7/UIX-8 GO discipline
+(rules 55/56/59/90) — UIX-8C mints **no umbrella/final** tag of its own
+(UIX8C-R002), and no sprint tag asserts UIX-7/UIX-8 runtime closure (UIX8C-R060).
+Absence of proof stays NO-GO (UIX8C-R030).

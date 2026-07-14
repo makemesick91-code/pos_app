@@ -28,10 +28,12 @@ FILES=(
   "docs/testing/uix-8c-screen-state-accessibility-matrix.md"
   "docs/deployment/uix-8c-delivery-plan.md"
   "docs/adr/0004-uix-8c-full-premium-rebuild.md"
+  "docs/adr/0005-uix-8c-02-premium-design-system-hardening.md"
   "docs/deployment/uix-8c-physical-run-run-97fbb64-2af94aa.json"
   "docs/deployment/uix-7-runtime-evidence.json"
   "docs/deployment/uix-8-runtime-evidence.json"
   "scripts/uix8c_foundation_gate.sh"
+  "scripts/uix8c_design_system_gate.sh"
 )
 mksandbox(){ # -> echoes sandbox dir
   local d; d="$(mktemp -d)"
@@ -93,6 +95,32 @@ SB="$(mksandbox)"
 rm -f "$SB/docs/testing/uix-8c-screen-state-accessibility-matrix.md"
 runsb "$SB"; RC=$?
 [ "$RC" -ne 0 ] && ok "a missing required doc is rejected" || no "missing doc must be rejected"
+rm -rf "$SB"
+
+# 7. A sprint-scoped uix-8c-NN-<slug>-go tag is PERMITTED (UIX8C-R002 refined) -> PASS.
+SB="$(mksandbox)"
+( cd "$SB" && git tag uix-8c-02-premium-design-system-hardening-go ) >/dev/null 2>&1
+runsb "$SB"; RC=$?
+[ "$RC" -eq 0 ] && ok "a sprint-scoped uix-8c-NN-*-go tag is permitted" \
+               || no "sprint-scoped tag must be permitted (rc=$RC)"
+rm -rf "$SB"
+
+# 8. Dropping the refined R002 sprint-scoped clause -> gate FAIL (governance must persist).
+SB="$(mksandbox)"
+sed -i 's/sprint-scoped/REDACTED/g' \
+  "$SB/.claude/rules/61-android-cashier-full-premium-delivery-foundation.md"
+runsb "$SB"; RC=$?
+[ "$RC" -ne 0 ] && ok "removing the R002 sprint-scoped clause is rejected" \
+               || no "missing R002 sprint-scoped clause must be rejected"
+rm -rf "$SB"
+
+# 9. A UIX-7 closure tag is still forbidden even alongside a sprint tag -> gate FAIL.
+SB="$(mksandbox)"
+( cd "$SB" && git tag uix-8c-02-premium-design-system-hardening-go \
+           && git tag uix-7-android-cashier-experience-remediation-go ) >/dev/null 2>&1
+runsb "$SB"; RC=$?
+[ "$RC" -ne 0 ] && ok "a UIX-7 closure tag is rejected even with a sprint tag present" \
+               || no "UIX-7 closure tag must be rejected"
 rm -rf "$SB"
 
 [ "$fails" -eq 0 ] && { echo "UIX-8C FOUNDATION GATE TEST: PASS"; exit 0; } \

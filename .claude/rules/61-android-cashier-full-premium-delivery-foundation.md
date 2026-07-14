@@ -30,9 +30,16 @@ settlement, or sync engine.
 - **UIX8C-R001** — UIX-8C is the final premium Android delivery train for
   UIX-7/UIX-8 closure; every UIX-8C sprint serves that closure and none
   fabricates it.
-- **UIX8C-R002** — UIX-8C does not create a separate GO tag. UIX-8C closure is
-  recorded against the existing UIX-7/UIX-8 GO discipline; there is no
-  `uix-8c-*-go` tag.
+- **UIX8C-R002** — UIX-8C has **no single umbrella or final GO tag**. Each
+  UIX-8C implementation sprint MAY carry an immutable, annotated, **sprint-scoped
+  GO tag** (pattern `uix-8c-NN-<slug>-go`, e.g.
+  `uix-8c-02-premium-design-system-hardening-go`) once that sprint is merged with
+  authoritative exact-SHA CI green, local/origin/VPS exact-match, and its sprint
+  gates PASS. A sprint-scoped tag records only that sprint's implementation
+  closure: it **never asserts UIX-7 or UIX-8 runtime closure**, never replaces
+  physical-device evidence, and never opens final release. UIX-8C's UIX-7/UIX-8
+  closure is still recorded against the existing UIX-7/UIX-8 GO discipline; no
+  umbrella `uix-8c-*-go` closure tag is ever minted (refined by UIX8C-R060).
 - **UIX8C-R003** — Historical failed physical evidence is immutable. The failed
   physical run `run-97fbb64-2af94aa` (R01 PENDING, R11 FAIL, R18 FAIL) is
   preserved verbatim and is never edited into a PASS.
@@ -106,6 +113,88 @@ settlement, or sync engine.
   classified evidence is captured. UIX-7 remains `NO-GO — GO DEFERRED` and
   UIX-8 remains `IMPLEMENTATION COMPLETE — GO DEFERRED` until genuinely closed.
 
+## UIX-8C-02 — Premium design-system, responsive shell & accessibility foundation
+Introduced by UIX-8C-02 (premium design-system hardening, responsive cashier
+shell, and reusable component library). These rules are the permanent visual /
+responsive / accessibility baseline for every subsequent Android sprint and
+extend — never weaken — rules 55/56/57/58/59 and UIX8C-R001..R030.
+
+### Visual system
+- **UIX8C-R031** — Material 3 is the canonical Android visual foundation
+  (`Theme.AishPosLite` extends `Theme.Material3.*`); no non-Material visual
+  framework is introduced for cashier surfaces.
+- **UIX8C-R032** — Aish brand colour, typography, spacing, shape, elevation, and
+  motion tokens are centralized in
+  `res/values/colors.xml|dimens.xml|styles.xml|themes.xml|shapes.xml` and are the
+  single visual source of truth.
+- **UIX8C-R033** — New or changed UI must not introduce raw off-system colour
+  values (no hardcoded hex in layouts or view code); use `@color` tokens.
+- **UIX8C-R034** — New or changed UI must not duplicate canonical component
+  styles locally; reuse `Widget.Aish.*` and `TextAppearance.Aish.*`.
+
+### Font-scale resilience
+- **UIX8C-R035** — Typography respects Android system font scaling (`sp` sizes;
+  no `dp` type sizes on the authoritative path).
+- **UIX8C-R036** — The application must never force or simulate a smaller user
+  font scale to hide layout defects.
+- **UIX8C-R037** — Supported primary workflows remain operable at 100%, 115%, and
+  130% system font scale.
+- **UIX8C-R038** — The product catalog remains visible or scroll-reachable at
+  130%.
+- **UIX8C-R039** — Cart, totals, and the checkout CTA remain visible or
+  scroll-reachable at 130% (the checkout CTA is never pushed off-screen).
+- **UIX8C-R040** — The payment sheet remains usable at 130% (its confirm CTA is
+  scroll-reachable, never below the sheet fold).
+- **UIX8C-R041** — Receipt and transaction history remain usable at 130%.
+
+### Layout integrity
+- **UIX8C-R042** — Critical content must not depend on unsafe fixed-height
+  containers; flexible regions are weighted or scroll-bounded, not clipped.
+- **UIX8C-R043** — Nested scrolling must be explicit, bounded, and free of dead
+  zones (no RecyclerView inside a plain ScrollView; scroll regions are weighted).
+- **UIX8C-R044** — All interactive touch targets remain at least 48dp.
+- **UIX8C-R049** — Long tenant, outlet, cashier, category, and product names wrap
+  or ellipsize safely and never clip a primary action.
+
+### Accessibility
+- **UIX8C-R045** — Icon-only controls carry meaningful accessible labels.
+- **UIX8C-R046** — Focus order follows the visible cashier workflow.
+- **UIX8C-R047** — Status, error, offline, and sync states are not conveyed by
+  colour alone; a text label always accompanies colour-coded state.
+- **UIX8C-R048** — Error states expose readable text and accessible
+  announcements.
+
+### Component & money presentation
+- **UIX8C-R050** — Loading, empty, no-result, error, offline, and unavailable
+  states use canonical reusable components (`component_state_*`,
+  `Widget.Aish.StateContainer`), not per-screen copies.
+- **UIX8C-R051** — Whole-Rupiah financial values remain visually stable, aligned,
+  and unambiguous (tabular figures via `TextAppearance.Aish.Money*`).
+- **UIX8C-R052** — Decorative elements must never obscure operational or financial
+  information.
+- **UIX8C-R053** — Animations remain lightweight, bounded, and do not block
+  cashier interaction.
+- **UIX8C-R054** — Dynamic colour must not override the governed Aish brand
+  identity unless explicitly approved via ADR.
+- **UIX8C-R055** — Phone portrait is the mandatory baseline; tablet adaptation
+  must not regress it.
+
+### Evidence & sprint-tag discipline
+- **UIX8C-R056** — Component previews, screenshot tests, and emulator validation
+  are development evidence and never replace physical-device runtime closure.
+- **UIX8C-R057** — Design-system regression is a release blocker (the fail-closed
+  `scripts/uix8c_design_system_gate.sh` enforces tokens, components, no-hardcode,
+  touch targets, font-scale test presence, and status-not-colour-alone).
+- **UIX8C-R058** — Old failed physical evidence (`run-97fbb64-2af94aa`) remains
+  immutable after visual remediation; R18 is not marked PASS by any automated or
+  emulator evidence.
+- **UIX8C-R059** — Any Android runtime visual change requires a new final APK and
+  new physical evidence after code freeze.
+- **UIX8C-R060** — A sprint-scoped implementation GO tag (UIX8C-R002) never
+  implies UIX-7 or UIX-8 runtime GO. UIX-7 stays `NO-GO — GO DEFERRED` and UIX-8
+  stays `IMPLEMENTATION COMPLETE — GO DEFERRED` until genuinely closed against the
+  UIX-7/UIX-8 GO discipline, regardless of any `uix-8c-NN-*-go` sprint tag.
+
 ## Scope guard for UIX-8C-01
 - UIX-8C-01 does not fix R11 (offline CASH durability), does not perform a broad
   runtime visual rebuild, does not modify runtime evidence/manifest state, does
@@ -113,22 +202,40 @@ settlement, or sync engine.
   any GO tag. It establishes governance, architecture, inventory, and the
   fail-closed foundation gate only.
 
+## Scope guard for UIX-8C-02
+- UIX-8C-02 hardens the design system, builds the reusable component library, and
+  fixes the structural R18 large-font layout risk on the cashier and payment
+  surfaces. It does NOT fix R11 (offline CASH durability), does NOT change
+  `SaleService`/backend financial behaviour, does NOT alter Room offline
+  transaction semantics or canonical runtime-evidence results, does NOT run a
+  physical campaign, and does NOT create a UIX-7 or UIX-8 GO tag. It MAY create
+  the sprint-scoped tag `uix-8c-02-premium-design-system-hardening-go` under
+  UIX8C-R002. Full per-screen rebuilds continue in UIX-8C-03..09.
+
 ## ADR requirement
 A material change to the delivery-train architecture, navigation graph, screen
 state architecture, component architecture, adaptive layout, receipt/payment
 state machine, or accessibility strategy requires an ADR under `docs/adr/`.
 UIX-8C-01 is recorded by
-`docs/adr/0004-uix-8c-full-premium-rebuild.md`.
+`docs/adr/0004-uix-8c-full-premium-rebuild.md`; the UIX-8C-02 design-system
+hardening, responsive cashier shell, and sprint-tag governance refinement are
+recorded by `docs/adr/0005-uix-8c-02-premium-design-system-hardening.md`.
 
 ## Enforcement
 - `scripts/verify_application_foundation_rules.sh` checks this rule file exists
-  and that `UIX8C-R001..R030` are persisted.
+  and that `UIX8C-R001..R060` are persisted.
 - `scripts/uix8c_foundation_gate.sh` (fail-closed) validates rule persistence,
   the screen inventory, the state/accessibility matrix, the ADR, the immutable
-  failed physical run record, UIX-7/UIX-8 deferred status, absent target GO
-  tags, and the no-secret / no-premature-GO invariants. Its self-tests are
+  failed physical run record, UIX-7/UIX-8 deferred status, the umbrella/final
+  GO-tag absence (while permitting sprint-scoped `uix-8c-NN-*-go` tags per
+  UIX8C-R002), and the no-secret / no-premature-GO invariants. Its self-tests are
   `scripts/tests/uix8c_foundation_gate_test.sh`.
-- Both are wired into the authoritative CI foundation lane
+- `scripts/uix8c_design_system_gate.sh` (fail-closed) enforces the UIX-8C-02
+  visual/responsive/accessibility baseline (UIX8C-R031..R060): centralized
+  tokens, canonical components, no hardcoded off-system values in changed UI,
+  48dp touch targets, font-scale test presence, and status-not-colour-alone. Its
+  self-tests are `scripts/tests/uix8c_design_system_gate_test.sh`.
+- All are wired into the authoritative CI foundation lane
   (`.github/workflows/_foundation-gates.yml`).
 - Because `main` is not branch-protected, GO discipline is enforced by rule and
   reviewer discipline; do not tag until every gate is genuinely met.

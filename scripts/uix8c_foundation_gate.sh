@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
-# UIX-8C-01 foundation gate (fail-closed).
+# UIX-8C foundation gate (fail-closed).
 #
 # Validates the permanent UIX-8C governance/architecture/foundation:
-#   * rule set UIX8C-R001..R030 persisted (modular rule + PROJECT_RULES);
-#   * foundation / architecture / matrix / delivery docs + ADR present;
+#   * rule set UIX8C-R001..R060 persisted (modular rule + PROJECT_RULES);
+#   * foundation / architecture / matrix / delivery docs + ADRs present;
 #   * full screen inventory + screen/state/accessibility matrix present;
 #   * the immutable failed physical run run-97fbb64-2af94aa is recorded and its
 #     genuine failures (R01 PENDING, R11 FAIL, R18 FAIL) are NOT flipped to PASS;
 #   * UIX-7 and UIX-8 remain GO DEFERRED (evidence decision != GO);
-#   * no target GO tag (uix-7/uix-8/uix-8c) exists — no premature GO;
+#   * no UIX-7/UIX-8 closure tag and no UIX-8C umbrella/final `uix-8c-*-go` tag
+#     exists — sprint-scoped `uix-8c-NN-<slug>-go` tags ARE permitted (UIX8C-R002);
 #   * no secret/credential pattern in UIX-8C artifacts.
 # Fail-closed: any missing/ambiguous check fails the gate. Absence of proof is
 # NO-GO (UIX8C-R030).
@@ -25,27 +26,31 @@ ARCH="docs/architecture/uix-8c-android-screen-state-architecture.md"
 MATRIX="docs/testing/uix-8c-screen-state-accessibility-matrix.md"
 PLAN="docs/deployment/uix-8c-delivery-plan.md"
 ADR="docs/adr/0004-uix-8c-full-premium-rebuild.md"
+ADR2="docs/adr/0005-uix-8c-02-premium-design-system-hardening.md"
+DESIGN_GATE="scripts/uix8c_design_system_gate.sh"
 FAILED_RUN="docs/deployment/uix-8c-physical-run-run-97fbb64-2af94aa.json"
 UIX7_EVID="docs/deployment/uix-7-runtime-evidence.json"
 UIX8_EVID="docs/deployment/uix-8-runtime-evidence.json"
 
-# 1. Rule file + all 30 rule ids present (modular rule + PROJECT_RULES).
+# 1. Rule file + all rule ids present (modular rule + PROJECT_RULES).
 [ -f "$RULE" ] && pass "modular rule 61 present" || bad "missing $RULE"
 [ -f "$PROJECT_RULES" ] && pass "PROJECT_RULES present" || bad "missing $PROJECT_RULES"
 missing_ids=""
-for i in $(seq -w 1 30); do
+for i in $(seq -w 1 60); do
   id="UIX8C-R0$i"
   if grep -q "$id" "$RULE" 2>/dev/null && grep -q "$id" "$PROJECT_RULES" 2>/dev/null; then :; else
     missing_ids="$missing_ids $id"
   fi
 done
-[ -z "$missing_ids" ] && pass "UIX8C-R001..R030 persisted (rule + PROJECT_RULES)" \
+[ -z "$missing_ids" ] && pass "UIX8C-R001..R060 persisted (rule + PROJECT_RULES)" \
   || bad "UIX8C rule ids not fully persisted:$missing_ids"
 
-# 2. Foundation / architecture / matrix / delivery docs + ADR present.
-for d in "$FOUNDATION" "$ARCH" "$MATRIX" "$PLAN" "$ADR"; do
+# 2. Foundation / architecture / matrix / delivery docs + ADRs present, and the
+#    UIX-8C-02 design-system gate exists (design-system regression is a blocker).
+for d in "$FOUNDATION" "$ARCH" "$MATRIX" "$PLAN" "$ADR" "$ADR2"; do
   [ -f "$d" ] && pass "doc present: $d" || bad "missing doc: $d"
 done
+[ -f "$DESIGN_GATE" ] && pass "design-system gate present" || bad "missing $DESIGN_GATE"
 
 # 3. Full screen inventory complete (architecture doc).
 inv_missing=""
@@ -128,23 +133,41 @@ done
 # Foundation doc states the deferred posture explicitly.
 grep -q "GO DEFERRED" "$FOUNDATION" 2>/dev/null && pass "foundation doc records GO DEFERRED status" || bad "foundation doc missing GO DEFERRED status"
 
-# 7. No premature GO tag (uix-7 / uix-8 / uix-8c targets must not exist).
+# 7. No premature UIX-7/UIX-8 closure tag and no UIX-8C umbrella/final GO tag.
+#    Sprint-scoped implementation tags `uix-8c-NN-<slug>-go` ARE permitted
+#    (UIX8C-R002 refined by UIX8C-R060): a sprint tag never asserts UIX-7/UIX-8
+#    runtime closure, so it is not premature.
 tags="$(git tag 2>/dev/null)"
 prem=""
 for t in "uix-7-android-cashier-experience-remediation-go" \
          "uix-8-android-cashier-premium-visual-transaction-experience-go"; do
   printf '%s\n' "$tags" | grep -qx "$t" && prem="$prem $t"
 done
-printf '%s\n' "$tags" | grep -qE '^uix-8c-.*-go$' && prem="$prem uix-8c-*-go"
-[ -z "$prem" ] && pass "no premature GO tag (uix-7/uix-8/uix-8c absent)" || bad "premature GO tag present:$prem"
-# Rule forbids a separate UIX-8C GO tag.
-grep -q "UIX8C-R002" "$RULE" 2>/dev/null && grep -qi "does not create a separate GO tag" "$RULE" 2>/dev/null \
-  && pass "UIX8C-R002 forbids a separate GO tag" || bad "UIX8C-R002 no-GO-tag clause missing"
+while IFS= read -r t; do
+  [ -z "$t" ] && continue
+  case "$t" in
+    uix-8c-[0-9][0-9]-*-go) : ;;            # sprint-scoped implementation GO tag — allowed
+    uix-8c-*-go) prem="$prem $t" ;;         # umbrella/final UIX-8C closure tag — forbidden
+  esac
+done <<EOF
+$tags
+EOF
+[ -z "$prem" ] && pass "no premature/umbrella GO tag (uix-7/uix-8/uix-8c-umbrella absent; sprint-scoped allowed)" \
+  || bad "premature/umbrella GO tag present:$prem"
+# Rule refines R002: no single umbrella/final tag, but sprint-scoped tags allowed,
+# and a sprint tag never asserts UIX-7/UIX-8 runtime closure.
+grep -q "UIX8C-R002" "$RULE" 2>/dev/null \
+  && grep -qi "no single umbrella or final GO tag" "$RULE" 2>/dev/null \
+  && grep -qi "sprint-scoped" "$RULE" 2>/dev/null \
+  && grep -qi "never asserts UIX-7 or UIX-8 runtime closure" "$RULE" 2>/dev/null \
+  && pass "UIX8C-R002 refined: umbrella/final forbidden, sprint-scoped allowed, non-closure" \
+  || bad "UIX8C-R002 refined sprint-tag governance clause missing"
 
 # 8. No secret/credential pattern in UIX-8C artifacts.
 sec=0
-for f in "$RULE" "$FOUNDATION" "$ARCH" "$MATRIX" "$PLAN" "$ADR" "$FAILED_RUN" \
-         scripts/uix8c_foundation_gate.sh scripts/tests/uix8c_foundation_gate_test.sh; do
+for f in "$RULE" "$FOUNDATION" "$ARCH" "$MATRIX" "$PLAN" "$ADR" "$ADR2" "$FAILED_RUN" \
+         scripts/uix8c_foundation_gate.sh scripts/tests/uix8c_foundation_gate_test.sh \
+         "$DESIGN_GATE" scripts/tests/uix8c_design_system_gate_test.sh; do
   [ -f "$f" ] || continue
   if grep -nEi "(-----BEGIN [A-Z ]*PRIVATE KEY|AKIA[0-9A-Z]{16}|eyJ[A-Za-z0-9_-]{20}|authorization:[[:space:]]*bearer[[:space:]]+[A-Za-z0-9._-]{8}|password[[:space:]]*[:=][[:space:]]*['\"][^'\"]{4})" "$f" >/dev/null 2>&1; then
     bad "possible secret/credential pattern in $f"; sec=1
