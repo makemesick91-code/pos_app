@@ -119,4 +119,102 @@
         <item name="android:paddingTop">@dimen/space_xs</item>
         <item name="android:paddingBottom">@dimen/space_xs</item>
     </style>
+
+    <!-- ============================================================
+         UIX-8C-02 — additional canonical text roles & components.
+         Money, status, and receipt roles are named so screens bind a
+         role rather than re-declaring sizes; all use system-scalable sp
+         so they respect font scaling (UIX8C-R035).
+         ============================================================ -->
+
+    <!-- Money — the authoritative total (large, tabular). -->
+    <style name="TextAppearance.Aish.MoneyTotal">
+        <item name="android:textSize">@dimen/text_currency_large</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <!-- Money — secondary / row amounts (aligned, tabular). -->
+    <style name="TextAppearance.Aish.MoneySecondary">
+        <item name="android:textSize">@dimen/text_card_title</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <!-- Status label — pairs with colour, never colour-alone. -->
+    <style name="TextAppearance.Aish.Status">
+        <item name="android:textSize">@dimen/text_label</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- Receipt — monospaced, tabular figures for alignment. -->
+    <style name="TextAppearance.Aish.Receipt">
+        <item name="android:textSize">@dimen/text_label</item>
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <!-- ===== Additional buttons ===== -->
+    <!-- Tertiary / text action — low-emphasis, still >=48dp. -->
+    <style name="Widget.Aish.Button.Tertiary" parent="Widget.Material3.Button.TextButton">
+        <item name="android:minHeight">@dimen/button_height</item>
+        <item name="android:minWidth">@dimen/touch_target_min</item>
+        <item name="android:textColor">@color/action_primary</item>
+        <item name="android:textSize">@dimen/text_button</item>
+        <item name="cornerRadius">@dimen/radius_button</item>
+    </style>
+
+    <!-- Icon-only action — enforces the 48dp minimum touch target. -->
+    <style name="Widget.Aish.Button.Icon" parent="Widget.Material3.Button.IconButton">
+        <item name="android:minWidth">@dimen/touch_target_min</item>
+        <item name="android:minHeight">@dimen/touch_target_min</item>
+        <item name="iconTint">@color/text_primary</item>
+    </style>
+
+    <!-- ===== Input ===== -->
+    <!-- Style for raw EditText (search / tender / paid) so bare inputs still
+         meet the 48dp target and read from the design foundation. -->
+    <style name="Widget.Aish.EditText" parent="Widget.AppCompat.EditText">
+        <item name="android:minHeight">@dimen/input_height</item>
+        <item name="android:textSize">@dimen/text_body</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textColorHint">@color/text_secondary</item>
+        <item name="android:paddingStart">@dimen/space_md</item>
+        <item name="android:paddingEnd">@dimen/space_md</item>
+    </style>
+
+    <!-- ===== Status chip container (text + colour, never colour alone) ===== -->
+    <style name="Widget.Aish.StatusChip" parent="">
+        <item name="android:minHeight">@dimen/status_chip_min_height</item>
+        <item name="android:gravity">center</item>
+        <item name="android:background">@drawable/bg_status_chip</item>
+        <item name="android:textAppearance">@style/TextAppearance.Aish.Status</item>
+        <item name="android:paddingStart">@dimen/space_md</item>
+        <item name="android:paddingEnd">@dimen/space_md</item>
+        <item name="android:paddingTop">@dimen/space_2xs</item>
+        <item name="android:paddingBottom">@dimen/space_2xs</item>
+    </style>
+
+    <!-- ===== Section header ===== -->
+    <style name="Widget.Aish.SectionHeader" parent="">
+        <item name="android:textAppearance">@style/TextAppearance.Aish.SectionTitle</item>
+        <item name="android:paddingTop">@dimen/space_sm</item>
+        <item name="android:paddingBottom">@dimen/space_xs</item>
+    </style>
+
+    <!-- ===== Bottom action region (pinned, scroll-reachable CTA) ===== -->
+    <style name="Widget.Aish.BottomActionRegion" parent="">
+        <item name="android:background">@drawable/bg_bottom_action_region</item>
+        <item name="android:paddingTop">@dimen/space_sm</item>
+    </style>
+
+    <!-- ===== Reusable state container (loading / empty / error / offline) ===== -->
+    <style name="Widget.Aish.StateContainer" parent="">
+        <item name="android:orientation">vertical</item>
+        <item name="android:gravity">center</item>
+        <item name="android:padding">@dimen/space_xl</item>
+    </style>
 </resources>

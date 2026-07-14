@@ -3,20 +3,38 @@
      Source of truth: operator-provided UI/UX handoff package (DESIGN_TOKENS.json / tokens/dimens.xml).
      UIX-1 Design Foundation Lock. 4dp spacing grid; touch target >= 48dp; pay button 52dp. -->
 <resources>
-    <!-- Spacing scale (4dp grid) -->
+    <!-- Spacing scale (4dp grid). UIX-8C-02 fills the 2dp / 20dp steps so
+         every inset resolves to a token (no raw dp in layouts). -->
+    <dimen name="space_2xs">2dp</dimen>
     <dimen name="space_xs">4dp</dimen>
     <dimen name="space_sm">8dp</dimen>
     <dimen name="space_md">12dp</dimen>
     <dimen name="space_lg">16dp</dimen>
+    <dimen name="space_lg_plus">20dp</dimen>
     <dimen name="space_xl">24dp</dimen>
     <dimen name="space_2xl">32dp</dimen>
     <dimen name="space_3xl">48dp</dimen>
+    <dimen name="hairline">1dp</dimen>
 
     <!-- Radius -->
     <dimen name="radius_input">8dp</dimen>
     <dimen name="radius_card">12dp</dimen>
     <dimen name="radius_sheet">16dp</dimen>
     <dimen name="radius_button">12dp</dimen>
+    <dimen name="radius_pill">999dp</dimen>
+
+    <!-- Elevation (light system: sparing, border-first — never heavy shadow). -->
+    <dimen name="elevation_none">0dp</dimen>
+    <dimen name="elevation_raised">1dp</dimen>
+    <dimen name="elevation_sheet">3dp</dimen>
+
+    <!-- Responsive cashier shell (UIX8C-R039/R042/R043): both the product
+         region and the bottom action region are weighted scroll containers
+         with a minimum height so neither can collapse nor push the checkout
+         CTA off-screen at large font scale. -->
+    <dimen name="cashier_product_min_height">96dp</dimen>
+    <dimen name="cashier_action_region_min_height">88dp</dimen>
+    <dimen name="status_chip_min_height">28dp</dimen>
 
     <!-- Touch targets -->
     <dimen name="touch_target_min">48dp</dimen>

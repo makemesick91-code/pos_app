@@ -247,15 +247,28 @@ appear to conflict, the modular rule in `.claude/rules/` is authoritative.
   plan for UIX-8C-02..09 (`docs/deployment/uix-8c-delivery-plan.md`), ADR 0004,
   and a fail-closed foundation gate (`scripts/uix8c_foundation_gate.sh`). No
   runtime code change, no visual rebuild, no physical campaign, no GO tag.
-- UIX-8C creates NO separate GO tag (UIX8C-R002); closure is recorded against
-  the existing UIX-7/UIX-8 GO discipline. The immutable failed physical run
-  `run-97fbb64-2af94aa` (R01 PENDING, R11 FAIL, R18 FAIL) is preserved verbatim
-  and never flipped to PASS (UIX8C-R003). Whole-Rupiah integer money stays
-  mandatory; canonical HTTP rejection never becomes offline success; cart
-  clears only after a durable save; stable `clientReference`; duplicate
-  sale/payment is automatic NO-GO. UIX-7 stays `NO-GO — GO DEFERRED`; UIX-8
-  stays `IMPLEMENTATION COMPLETE — GO DEFERRED`. Absence of evidence stays
-  NO-GO (UIX8C-R030). See `.claude/rules/61-...` (UIX8C-R001..R030).
+- UIX-8C mints NO single umbrella/final GO tag (UIX8C-R002, refined); genuine
+  UIX-7/UIX-8 closure is recorded against the existing UIX-7/UIX-8 GO discipline.
+  Each UIX-8C implementation sprint MAY carry an immutable annotated
+  **sprint-scoped** `uix-8c-NN-<slug>-go` tag once merged with authoritative
+  exact-SHA CI green, local/origin/VPS exact-match, and sprint gates PASS; a
+  sprint tag never asserts UIX-7/UIX-8 runtime closure (UIX8C-R060). The
+  immutable failed physical run `run-97fbb64-2af94aa` (R01 PENDING, R11 FAIL,
+  R18 FAIL) is preserved verbatim and never flipped to PASS (UIX8C-R003).
+  Whole-Rupiah integer money stays mandatory; canonical HTTP rejection never
+  becomes offline success; cart clears only after a durable save; stable
+  `clientReference`; duplicate sale/payment is automatic NO-GO. UIX-7 stays
+  `NO-GO — GO DEFERRED`; UIX-8 stays `IMPLEMENTATION COMPLETE — GO DEFERRED`.
+  Absence of evidence stays NO-GO (UIX8C-R030). See `.claude/rules/61-...`
+  (UIX8C-R001..R060).
+- UIX-8C-02 (design-system hardening) adds the premium visual/responsive/
+  accessibility baseline (UIX8C-R031..R060): centralized Material 3 tokens
+  (`colors|dimens|styles|themes|shapes.xml`), a reusable `Widget.Aish.*` /
+  `component_state_*` library, and a hardened responsive cashier shell that
+  fixes the structural R18 large-font failure (product + cart + total + checkout
+  CTA stay visible or scroll-reachable at 100/115/130% font). Enforced by the
+  fail-closed `scripts/uix8c_design_system_gate.sh` (+ self-tests) and ADR 0005.
+  It changes no backend/Room/financial behaviour and does not fix R11.
 
 ## Authoritative CI consolidation (CICD-CTRL-2)
 - CI is consolidated into four lanes driven by a fail-closed change classifier

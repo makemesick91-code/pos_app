@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- UIX-8C-02 — status chip background. Neutral rounded fill; the per-state
+     colour is applied via backgroundTint (state_*_bg) with a paired text
+     label + colour (state_*_fg), so status is never conveyed by colour alone. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/surface_default" />
+    <corners android:radius="@dimen/radius_pill" />
+    <stroke
+        android:width="@dimen/hairline"
+        android:color="@color/border_default" />
+</shape>

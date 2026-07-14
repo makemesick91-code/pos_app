@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- UIX-8C-02 — reusable EMPTY / NO-RESULT state (UIX8C-R050). Empty states
+     explain the next action (UIX8B-R023). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/stateEmpty"
+    style="@style/Widget.Aish.StateContainer"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/textStateEmptyTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/state_empty_default"
+        android:textAppearance="@style/TextAppearance.Aish.CardTitle" />
+
+    <TextView
+        android:id="@+id/textStateEmptyMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_xs"
+        android:gravity="center"
+        android:textAppearance="@style/TextAppearance.Aish.Body"
+        android:textColor="@color/text_secondary" />
+</LinearLayout>

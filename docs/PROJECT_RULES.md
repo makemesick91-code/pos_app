@@ -1687,16 +1687,18 @@ experience over existing Android/backend domain services. Modular rule:
 23. `CICD2-R023` — CI runtime savings never override absence-of-proof governance.
 24. `CICD2-R024` — Shared-VPS source synchronization must not regress DaengtisiaMS.
 
-## Aish POS UIX-8C — Full Premium Android Cashier Delivery & Closure Foundation (UIX8C-R001..UIX8C-R030)
+## Aish POS UIX-8C — Full Premium Android Cashier Delivery & Closure Foundation (UIX8C-R001..UIX8C-R060)
 
 Authoritative rule text: `.claude/rules/61-android-cashier-full-premium-delivery-foundation.md`.
 Foundation narrative: `docs/foundation/uix-8c-full-premium-android-cashier.md`.
 Architecture/inventory: `docs/architecture/uix-8c-android-screen-state-architecture.md`.
 Matrix: `docs/testing/uix-8c-screen-state-accessibility-matrix.md`.
-Delivery plan: `docs/deployment/uix-8c-delivery-plan.md`. ADR: `docs/adr/0004-uix-8c-full-premium-rebuild.md`.
+Delivery plan: `docs/deployment/uix-8c-delivery-plan.md`. ADRs:
+`docs/adr/0004-uix-8c-full-premium-rebuild.md`,
+`docs/adr/0005-uix-8c-02-premium-design-system-hardening.md`.
 
 1. `UIX8C-R001` — UIX-8C is the final premium Android delivery train for UIX-7/UIX-8 closure.
-2. `UIX8C-R002` — UIX-8C does not create a separate GO tag.
+2. `UIX8C-R002` — UIX-8C has no single umbrella or final GO tag; each implementation sprint MAY carry an immutable annotated sprint-scoped `uix-8c-NN-<slug>-go` tag that never asserts UIX-7/UIX-8 runtime closure.
 3. `UIX8C-R003` — Historical failed physical evidence is immutable.
 4. `UIX8C-R004` — Runtime changes invalidate old APK evidence.
 5. `UIX8C-R005` — Physical closure occurs only after code freeze.
@@ -1726,9 +1728,45 @@ Delivery plan: `docs/deployment/uix-8c-delivery-plan.md`. ADR: `docs/adr/0004-ui
 29. `UIX8C-R029` — Prior GO tags are immutable.
 30. `UIX8C-R030` — Absence of evidence remains NO-GO.
 
-Enforcement: `scripts/uix8c_foundation_gate.sh` (fail-closed) + `scripts/tests/uix8c_foundation_gate_test.sh`,
-wired into `.github/workflows/_foundation-gates.yml`, plus the `5i` block in
+UIX-8C-02 — Premium design-system, responsive shell & accessibility foundation (UIX8C-R031..R060):
+
+31. `UIX8C-R031` — Material 3 is the canonical Android visual foundation.
+32. `UIX8C-R032` — Brand colour, typography, spacing, shape, elevation and motion tokens are centralized.
+33. `UIX8C-R033` — New/changed UI must not introduce raw off-system colour values.
+34. `UIX8C-R034` — New/changed UI must not duplicate canonical component styles locally.
+35. `UIX8C-R035` — Typography respects Android system font scaling (`sp`).
+36. `UIX8C-R036` — The app must never force or simulate a smaller user font scale to hide layout defects.
+37. `UIX8C-R037` — Supported primary workflows remain operable at 100%, 115% and 130% font scale.
+38. `UIX8C-R038` — The product catalog remains visible or scroll-reachable at 130%.
+39. `UIX8C-R039` — Cart, totals and the checkout CTA remain visible or scroll-reachable at 130%.
+40. `UIX8C-R040` — The payment sheet remains usable at 130%.
+41. `UIX8C-R041` — Receipt and transaction history remain usable at 130%.
+42. `UIX8C-R042` — Critical content must not depend on unsafe fixed-height containers.
+43. `UIX8C-R043` — Nested scrolling is explicit, bounded and free of dead zones.
+44. `UIX8C-R044` — All interactive touch targets remain at least 48dp.
+45. `UIX8C-R045` — Icon-only controls carry meaningful accessible labels.
+46. `UIX8C-R046` — Focus order follows the visible cashier workflow.
+47. `UIX8C-R047` — Status/error/offline/sync states are not conveyed by colour alone.
+48. `UIX8C-R048` — Error states expose readable text and accessible announcements.
+49. `UIX8C-R049` — Long tenant/outlet/cashier/category/product names wrap or ellipsize safely.
+50. `UIX8C-R050` — Loading/empty/no-result/error/offline/unavailable states use canonical reusable components.
+51. `UIX8C-R051` — Whole-Rupiah financial values remain visually stable, aligned and unambiguous.
+52. `UIX8C-R052` — Decorative elements never obscure operational or financial information.
+53. `UIX8C-R053` — Animations remain lightweight, bounded and never block cashier interaction.
+54. `UIX8C-R054` — Dynamic colour must not override the governed Aish brand identity unless ADR-approved.
+55. `UIX8C-R055` — Phone portrait is the mandatory baseline; tablet adaptation must not regress it.
+56. `UIX8C-R056` — Component previews/screenshot tests/emulator validation never replace physical runtime closure.
+57. `UIX8C-R057` — Design-system regression is a release blocker (`scripts/uix8c_design_system_gate.sh`).
+58. `UIX8C-R058` — Old failed physical evidence (`run-97fbb64-2af94aa`) remains immutable after visual remediation.
+59. `UIX8C-R059` — Any Android runtime visual change requires a new final APK and new physical evidence after code freeze.
+60. `UIX8C-R060` — A sprint-scoped implementation GO tag never implies UIX-7 or UIX-8 runtime GO.
+
+Enforcement: `scripts/uix8c_foundation_gate.sh` and `scripts/uix8c_design_system_gate.sh` (both
+fail-closed) + `scripts/tests/uix8c_foundation_gate_test.sh` +
+`scripts/tests/uix8c_design_system_gate_test.sh`, wired into
+`.github/workflows/_foundation-gates.yml`, plus the `5i` block in
 `scripts/verify_application_foundation_rules.sh`. The immutable failed physical run is
 `docs/deployment/uix-8c-physical-run-run-97fbb64-2af94aa.json` (R01 PENDING, R11 FAIL, R18 FAIL —
-never flipped to PASS). UIX-7 stays `NO-GO — GO DEFERRED`; UIX-8 stays
+never flipped to PASS). A sprint-scoped `uix-8c-NN-<slug>-go` tag records only that sprint's
+implementation closure. UIX-7 stays `NO-GO — GO DEFERRED`; UIX-8 stays
 `IMPLEMENTATION COMPLETE — GO DEFERRED`.

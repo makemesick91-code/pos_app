@@ -15,8 +15,30 @@
         <item name="android:textColorPrimary">@color/text_primary</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>
         <item name="android:statusBarColor">@color/brand_dark</item>
+        <item name="colorPrimaryContainer">@color/status_info_bg</item>
+        <item name="colorOnPrimaryContainer">@color/status_info_fg</item>
+        <item name="colorSurfaceVariant">@color/bg_subtle</item>
+        <item name="android:disabledAlpha">0.5</item>
 
-        <!-- Default component style -->
+        <!-- UIX-8C-02 — centralized Material 3 shape families (single source
+             of truth for component corners; no per-layout shape overrides). -->
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.Aish.SmallComponent</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Aish.MediumComponent</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Aish.LargeComponent</item>
+
+        <!-- Default component styles -->
         <item name="materialButtonStyle">@style/Widget.Aish.Button.Primary</item>
+        <item name="bottomSheetDialogTheme">@style/ThemeOverlay.Aish.BottomSheetDialog</item>
+    </style>
+
+    <!-- UIX-8C-02 — bottom sheets use the governed top-rounded shape so the
+         cash payment sheet reads as one system. -->
+    <style name="ThemeOverlay.Aish.BottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/Widget.Aish.BottomSheet.Modal</item>
+    </style>
+
+    <style name="Widget.Aish.BottomSheet.Modal" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="shapeAppearance">@style/ShapeAppearance.Aish.BottomSheet</item>
+        <item name="backgroundTint">@color/surface_default</item>
     </style>
 </resources>

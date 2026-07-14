@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- UIX-8C-02 — reusable compact cashier context header (UIX8C-R049,
+     UIX8B-R025): outlet / cashier / device + network + sync state. Long
+     names ellipsize (never clip a primary action). Status uses text + a
+     chip colour, never colour alone. Presentation only — no business logic. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/contextHeader"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingVertical="@dimen/space_xs">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/textContextOutlet"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="@string/ctx_placeholder"
+            android:textAppearance="@style/TextAppearance.Aish.CardTitle" />
+
+        <TextView
+            android:id="@+id/textContextCashier"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="@string/ctx_placeholder"
+            android:textAppearance="@style/TextAppearance.Aish.Caption" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/chipNetwork"
+        style="@style/Widget.Aish.StatusChip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_sm"
+        android:backgroundTint="@color/state_online_bg"
+        android:textColor="@color/state_online_fg"
+        android:contentDescription="@string/cd_network_status"
+        android:text="@string/ctx_network_online" />
+</LinearLayout>

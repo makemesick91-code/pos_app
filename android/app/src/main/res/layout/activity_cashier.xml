@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- UIX-8B — Cashier home. Tokenized (no raw dp/sp), accessible (content
-     descriptions + >=48dp targets), product area dominant, truthful states. -->
+<!-- UIX-8C-02 — Cashier home, hardened responsive shell (fixes physical R18).
+     Root is a vertical LinearLayout split into THREE zones:
+       (1) a compact fixed header (title + sync/queue rows + search);
+       (2) a weighted product region (RecyclerView, internal scroll, minHeight);
+       (3) a weighted, internally-scrollable bottom action region holding the
+           cart summary + total + paid input + checkout CTAs.
+     Because both (2) and (3) are 0dp-weighted scroll containers with a
+     minHeight, the vertical stack can NEVER exceed the screen: at 100/115/130%
+     font the product list and the checkout CTA both stay visible or
+     scroll-reachable and the CTA can never be pushed off-screen
+     (UIX8C-R037..R039, R042, R043). Tokenized, accessible, all IDs preserved
+     so CashierViewModel/ViewBinding wiring is unchanged. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -8,6 +18,7 @@
     android:background="@color/bg_default"
     android:padding="@dimen/space_lg">
 
+    <!-- ===== Zone 1 — fixed compact header ===== -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -35,10 +46,10 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="@dimen/space_md"
+            android:contentDescription="@string/cd_sync_status"
             android:text="@string/cashier_sync_idle"
             android:textAppearance="@style/TextAppearance.Aish.BodySmall" />
 
-        <!-- Open the lightweight daily summary / closing screen. -->
         <Button
             android:id="@+id/buttonReports"
             style="@style/Widget.Aish.Button.Secondary"
@@ -48,7 +59,6 @@
             android:minHeight="@dimen/touch_target_min"
             android:text="@string/cashier_reports" />
 
-        <!-- UIX-8B — open the transaction-history screen. -->
         <Button
             android:id="@+id/buttonHistory"
             style="@style/Widget.Aish.Button.Secondary"
@@ -60,7 +70,6 @@
 
     </LinearLayout>
 
-    <!-- Offline sync queue summary + manual sync trigger. -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -89,6 +98,7 @@
 
     <EditText
         android:id="@+id/inputSearch"
+        style="@style/Widget.Aish.EditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:minHeight="@dimen/input_height"
@@ -99,10 +109,12 @@
         android:maxLines="1"
         android:autofillHints="" />
 
+    <!-- ===== Zone 2 — weighted product region (internal scroll) ===== -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_weight="3"
+        android:minHeight="@dimen/cashier_product_min_height"
         android:layout_marginTop="@dimen/space_sm">
 
         <androidx.recyclerview.widget.RecyclerView
@@ -132,89 +144,107 @@
 
     </FrameLayout>
 
-    <View
+    <!-- ===== Zone 3 — weighted, internally-scrollable bottom action region.
+         Guarantees the checkout CTA is always visible or scroll-reachable at
+         any font scale (UIX8C-R039). ===== -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/cartActionScroll"
         android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginVertical="@dimen/space_sm"
-        android:background="@color/divider" />
-
-    <TextView
-        android:id="@+id/textCartCount"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/cashier_cart_empty"
-        android:textAppearance="@style/TextAppearance.Aish.Body" />
-
-    <TextView
-        android:id="@+id/textCartTotal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_xs"
-        android:text="@string/cashier_total_zero"
-        android:contentDescription="@string/cd_cart_total"
-        android:textAppearance="@style/TextAppearance.Aish.SectionTitle" />
-
-    <EditText
-        android:id="@+id/inputPaidAmount"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="@dimen/input_height"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:minHeight="@dimen/cashier_action_region_min_height"
         android:layout_marginTop="@dimen/space_sm"
-        android:hint="@string/cashier_paid_hint"
-        android:contentDescription="@string/cd_paid_amount"
-        android:inputType="numberDecimal"
-        android:maxLines="1"
-        android:autofillHints="" />
+        android:fillViewport="true"
+        style="@style/Widget.Aish.BottomActionRegion">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_sm"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/buttonClearCart"
-            style="@style/Widget.Aish.Button.Secondary"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:minHeight="@dimen/touch_target_min"
-            android:contentDescription="@string/cd_clear_cart"
-            android:text="@string/cashier_clear_cart" />
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/space_xs">
 
-        <Button
-            android:id="@+id/buttonCheckout"
-            style="@style/Widget.Aish.Button.Pay"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="@dimen/space_sm"
-            android:minHeight="@dimen/button_pay_height"
-            android:enabled="false"
-            android:contentDescription="@string/cd_checkout_online"
-            android:text="@string/cashier_checkout_cash" />
+            <TextView
+                android:id="@+id/textCartCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/cashier_cart_empty"
+                android:textAppearance="@style/TextAppearance.Aish.Body" />
 
-    </LinearLayout>
+            <TextView
+                android:id="@+id/textCartTotal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:text="@string/cashier_total_zero"
+                android:contentDescription="@string/cd_cart_total"
+                android:textAppearance="@style/TextAppearance.Aish.MoneyTotal" />
 
-    <!-- Offline CASH checkout (stores locally, syncs later). -->
-    <Button
-        android:id="@+id/buttonCheckoutOffline"
-        style="@style/Widget.Aish.Button.Secondary"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_sm"
-        android:minHeight="@dimen/touch_target_min"
-        android:enabled="false"
-        android:contentDescription="@string/cd_checkout_offline"
-        android:text="@string/cashier_checkout_cash_offline" />
+            <EditText
+                android:id="@+id/inputPaidAmount"
+                style="@style/Widget.Aish.EditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/input_height"
+                android:layout_marginTop="@dimen/space_sm"
+                android:hint="@string/cashier_paid_hint"
+                android:contentDescription="@string/cd_paid_amount"
+                android:inputType="numberDecimal"
+                android:maxLines="1"
+                android:autofillHints="" />
 
-    <TextView
-        android:id="@+id/textCheckoutResult"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_sm"
-        android:text=""
-        android:textAppearance="@style/TextAppearance.Aish.Body"
-        android:visibility="gone" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/buttonClearCart"
+                    style="@style/Widget.Aish.Button.Secondary"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:minHeight="@dimen/touch_target_min"
+                    android:contentDescription="@string/cd_clear_cart"
+                    android:text="@string/cashier_clear_cart" />
+
+                <Button
+                    android:id="@+id/buttonCheckout"
+                    style="@style/Widget.Aish.Button.Pay"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="@dimen/space_sm"
+                    android:minHeight="@dimen/button_pay_height"
+                    android:enabled="false"
+                    android:contentDescription="@string/cd_checkout_online"
+                    android:text="@string/cashier_checkout_cash" />
+
+            </LinearLayout>
+
+            <!-- Offline CASH checkout (stores locally, syncs later). -->
+            <Button
+                android:id="@+id/buttonCheckoutOffline"
+                style="@style/Widget.Aish.Button.Secondary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:minHeight="@dimen/touch_target_min"
+                android:enabled="false"
+                android:contentDescription="@string/cd_checkout_offline"
+                android:text="@string/cashier_checkout_cash_offline" />
+
+            <TextView
+                android:id="@+id/textCheckoutResult"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:text=""
+                android:textAppearance="@style/TextAppearance.Aish.Body"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
 
 </LinearLayout>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Aish POS — UIX-8C-02 centralized Material 3 shape tokens.
+     Single source of truth for component corner families (UIX8C-R032). Radii
+     resolve to the @dimen scale so a shape is never hand-rolled per layout. -->
+<resources>
+    <style name="ShapeAppearance.Aish.SmallComponent" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/radius_input</item>
+    </style>
+
+    <style name="ShapeAppearance.Aish.MediumComponent" parent="ShapeAppearance.Material3.MediumComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/radius_card</item>
+    </style>
+
+    <style name="ShapeAppearance.Aish.LargeComponent" parent="ShapeAppearance.Material3.LargeComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/radius_sheet</item>
+    </style>
+
+    <!-- Pill — status chips and fully-rounded controls. -->
+    <style name="ShapeAppearance.Aish.Pill" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/radius_pill</item>
+    </style>
+
+    <!-- Bottom sheet — top corners rounded only. -->
+    <style name="ShapeAppearance.Aish.BottomSheet" parent="ShapeAppearance.Material3.LargeComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">@dimen/radius_sheet</item>
+        <item name="cornerSizeTopRight">@dimen/radius_sheet</item>
+        <item name="cornerSizeBottomLeft">@dimen/elevation_none</item>
+        <item name="cornerSizeBottomRight">@dimen/elevation_none</item>
+    </style>
+
+    <!-- Dialog. -->
+    <style name="ShapeAppearance.Aish.Dialog" parent="ShapeAppearance.Material3.LargeComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">@dimen/radius_sheet</item>
+    </style>
+</resources>
