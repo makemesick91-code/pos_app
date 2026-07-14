@@ -50,6 +50,11 @@ sed -e 's/| PENDING |/| PASS |/g' \
     -e 's/| PENDING /| PASS /g' \
     -e 's/^Decision: \*\*NO-GO.*/Decision: **GO** — all physical-device runtime evidence captured./' \
     "$REAL" > "$TMP/complete.md"
+# A genuinely-complete doc is physical-device verified: neutralise any emulator /
+# unit-test / 10.0.2.2 wording that only belongs to deferred (PENDING) rows, so the
+# flipped fixture is UIX7-R062-clean (closure check #12) — mirrors what a real
+# physical-device closure would read.
+sed -i 's/emulator[^|]*/physical-device verified/Ig; s/unit[ -]\?test[^|]*/physical-device verified/Ig; s/10\.0\.2\.2//g' "$TMP/complete.md"
 # Give the cleanup/vps/dms/exact-match tables (| item | PASS | — |) real refs.
 sed -i 's/| PASS | — |/| PASS | evidence captured |/g; s/| PASS | -- |/| PASS | evidence captured |/g' "$TMP/complete.md"
 check "complete doc closure PASS" pass closure "$TMP/complete.md"
