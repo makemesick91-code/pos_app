@@ -94,7 +94,7 @@ class SalesRepositoryTest {
             CartItem(productId = 1L, name = "Kopi", unitPrice = 10000.0, quantity = 2),
         )
 
-        val result = repo.checkoutCash(cart, paidAmount = 25000.0)
+        val result = repo.checkoutCash(cart, paidAmount = 25000L)
 
         assertTrue(result is ResultState.Success)
         val request = api.captured!!
@@ -112,7 +112,7 @@ class SalesRepositoryTest {
 
         val result = repo.checkoutCash(
             listOf(CartItem(1L, "Kopi", 10000.0, 2)),
-            paidAmount = 25000.0,
+            paidAmount = 25000L,
         )
 
         result as ResultState.Success
@@ -130,7 +130,7 @@ class SalesRepositoryTest {
 
         val result = repo.checkoutCash(
             listOf(CartItem(1L, "Kopi", 10000.0, 1)),
-            paidAmount = 10000.0,
+            paidAmount = 10000L,
         )
 
         assertTrue(result is ResultState.Error)
@@ -141,7 +141,7 @@ class SalesRepositoryTest {
         val api = FakeApi(Response.success(SaleResponse(data = sampleSale())))
         val repo = SalesRepository(api)
 
-        val result = repo.checkoutCash(emptyList(), paidAmount = 0.0)
+        val result = repo.checkoutCash(emptyList(), paidAmount = 0L)
 
         assertTrue(result is ResultState.Error)
         assertEquals(null, api.captured)
@@ -157,7 +157,7 @@ class SalesRepositoryTest {
 
         repo.checkoutCash(
             listOf(CartItem(1L, "Kopi", 10000.0, 2)),
-            paidAmount = 25000.0,
+            paidAmount = 25000L,
             clientReference = "online-ref-abc-123",
         )
 
@@ -173,7 +173,7 @@ class SalesRepositoryTest {
         val api = FakeApi(Response.success(SaleResponse(data = sampleSale())))
         val repo = SalesRepository(api)
 
-        repo.checkoutCash(listOf(CartItem(1L, "Kopi", 10000.0, 1)), paidAmount = 10000.0)
+        repo.checkoutCash(listOf(CartItem(1L, "Kopi", 10000.0, 1)), paidAmount = 10000L)
 
         val request = api.captured!!
         assertEquals(null, request.clientReference)

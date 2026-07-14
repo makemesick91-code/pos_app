@@ -32,7 +32,7 @@ class OfflineSaleRepositoryTest {
         val db = FakeOfflineDb()
         val result = repo(db, ref = { "offline-uuid-xyz" }).createOfflineCashSale(
             items = listOf(CartItem(1L, "Kopi", 10000.0, 2)),
-            paidAmount = 25000.0,
+            paidAmount = 25000L,
         )
 
         assertTrue(result is OfflineSaleRepository.SaveResult.Saved)
@@ -54,7 +54,7 @@ class OfflineSaleRepositoryTest {
                 CartItem(1L, "Kopi", 10000.0, 2),
                 CartItem(2L, "Teh", 8000.0, 1),
             ),
-            paidAmount = 30000.0,
+            paidAmount = 30000L,
         )
 
         assertEquals(2, db.items.size)
@@ -71,7 +71,7 @@ class OfflineSaleRepositoryTest {
     @Test
     fun `empty cart is rejected and stores nothing`() = runTest {
         val db = FakeOfflineDb()
-        val result = repo(db).createOfflineCashSale(emptyList(), paidAmount = 0.0)
+        val result = repo(db).createOfflineCashSale(emptyList(), paidAmount = 0L)
 
         assertTrue(result is OfflineSaleRepository.SaveResult.Error)
         assertTrue(db.sales.isEmpty())
@@ -82,7 +82,7 @@ class OfflineSaleRepositoryTest {
         val db = FakeOfflineDb()
         val result = repo(db).createOfflineCashSale(
             items = listOf(CartItem(1L, "Kopi", 10000.0, 1)),
-            paidAmount = 5000.0,
+            paidAmount = 5000L,
         )
 
         assertTrue(result is OfflineSaleRepository.SaveResult.Error)
@@ -96,13 +96,13 @@ class OfflineSaleRepositoryTest {
         val cart = CartRepository().apply { addProduct(1L, "Kopi", 10000.0) }
 
         // Success path: caller clears the cart.
-        val ok = repository.createOfflineCashSale(cart.items(), paidAmount = 10000.0)
+        val ok = repository.createOfflineCashSale(cart.items(), paidAmount = 10000L)
         if (ok is OfflineSaleRepository.SaveResult.Saved) cart.clear()
         assertTrue(cart.isEmpty())
 
         // Failure path: an empty cart save fails, so a re-added cart is NOT cleared.
         cart.addProduct(2L, "Teh", 8000.0)
-        val failed = repository.createOfflineCashSale(emptyList(), paidAmount = 0.0)
+        val failed = repository.createOfflineCashSale(emptyList(), paidAmount = 0L)
         if (failed is OfflineSaleRepository.SaveResult.Saved) cart.clear()
         assertFalse(cart.isEmpty())
     }

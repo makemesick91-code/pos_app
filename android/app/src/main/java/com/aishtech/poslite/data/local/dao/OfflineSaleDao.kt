@@ -39,23 +39,33 @@ abstract class OfflineSaleDao {
     }
 
     /**
-     * Rows eligible for a (re)sync attempt: PENDING, FAILED, and — since UIX-7
-     * (UIX7-R009/R012) — orphaned in-flight rows still marked SYNCING. A sale is
-     * set SYNCING immediately before the network call, so a process death between
-     * [markSyncing] and the server response would otherwise strand it in SYNCING
-     * forever and silently lose the transaction. Replaying it is safe because the
-     * submit is idempotent on the device-generated clientReference; the server
-     * dedupes a genuine in-flight duplicate.
+     * Rows eligible for a (re)sync attempt: PENDING, orphaned in-flight SYNCING
+     * (UIX7-R009/R012), and FAILED rows still under the retry cap.
+     *
+     * A sale is set SYNCING immediately before the network call, so a process
+     * death between [markSyncing] and the server response would otherwise strand
+     * it in SYNCING forever and silently lose the transaction. Replaying it is
+     * safe because the submit is idempotent on the device-generated
+     * clientReference; the server dedupes a genuine in-flight duplicate.
+     *
+     * UIX-8 (bounded retry) — a FAILED row is only eligible while
+     * `syncAttemptCount < maxAttempts`. Without this cap a permanently-failing
+     * ("poison") row, ordered oldest-first, is re-selected on every sync and
+     * consumes the LIMIT window, starving newer sales from ever syncing. Past the
+     * cap the row STAYS FAILED (still counted by [countFailed] and visible to the
+     * cashier for manual attention) — it is not silently dropped, it just stops
+     * auto-retrying. PENDING and orphaned SYNCING rows are never capped.
      */
     @Query(
         """
         SELECT * FROM offline_sales
-        WHERE syncStatus IN ('PENDING', 'FAILED', 'SYNCING')
+        WHERE syncStatus IN ('PENDING', 'SYNCING')
+           OR (syncStatus = 'FAILED' AND syncAttemptCount < :maxAttempts)
         ORDER BY createdAt ASC
         LIMIT :limit
         """
     )
-    abstract suspend fun getPendingOrFailed(limit: Int): List<LocalOfflineSaleEntity>
+    abstract suspend fun getPendingOrFailed(limit: Int, maxAttempts: Int): List<LocalOfflineSaleEntity>
 
     @Query("SELECT * FROM offline_sales WHERE localId = :localId LIMIT 1")
     abstract suspend fun getOfflineSaleWithItems(localId: Long): LocalOfflineSaleEntity?

@@ -29,7 +29,7 @@ class OfflineSaleMappingTest {
 
         repository.createOfflineCashSale(
             items = listOf(CartItem(5L, "Nasi", 12000.0, 3)),
-            paidAmount = 40000.0,
+            paidAmount = 40000L,
         )
         repository.syncPending()
 

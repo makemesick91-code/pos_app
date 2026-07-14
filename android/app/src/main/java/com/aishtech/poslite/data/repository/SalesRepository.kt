@@ -22,7 +22,7 @@ class SalesRepository(private val api: PosApiService) {
 
     suspend fun checkoutCash(
         items: List<CartItem>,
-        paidAmount: Double,
+        paidAmount: Long,
         clientReference: String? = null,
         clientCreatedAt: String? = null,
     ): ResultState<SaleDto> {
@@ -59,6 +59,9 @@ class SalesRepository(private val api: PosApiService) {
         }
     }
 
-    private fun formatAmount(value: Double): String =
-        String.format(Locale.US, "%.2f", value)
+    // UIX-8 — the cash tendered is whole-rupiah Long; the backend sale contract
+    // still expects a 2-decimal string, so format the integer as "<rupiah>.00"
+    // (no float arithmetic, exact) to keep the wire contract unchanged.
+    private fun formatAmount(value: Long): String =
+        String.format(Locale.US, "%d.00", value)
 }

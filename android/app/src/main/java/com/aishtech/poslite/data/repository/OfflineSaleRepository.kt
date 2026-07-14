@@ -1,5 +1,6 @@
 package com.aishtech.poslite.data.repository
 
+import com.aishtech.poslite.core.money.RupiahMoney
 import com.aishtech.poslite.core.network.PosApiService
 import com.aishtech.poslite.data.local.OfflineSyncStatus
 import com.aishtech.poslite.data.local.dao.OfflineSaleDao
@@ -54,17 +55,21 @@ class OfflineSaleRepository(
      */
     suspend fun createOfflineCashSale(
         items: List<com.aishtech.poslite.feature.cashier.CartItem>,
-        paidAmount: Double,
+        paidAmount: Long,
         storeId: Long? = null,
     ): SaveResult {
         if (items.isEmpty()) {
             return SaveResult.Error("Keranjang kosong.")
         }
 
-        val subtotal = items.sumOf { it.lineTotal }
-        if (paidAmount < subtotal) {
+        // UIX-8 — the draft total is computed integer-exact in whole rupiah; the
+        // Room entity still stores Double columns, so the integer value is
+        // projected to Double at THIS single persistence boundary only.
+        val subtotal = RupiahMoney.subtotal(items.map { it.lineTotalRupiah })
+        if (!RupiahMoney.isSufficient(paidAmount, subtotal)) {
             return SaveResult.Error("Uang dibayar kurang dari total.")
         }
+        val change = RupiahMoney.change(paidAmount, subtotal)
 
         val clientReference = referenceProvider()
         val ts = clock()
@@ -72,12 +77,12 @@ class OfflineSaleRepository(
             clientReference = clientReference,
             storeId = storeId,
             saleDate = isoUtc(ts),
-            subtotal = subtotal,
+            subtotal = subtotal.toDouble(),
             discountTotal = 0.0,
             taxTotal = 0.0,
-            grandTotal = subtotal,
-            paidAmount = paidAmount,
-            changeAmount = paidAmount - subtotal,
+            grandTotal = subtotal.toDouble(),
+            paidAmount = paidAmount.toDouble(),
+            changeAmount = change.toDouble(),
             syncStatus = OfflineSyncStatus.PENDING,
             syncAttemptCount = 0,
             createdAt = ts,
@@ -104,9 +109,13 @@ class OfflineSaleRepository(
         }
     }
 
-    /** Replay up to [limit] pending/failed offline sales to the backend. */
+    /**
+     * Replay up to [limit] eligible offline sales to the backend. FAILED rows
+     * that have exhausted [MAX_SYNC_ATTEMPTS] are no longer auto-retried (they
+     * remain FAILED and visible) so a poison row cannot starve the queue.
+     */
     suspend fun syncPending(limit: Int = 10): SyncSummary {
-        val queue = offlineSaleDao.getPendingOrFailed(limit)
+        val queue = offlineSaleDao.getPendingOrFailed(limit, MAX_SYNC_ATTEMPTS)
         var synced = 0
         var failed = 0
         var conflicts = 0
@@ -184,5 +193,13 @@ class OfflineSaleRepository(
 
     companion object {
         const val SOURCE_ANDROID_OFFLINE = "ANDROID_OFFLINE"
+
+        /**
+         * UIX-8 bounded retry — the maximum automatic sync attempts for a FAILED
+         * offline sale before it stops being auto-retried (it stays FAILED and
+         * visible for manual attention). Chosen to tolerate transient outages
+         * while preventing a poison row from starving the sync queue forever.
+         */
+        const val MAX_SYNC_ATTEMPTS = 5
     }
 }

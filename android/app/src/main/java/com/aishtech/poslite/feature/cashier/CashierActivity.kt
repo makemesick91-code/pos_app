@@ -72,14 +72,12 @@ class CashierActivity : AppCompatActivity() {
         // canonical UIX-1 microcopy already shipped in strings.xml.
         binding.buttonClearCart.setOnClickListener { confirmClearCart() }
         binding.buttonCheckout.setOnClickListener {
-            val paid = binding.inputPaidAmount.text?.toString()?.toDoubleOrNull() ?: 0.0
-            viewModel.checkoutCash(paid)
+            viewModel.checkoutCash(readPaidAmount())
         }
         // Sprint 7 — offline CASH checkout: store locally, then kick a background
         // sync. The worker is network-constrained so it waits for connectivity.
         binding.buttonCheckoutOffline.setOnClickListener {
-            val paid = binding.inputPaidAmount.text?.toString()?.toDoubleOrNull() ?: 0.0
-            viewModel.checkoutCashOffline(paid)
+            viewModel.checkoutCashOffline(readPaidAmount())
             OfflineSalesSyncScheduler.enqueue(context)
         }
         binding.buttonSyncNow.setOnClickListener {
@@ -165,8 +163,8 @@ class CashierActivity : AppCompatActivity() {
                 result.text = getString(R.string.cashier_offline_saved) +
                     "\n" + getString(R.string.cashier_offline_draft_label) +
                     "\nRef: ${state.clientReference}" +
-                    "\nTotal: ${formatPrice(state.grandTotal)}" +
-                    "\nKembalian: ${formatPrice(state.change)}"
+                    "\nTotal: ${RupiahMoney.format(state.grandTotal)}" +
+                    "\nKembalian: ${RupiahMoney.format(state.change)}"
                 binding.inputPaidAmount.text?.clear()
                 val hasItems = viewModel.cartItems.value?.isNotEmpty() ?: false
                 binding.buttonCheckout.isEnabled = hasItems
@@ -216,6 +214,14 @@ class CashierActivity : AppCompatActivity() {
             .putExtra(ReceiptActivity.EXTRA_SALE_ID, saleId)
         startActivity(intent)
     }
+
+    // UIX-8 — read the tendered cash as whole rupiah through the single canonical
+    // parser. It tolerates "Rp"/thousands grouping and discards any decimal part
+    // (rupiah is whole), and returns null for blank/garbage input. A null becomes
+    // -1 so the ViewModel rejects it as insufficient instead of the old
+    // toDoubleOrNull() path, which fabricated 0 and mis-parsed "25.000" as 25.
+    private fun readPaidAmount(): Long =
+        RupiahMoney.parse(binding.inputPaidAmount.text?.toString()) ?: -1L
 
     // UIX7-R019/R029 — money is rendered only through the single canonical
     // whole-rupiah formatter. Legacy Double amounts are bridged without a fresh
