@@ -42,6 +42,9 @@ jobs:
       - name: UIX-8C-04 offline cash durability gate
         run: bash scripts/uix8c_offline_cash_durability_gate.sh
 
+      - name: UIX-8C-05 payment / offline-sync recovery UX gate
+        run: bash scripts/uix8c_payment_offline_sync_ux_gate.sh
+
       - name: CICD-CTRL-2 CI architecture gate
         run: bash scripts/ci/cicd_ctrl_2_gate.sh
 
@@ -62,3 +65,6 @@ jobs:
 
       - name: UIX-8C-04 offline cash durability gate self-tests
         run: bash scripts/tests/uix8c_offline_cash_durability_gate_test.sh
+
+      - name: UIX-8C-05 payment / offline-sync recovery UX gate self-tests
+        run: bash scripts/tests/uix8c_payment_offline_sync_ux_gate_test.sh
