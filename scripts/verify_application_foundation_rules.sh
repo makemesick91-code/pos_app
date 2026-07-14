@@ -260,6 +260,32 @@ for i in $(seq -w 1 78); do
 done
 [ -z "$missing_ops" ] && pass "UIX8BOPS-R001..R078 persisted" || bad "release ops rule ids not fully persisted:$missing_ops"
 
+# 5i. Android full premium delivery & closure foundation (UIX8C-R001..R030, UIX-8C).
+[ -f .claude/rules/61-android-cashier-full-premium-delivery-foundation.md ] && pass "UIX-8C delivery rule present" || bad "missing .claude/rules/61-android-cashier-full-premium-delivery-foundation.md"
+missing_uix8c=""
+for i in $(seq -w 1 30); do
+  id="UIX8C-R0$i"
+  grep -q "$id" .claude/rules/61-android-cashier-full-premium-delivery-foundation.md || missing_uix8c="$missing_uix8c $id"
+done
+[ -z "$missing_uix8c" ] && pass "UIX8C-R001..R030 persisted" || bad "UIX-8C rule ids not fully persisted:$missing_uix8c"
+# UIX-8C foundation artifacts + fail-closed gate present.
+[ -x scripts/uix8c_foundation_gate.sh ] && pass "UIX-8C foundation gate present" || bad "missing scripts/uix8c_foundation_gate.sh"
+[ -x scripts/tests/uix8c_foundation_gate_test.sh ] && pass "UIX-8C foundation gate tests present" || bad "missing scripts/tests/uix8c_foundation_gate_test.sh"
+for d in docs/foundation/uix-8c-full-premium-android-cashier.md \
+         docs/architecture/uix-8c-android-screen-state-architecture.md \
+         docs/testing/uix-8c-screen-state-accessibility-matrix.md \
+         docs/deployment/uix-8c-delivery-plan.md \
+         docs/adr/0004-uix-8c-full-premium-rebuild.md; do
+  [ -f "$d" ] && pass "UIX-8C doc $(basename "$d")" || bad "missing UIX-8C doc $d"
+done
+# The immutable failed physical run is recorded and never flipped to PASS (UIX8C-R003).
+FRUN=docs/deployment/uix-8c-physical-run-run-97fbb64-2af94aa.json
+if [ -f "$FRUN" ] && grep -q 'run-97fbb64-2af94aa' "$FRUN" && ! grep -q '"status": *"PASS"' "$FRUN"; then
+  pass "failed physical run recorded and not flipped to PASS"
+else
+  bad "failed physical run record missing or flipped to PASS"
+fi
+
 # 6. No tracked secret files / keys.
 if git ls-files | grep -qE '(^|/)\.env$|\.pem$|id_rsa|id_ed25519|_ed25519$|\.p12$|\.keystore$'; then
   bad "tracked secret/key file"

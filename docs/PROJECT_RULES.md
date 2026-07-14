@@ -1686,3 +1686,49 @@ experience over existing Android/backend domain services. Modular rule:
 22. `CICD2-R022` — CI optimization must be measured using observed workflow counts and runtime before and after implementation.
 23. `CICD2-R023` — CI runtime savings never override absence-of-proof governance.
 24. `CICD2-R024` — Shared-VPS source synchronization must not regress DaengtisiaMS.
+
+## Aish POS UIX-8C — Full Premium Android Cashier Delivery & Closure Foundation (UIX8C-R001..UIX8C-R030)
+
+Authoritative rule text: `.claude/rules/61-android-cashier-full-premium-delivery-foundation.md`.
+Foundation narrative: `docs/foundation/uix-8c-full-premium-android-cashier.md`.
+Architecture/inventory: `docs/architecture/uix-8c-android-screen-state-architecture.md`.
+Matrix: `docs/testing/uix-8c-screen-state-accessibility-matrix.md`.
+Delivery plan: `docs/deployment/uix-8c-delivery-plan.md`. ADR: `docs/adr/0004-uix-8c-full-premium-rebuild.md`.
+
+1. `UIX8C-R001` — UIX-8C is the final premium Android delivery train for UIX-7/UIX-8 closure.
+2. `UIX8C-R002` — UIX-8C does not create a separate GO tag.
+3. `UIX8C-R003` — Historical failed physical evidence is immutable.
+4. `UIX8C-R004` — Runtime changes invalidate old APK evidence.
+5. `UIX8C-R005` — Physical closure occurs only after code freeze.
+6. `UIX8C-R006` — Every screen must define loading, empty, error, offline and success states.
+7. `UIX8C-R007` — Business logic remains outside layouts/views.
+8. `UIX8C-R008` — Backend and Android canonical domain services remain authoritative.
+9. `UIX8C-R009` — Whole-Rupiah integer money remains mandatory.
+10. `UIX8C-R010` — Tenant/outlet/user/device context comes from authenticated state.
+11. `UIX8C-R011` — Cross-tenant cached identity is forbidden.
+12. `UIX8C-R012` — CASH may fall back offline only for governed transport failures.
+13. `UIX8C-R013` — Canonical HTTP rejection must never become offline success.
+14. `UIX8C-R014` — Cart clears only after durable save or canonical acknowledgement.
+15. `UIX8C-R015` — Stable clientReference is mandatory.
+16. `UIX8C-R016` — Duplicate sale/payment/inventory mutation is automatic NO-GO.
+17. `UIX8C-R017` — Material 3 design tokens are centralized.
+18. `UIX8C-R018` — No raw hardcoded visual values in new/changed layouts.
+19. `UIX8C-R019` — Touch targets remain at least 48dp.
+20. `UIX8C-R020` — TalkBack, focus order and semantic labels are release gates.
+21. `UIX8C-R021` — Primary workflows remain operable at 130% font.
+22. `UIX8C-R022` — Status must not rely only on color.
+23. `UIX8C-R023` — Long tenant/outlet/product names must not break layout.
+24. `UIX8C-R024` — Physical testing does not start before code freeze.
+25. `UIX8C-R025` — Development emulator evidence does not replace final physical evidence.
+26. `UIX8C-R026` — Raw credentials, PII, tokens and payment secrets never enter evidence.
+27. `UIX8C-R027` — Every sprint requires authoritative exact-SHA CI.
+28. `UIX8C-R028` — Every sprint PR is merged only after green gates.
+29. `UIX8C-R029` — Prior GO tags are immutable.
+30. `UIX8C-R030` — Absence of evidence remains NO-GO.
+
+Enforcement: `scripts/uix8c_foundation_gate.sh` (fail-closed) + `scripts/tests/uix8c_foundation_gate_test.sh`,
+wired into `.github/workflows/_foundation-gates.yml`, plus the `5i` block in
+`scripts/verify_application_foundation_rules.sh`. The immutable failed physical run is
+`docs/deployment/uix-8c-physical-run-run-97fbb64-2af94aa.json` (R01 PENDING, R11 FAIL, R18 FAIL —
+never flipped to PASS). UIX-7 stays `NO-GO — GO DEFERRED`; UIX-8 stays
+`IMPLEMENTATION COMPLETE — GO DEFERRED`.
