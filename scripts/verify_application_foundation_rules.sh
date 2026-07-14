@@ -244,6 +244,15 @@ else
   pass "no blanket MissingPermission suppression in printer transport"
 fi
 
+# 5h. Android release/deployment/runtime-closure ops foundation (UIX8BOPS-R001..R078).
+[ -f .claude/rules/59-android-release-runtime-closure-ops-foundation.md ] && pass "android release ops rule present" || bad "missing .claude/rules/59-android-release-runtime-closure-ops-foundation.md"
+missing_ops=""
+for i in $(seq -w 1 78); do
+  id="UIX8BOPS-R0$i"
+  grep -q "$id" .claude/rules/59-android-release-runtime-closure-ops-foundation.md || missing_ops="$missing_ops $id"
+done
+[ -z "$missing_ops" ] && pass "UIX8BOPS-R001..R078 persisted" || bad "release ops rule ids not fully persisted:$missing_ops"
+
 # 6. No tracked secret files / keys.
 if git ls-files | grep -qE '(^|/)\.env$|\.pem$|id_rsa|id_ed25519|_ed25519$|\.p12$|\.keystore$'; then
   bad "tracked secret/key file"

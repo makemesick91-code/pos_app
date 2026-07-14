@@ -217,6 +217,23 @@ appear to conflict, the modular rule in `.claude/rules/` is authoritative.
   `.claude/rules/58-android-bluetooth-permission-foundation.md`
   (BTPERM-R001..R029).
 
+## Android release, deployment & runtime-closure ops (UIX-8B-OPS-1)
+- The operational closure of every Android cashier release — shared-VPS
+  Git-based deploy, DaengtisiaMS co-tenant non-regression bracket, controlled
+  operator-observed runtime-evidence capture, transaction/idempotency proof,
+  accessibility observation, evidence-closure commit binding, and release-debt
+  discipline — obeys a fail-closed foundation. Operator observation is a human
+  checkpoint and is NEVER fabricated: a blank/generic observation, missing
+  screenshot, missing transaction reference, or missing DB proof stays PENDING;
+  emulator/automated/operator evidence keep distinct labels; the runtime
+  candidate binds to the exact commit + APK SHA-256; the evidence-closure commit
+  may differ from the candidate only by an evidence-only diff. A UIX-8 GO tag is
+  created only after `scripts/uix8_runtime_closure_gate.sh` (closure mode) PASSes
+  with zero non-PASS rows and UIX-7 debt closed-or-waived; absence of proof =
+  NO-GO. The turnkey capture tool is `scripts/uix8_operator_runner.sh`. See
+  `.claude/rules/59-android-release-runtime-closure-ops-foundation.md`
+  (UIX8BOPS-R001..R078).
+
 ## Authoritative CI consolidation (CICD-CTRL-2)
 - CI is consolidated into four lanes driven by a fail-closed change classifier
   (`scripts/ci/classify_changes.sh`). The single authoritative gate is **AISH POS
