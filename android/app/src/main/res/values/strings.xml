@@ -70,6 +70,16 @@
     <string name="pay_sheet_pay_online">Bayar Tunai</string>
     <string name="pay_sheet_pay_offline">Simpan Offline</string>
     <string name="cd_pay_sheet_tender">Nominal uang tunai yang diterima dalam rupiah</string>
+    <!-- UIX-8C-05 — truthful tender validation + offline sync recovery UX -->
+    <string name="pay_sheet_invalid_tender">Nominal tidak valid.</string>
+    <string name="pay_state_submitting">Mengirim transaksi ke server…</string>
+    <string name="pay_state_online_success">Pembayaran berhasil dan tercatat di server.</string>
+    <string name="pay_state_offline_queued">Tersimpan di perangkat, menunggu sinkronisasi.</string>
+    <string name="hist_status_retry_scheduled">Menunggu percobaan ulang otomatis</string>
+    <string name="cashier_manual_retry">Coba Sinkron Lagi</string>
+    <string name="cashier_reconnected">Koneksi kembali. Sinkronisasi tertunda dapat dilanjutkan.</string>
+    <string name="cd_manual_retry">Coba sinkronkan ulang transaksi tertunda</string>
+    <string name="cd_payment_state">Status pembayaran saat ini</string>
 
     <!-- UIX-8B — transaction history -->
     <string name="cashier_history">Riwayat</string>

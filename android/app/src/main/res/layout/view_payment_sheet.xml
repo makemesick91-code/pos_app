@@ -96,12 +96,17 @@
             android:maxLines="1"
             android:autofillHints="" />
 
+        <!-- UIX-8C-05 — validation/change message is an accessibility live region
+             so TalkBack announces "insufficient"/"invalid"/change as the operator
+             types; the message is textual (never colour-only) (UIX8C-R163/R165). -->
         <TextView
             android:id="@+id/textSheetChange"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_sm"
             android:text="@string/pay_sheet_enter_tender"
+            android:accessibilityLiveRegion="polite"
+            android:contentDescription="@string/cd_payment_state"
             android:textAppearance="@style/TextAppearance.Aish.Body" />
 
         <Button

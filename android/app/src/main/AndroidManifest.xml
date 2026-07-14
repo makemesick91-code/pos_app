@@ -4,6 +4,12 @@
     <!-- Backend catalog sync + auth over HTTP(S). -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- UIX-8C-05 — observe default-network availability to give the cashier a
+         truthful "connection restored, sync can resume" signal. Reachable code
+         path: CashierActivity's default-network callback (least-privilege; the
+         actual reconnect sync stays with the governed WorkManager scheduler). -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <!-- Sprint 6 — Bluetooth ESC/POS receipt printing (paired device by MAC; no
          discovery, so no location permission). Legacy perms are capped at API 30;
          BLUETOOTH_CONNECT is the runtime permission on Android 12+. -->
