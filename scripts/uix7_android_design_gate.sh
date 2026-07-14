@@ -48,11 +48,19 @@ for s in cashier_sync_summary uix_sync_pending uix_sync_in_progress uix_sync_fai
   grep -q "\"$s\"" "$APP/res/values/strings.xml" && pass "status label '$s' present" || bad "missing status label '$s'"
 done
 
-# 5. Offline durability: interrupted in-flight (SYNCING) rows are recovered (UIX7-R009/R012).
-if grep -q "'PENDING', 'FAILED', 'SYNCING'" "$DAO"; then
+# 5. Offline durability: interrupted in-flight (SYNCING) rows are recovered
+#    (UIX7-R009/R012), and FAILED retries are bounded (UIX8-R023) so a poison row
+#    cannot starve the queue. The eligible set is PENDING + orphaned SYNCING +
+#    FAILED-under-cap; PENDING and SYNCING are never capped.
+if grep -q "IN ('PENDING', 'SYNCING')" "$DAO"; then
   pass "offline retry queue recovers orphaned SYNCING rows"
 else
   bad "offline retry queue does not recover orphaned SYNCING rows"
+fi
+if grep -q "syncStatus = 'FAILED' AND syncAttemptCount < :maxAttempts" "$DAO"; then
+  pass "offline FAILED retry is bounded (UIX8-R023 anti-starvation)"
+else
+  bad "offline FAILED retry is not bounded (poison row can starve the queue)"
 fi
 
 # 6. Checkout double-submit guard is at the ViewModel, not UI-only (UIX7-R015/R025).
