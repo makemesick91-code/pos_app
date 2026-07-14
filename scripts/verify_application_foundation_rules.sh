@@ -216,6 +216,34 @@ grep -q 'android:allowBackup="false"' android/app/src/main/AndroidManifest.xml &
 # Cashier money is formatted through the canonical formatter (UIX7-R019).
 grep -q 'RupiahMoney' android/app/src/main/java/com/aishtech/poslite/feature/cashier/CashierActivity.kt && pass "cashier uses canonical money formatter" || bad "cashier not using RupiahMoney formatter"
 
+# 5g. Android Bluetooth permission foundation (BTPERM-R001..R029, FIX-BT-SCAN).
+[ -f .claude/rules/58-android-bluetooth-permission-foundation.md ] && pass "bluetooth permission rule present" || bad "missing .claude/rules/58-android-bluetooth-permission-foundation.md"
+missing_bt=""
+for i in $(seq -w 1 29); do
+  id="BTPERM-R0$i"
+  grep -q "$id" .claude/rules/58-android-bluetooth-permission-foundation.md || missing_bt="$missing_bt $id"
+done
+[ -z "$missing_bt" ] && pass "BTPERM-R001..R029 persisted" || bad "Bluetooth rule ids not fully persisted:$missing_bt"
+# The printer transport does no discovery: it must not call the BLUETOOTH_SCAN-only APIs (BTPERM-R005/R013).
+BTPC=android/app/src/main/java/com/aishtech/poslite/feature/printer/BluetoothPrinterConnection.kt
+if [ -f "$BTPC" ] && grep -qE '\.(cancelDiscovery|startDiscovery)\(' "$BTPC"; then
+  bad "printer transport calls a BLUETOOTH_SCAN discovery API"
+else
+  pass "printer transport calls no discovery/scan API"
+fi
+# BLUETOOTH_SCAN is not declared (least-privilege, BTPERM-R013/R014).
+if grep -q 'android.permission.BLUETOOTH_SCAN' android/app/src/main/AndroidManifest.xml; then
+  bad "manifest declares BLUETOOTH_SCAN without a discovery flow"
+else
+  pass "no BLUETOOTH_SCAN permission declared (least-privilege)"
+fi
+# No blanket MissingPermission suppression in printer transport (BTPERM-R011).
+if [ -f "$BTPC" ] && grep -qE 'SuppressLint\("?MissingPermission' "$BTPC"; then
+  bad "printer transport uses blanket MissingPermission suppression"
+else
+  pass "no blanket MissingPermission suppression in printer transport"
+fi
+
 # 6. No tracked secret files / keys.
 if git ls-files | grep -qE '(^|/)\.env$|\.pem$|id_rsa|id_ed25519|_ed25519$|\.p12$|\.keystore$'; then
   bad "tracked secret/key file"

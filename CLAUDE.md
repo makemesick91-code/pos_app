@@ -201,6 +201,22 @@ appear to conflict, the modular rule in `.claude/rules/` is authoritative.
   `.claude/rules/57-android-cashier-premium-screen-rebuild.md`
   (UIX8B-R001..R100).
 
+## Android Bluetooth permission foundation (FIX-BT-SCAN)
+- Every Android Bluetooth integration (starting with the ESC/POS printer
+  transport `BluetoothPrinterConnection`) obeys a least-privilege permission
+  contract: protected calls have a single explicit permission owner, runtime
+  checks are API-level correct (`BLUETOOTH_CONNECT` runtime on API 31+, legacy
+  `BLUETOOTH`/`BLUETOOTH_ADMIN` capped at API 30), and `BLUETOOTH_SCAN` is never
+  declared or called because the transport does no discovery. Denied permission
+  returns an actionable typed failure and never crashes or reaches a protected
+  API; `SecurityException` is handled defensively, never hidden. Blanket
+  `MissingPermission` suppression is forbidden; location permission is never
+  added to silence Bluetooth lint. Printer failures never affect transaction
+  persistence or authority. This fix never fabricates a UIX-7/UIX-8 GO or alters
+  their closure debt. See
+  `.claude/rules/58-android-bluetooth-permission-foundation.md`
+  (BTPERM-R001..R029).
+
 ## Authoritative CI consolidation (CICD-CTRL-2)
 - CI is consolidated into four lanes driven by a fail-closed change classifier
   (`scripts/ci/classify_changes.sh`). The single authoritative gate is **AISH POS
@@ -223,7 +239,7 @@ appear to conflict, the modular rule in `.claude/rules/` is authoritative.
 - Modular enforceable rules: `.claude/rules/` (00–90, plus 25 tenant-owner boundary,
   35 billing, 45 support/observability, 55 android cashier, 56 android cashier
   premium visual & transaction foundation, 57 android cashier native premium
-  screen rebuild, 72 authoritative CI
+  screen rebuild, 58 android bluetooth permission foundation, 72 authoritative CI
   consolidation). Legacy line kept for continuity:
   35 billing-console integrity, 45 support/observability/incident governance, and
   55 android cashier experience). Root agent index: `AGENTS.md`.
