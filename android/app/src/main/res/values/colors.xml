@@ -58,4 +58,39 @@
          Kept token-derived so a single source drives all surfaces. -->
     <color name="divider">#E2E8F0</color>
     <color name="scrim_subtle">#EEF2F7</color>
+
+    <!-- ============================================================
+         UIX-8C-02 — Transaction / sync state semantics (UIX8C-R047).
+         Each state has a distinct fg + bg drawn from the accessible
+         status triads above; state is NEVER colour-alone (a text label
+         and/or icon always accompanies these). Adding named tokens per
+         state keeps sync/offline/pending semantics unambiguous and
+         centralized rather than re-derived per screen.
+         ============================================================ -->
+    <!-- Online / synced (positive, settled) -->
+    <color name="state_online_fg">#15803D</color>
+    <color name="state_online_bg">#E7F4EA</color>
+    <color name="state_synced_fg">#15803D</color>
+    <color name="state_synced_bg">#E7F4EA</color>
+    <!-- Pending / syncing (in-progress, informational) -->
+    <color name="state_pending_fg">#1D4ED8</color>
+    <color name="state_pending_bg">#E8EEFC</color>
+    <color name="state_syncing_fg">#1D4ED8</color>
+    <color name="state_syncing_bg">#E8EEFC</color>
+    <!-- Offline / retrying / conflict (attention, not error) -->
+    <color name="state_offline_fg">#B45309</color>
+    <color name="state_offline_bg">#FBF0DC</color>
+    <color name="state_retrying_fg">#B45309</color>
+    <color name="state_retrying_bg">#FBF0DC</color>
+    <color name="state_conflict_fg">#B45309</color>
+    <color name="state_conflict_bg">#FBF0DC</color>
+    <!-- Failed (error) -->
+    <color name="state_failed_fg">#B91C1C</color>
+    <color name="state_failed_bg">#FBE7E7</color>
+    <!-- Disabled / unavailable (muted) -->
+    <color name="state_disabled_fg">#9CA3AF</color>
+    <color name="state_disabled_bg">#F1F4F9</color>
+
+    <!-- Refined gold accent — sparing use only (never a large fill). -->
+    <color name="accent_gold">#D6A84B</color>
 </resources>
