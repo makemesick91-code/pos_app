@@ -1,117 +1,129 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- UIX-8B — native cash payment tender bottom sheet. Presents amount due,
-     quick-tender shortcuts, manual entry, live integer-exact change, and
+<!-- UIX-8B/UIX-8C-02 — native cash payment tender bottom sheet. Presents amount
+     due, quick-tender shortcuts, manual entry, live integer-exact change, and
      online/offline confirm. It holds NO transaction authority: confirm delegates
      to CashierViewModel (double-submit guard, stable clientReference, durable
-     save all preserved). Tokenized, accessible, >=48dp targets. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+     save all preserved).
+     UIX-8C-02: the root is now a NestedScrollView so at 100/115/130% font the
+     Pay CTA can never drop below the sheet fold — the sheet content scrolls and
+     the confirm buttons stay reachable (UIX8C-R040). Tokenized, accessible,
+     >=48dp targets; all child IDs preserved. -->
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:background="@color/surface_default"
-    android:padding="@dimen/space_lg">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/pay_sheet_title"
-        android:textAppearance="@style/TextAppearance.Aish.SectionTitle" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_md"
-        android:text="@string/pay_sheet_due_label"
-        android:textAppearance="@style/TextAppearance.Aish.Label" />
-
-    <TextView
-        android:id="@+id/textSheetDue"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="@style/TextAppearance.Aish.CurrencyLarge" />
+    android:fillViewport="true"
+    android:background="@color/surface_default">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_md"
-        android:orientation="horizontal">
+        android:orientation="vertical"
+        android:padding="@dimen/space_lg">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/pay_sheet_title"
+            android:textAppearance="@style/TextAppearance.Aish.SectionTitle" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_md"
+            android:text="@string/pay_sheet_due_label"
+            android:textAppearance="@style/TextAppearance.Aish.Label" />
+
+        <TextView
+            android:id="@+id/textSheetDue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.Aish.MoneyTotal" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_md"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/buttonQuickExact"
+                style="@style/Widget.Aish.Button.Secondary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minHeight="@dimen/touch_target_min"
+                android:text="@string/pay_sheet_exact" />
+
+            <Button
+                android:id="@+id/buttonQuick1"
+                style="@style/Widget.Aish.Button.Secondary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="@dimen/space_sm"
+                android:minHeight="@dimen/touch_target_min" />
+
+            <Button
+                android:id="@+id/buttonQuick2"
+                style="@style/Widget.Aish.Button.Secondary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="@dimen/space_sm"
+                android:minHeight="@dimen/touch_target_min" />
+
+            <Button
+                android:id="@+id/buttonQuick3"
+                style="@style/Widget.Aish.Button.Secondary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="@dimen/space_sm"
+                android:minHeight="@dimen/touch_target_min" />
+
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/inputSheetTender"
+            style="@style/Widget.Aish.EditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/input_height"
+            android:layout_marginTop="@dimen/space_md"
+            android:hint="@string/pay_sheet_tender_hint"
+            android:contentDescription="@string/cd_pay_sheet_tender"
+            android:inputType="numberDecimal"
+            android:maxLines="1"
+            android:autofillHints="" />
+
+        <TextView
+            android:id="@+id/textSheetChange"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_sm"
+            android:text="@string/pay_sheet_enter_tender"
+            android:textAppearance="@style/TextAppearance.Aish.Body" />
 
         <Button
-            android:id="@+id/buttonQuickExact"
-            style="@style/Widget.Aish.Button.Secondary"
-            android:layout_width="0dp"
+            android:id="@+id/buttonSheetPayOnline"
+            style="@style/Widget.Aish.Button.Pay"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_marginTop="@dimen/space_md"
+            android:minHeight="@dimen/button_pay_height"
+            android:enabled="false"
+            android:text="@string/pay_sheet_pay_online" />
+
+        <Button
+            android:id="@+id/buttonSheetPayOffline"
+            style="@style/Widget.Aish.Button.Secondary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_sm"
             android:minHeight="@dimen/touch_target_min"
-            android:text="@string/pay_sheet_exact" />
-
-        <Button
-            android:id="@+id/buttonQuick1"
-            style="@style/Widget.Aish.Button.Secondary"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="@dimen/space_sm"
-            android:minHeight="@dimen/touch_target_min" />
-
-        <Button
-            android:id="@+id/buttonQuick2"
-            style="@style/Widget.Aish.Button.Secondary"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="@dimen/space_sm"
-            android:minHeight="@dimen/touch_target_min" />
-
-        <Button
-            android:id="@+id/buttonQuick3"
-            style="@style/Widget.Aish.Button.Secondary"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="@dimen/space_sm"
-            android:minHeight="@dimen/touch_target_min" />
+            android:enabled="false"
+            android:text="@string/pay_sheet_pay_offline" />
 
     </LinearLayout>
 
-    <EditText
-        android:id="@+id/inputSheetTender"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="@dimen/input_height"
-        android:layout_marginTop="@dimen/space_md"
-        android:hint="@string/pay_sheet_tender_hint"
-        android:contentDescription="@string/cd_pay_sheet_tender"
-        android:inputType="numberDecimal"
-        android:maxLines="1"
-        android:autofillHints="" />
-
-    <TextView
-        android:id="@+id/textSheetChange"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_sm"
-        android:text="@string/pay_sheet_enter_tender"
-        android:textAppearance="@style/TextAppearance.Aish.Body" />
-
-    <Button
-        android:id="@+id/buttonSheetPayOnline"
-        style="@style/Widget.Aish.Button.Pay"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_md"
-        android:minHeight="@dimen/button_pay_height"
-        android:enabled="false"
-        android:text="@string/pay_sheet_pay_online" />
-
-    <Button
-        android:id="@+id/buttonSheetPayOffline"
-        style="@style/Widget.Aish.Button.Secondary"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_sm"
-        android:minHeight="@dimen/touch_target_min"
-        android:enabled="false"
-        android:text="@string/pay_sheet_pay_offline" />
-
-</LinearLayout>
+</androidx.core.widget.NestedScrollView>

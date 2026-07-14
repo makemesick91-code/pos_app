@@ -33,7 +33,7 @@
             android:id="@+id/textPrice"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
+            android:layout_marginTop="@dimen/space_2xs"
             android:textAppearance="@style/TextAppearance.Aish.Body" />
 
         <!-- Sprint 8 — lightweight, informational stock label. Defaults to
@@ -42,7 +42,7 @@
             android:id="@+id/textStock"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
+            android:layout_marginTop="@dimen/space_2xs"
             android:textAppearance="@style/TextAppearance.Aish.Caption"
             android:text="@string/cashier_stock_unknown" />
 
