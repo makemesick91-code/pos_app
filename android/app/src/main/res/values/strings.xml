@@ -39,6 +39,19 @@
     <string name="cashier_stock_refresh">Refresh Stok</string>
     <string name="qris_offline_blocked">QRIS membutuhkan koneksi internet</string>
 
+    <!-- UIX-8B — truthful product-list states (loading vs empty-catalog vs no-match vs error) -->
+    <string name="cashier_products_loading">Memuat produk…</string>
+    <string name="cashier_products_no_match">Tidak ada produk yang cocok dengan pencarian.</string>
+    <string name="cashier_products_error">Gagal memuat produk. Coba lagi.</string>
+
+    <!-- UIX-8B — accessibility content descriptions (icon/ambiguous controls). -->
+    <string name="cd_search_products">Cari produk berdasarkan nama, SKU, atau barcode</string>
+    <string name="cd_paid_amount">Nominal uang tunai yang diterima dalam rupiah</string>
+    <string name="cd_checkout_online">Bayar tunai dan kirim transaksi ke server</string>
+    <string name="cd_checkout_offline">Simpan transaksi tunai offline di perangkat</string>
+    <string name="cd_clear_cart">Kosongkan keranjang</string>
+    <string name="cd_cart_total">Total keranjang saat ini</string>
+
     <!-- Sprint 5 — QRIS payment -->
     <string name="qris_title">Pembayaran QRIS</string>
     <string name="qris_payload_heading">Kode QR (teks):</string>

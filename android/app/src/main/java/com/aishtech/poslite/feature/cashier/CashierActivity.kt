@@ -105,15 +105,19 @@ class CashierActivity : AppCompatActivity() {
     private fun observe() {
         viewModel.products.observe(this) { products ->
             adapter.submitList(products)
-            binding.textEmpty.visibility = if (products.isEmpty()) View.VISIBLE else View.GONE
         }
+        // UIX8B-R023/R024 — truthful product-list state (loading / empty-catalog /
+        // no-match / error) instead of a silent empty swap.
+        viewModel.productsState.observe(this) { renderProducts(it) }
         // Sprint 8 — informational stock labels; the adapter re-renders when the
         // backend stock fetch resolves. Never blocks the product list or a sale.
         viewModel.stockLabels.observe(this) { labels ->
             adapter.setStockLabels(labels)
         }
-        viewModel.subtotal.observe(this) { subtotal ->
-            binding.textCartTotal.text = "Total: ${formatPrice(subtotal)}"
+        // UIX8B-R044 — render the authoritative whole-rupiah integer total, never
+        // a recomputed float, so the shown total matches the checkout amount.
+        viewModel.subtotalRupiah.observe(this) { total ->
+            binding.textCartTotal.text = "Total: ${RupiahMoney.format(total)}"
         }
         viewModel.cartItems.observe(this) { items ->
             val count = items.sumOf { it.quantity }
@@ -173,10 +177,14 @@ class CashierActivity : AppCompatActivity() {
             is CashierViewModel.CheckoutState.Success -> {
                 val sale = state.sale
                 result.visibility = View.VISIBLE
+                // UIX8B-R044/R047/R063 — the canonical server total/change are
+                // whole-rupiah strings; parse to Long and render through the single
+                // formatter. A missing value renders "Tidak tersedia" (never a
+                // fabricated 0 via the old toDoubleOrNull() ?: 0.0 float path).
                 result.text = getString(R.string.cashier_checkout_success) +
                     "\nInvoice: ${sale.invoiceNumber}" +
-                    "\nTotal: ${formatPrice(sale.grandTotal?.toDoubleOrNull() ?: 0.0)}" +
-                    "\nKembalian: ${formatPrice(sale.changeTotal?.toDoubleOrNull() ?: 0.0)}" +
+                    "\nTotal: ${RupiahMoney.formatOrUnavailable(RupiahMoney.parse(sale.grandTotal))}" +
+                    "\nKembalian: ${RupiahMoney.formatOrUnavailable(RupiahMoney.parse(sale.changeTotal))}" +
                     "\n" + getString(R.string.cashier_view_receipt)
                 // Sprint 6 — tap the result to open the receipt for this sale.
                 result.setOnClickListener { openReceipt(sale.id) }
@@ -223,9 +231,36 @@ class CashierActivity : AppCompatActivity() {
     private fun readPaidAmount(): Long =
         RupiahMoney.parse(binding.inputPaidAmount.text?.toString()) ?: -1L
 
-    // UIX7-R019/R029 — money is rendered only through the single canonical
-    // whole-rupiah formatter. Legacy Double amounts are bridged without a fresh
-    // float calculation.
-    private fun formatPrice(value: Double): String =
-        RupiahMoney.format(RupiahMoney.fromDouble(value))
+    // UIX8B-R023/R024/R029 — drive the product area's truthful states. A load
+    // failure surfaces an error message but never clears the last product list or
+    // the cart; the RecyclerView keeps its content behind the overlay.
+    private fun renderProducts(state: CashierViewModel.ProductsState) {
+        val progress = binding.progressProducts
+        val empty = binding.textEmpty
+        when (state) {
+            CashierViewModel.ProductsState.Loading -> {
+                progress.visibility = View.VISIBLE
+                empty.visibility = View.GONE
+            }
+            is CashierViewModel.ProductsState.Loaded -> {
+                progress.visibility = View.GONE
+                empty.visibility = View.GONE
+            }
+            CashierViewModel.ProductsState.EmptyCatalog -> {
+                progress.visibility = View.GONE
+                empty.text = getString(R.string.cashier_empty)
+                empty.visibility = View.VISIBLE
+            }
+            is CashierViewModel.ProductsState.NoMatch -> {
+                progress.visibility = View.GONE
+                empty.text = getString(R.string.cashier_products_no_match)
+                empty.visibility = View.VISIBLE
+            }
+            is CashierViewModel.ProductsState.Error -> {
+                progress.visibility = View.GONE
+                empty.text = getString(R.string.cashier_products_error)
+                empty.visibility = View.VISIBLE
+            }
+        }
+    }
 }
