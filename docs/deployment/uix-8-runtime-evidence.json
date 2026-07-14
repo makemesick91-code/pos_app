@@ -2,14 +2,14 @@
   "sprint": "UIX-8",
   "title": "Android Cashier Premium Visual & Transaction Experience",
   "go_tag": "uix-8-android-cashier-premium-visual-transaction-experience-go",
-  "candidate_commit": "",
-  "app_version_name": "",
-  "apk_variant": "",
-  "apk_sha256": "",
+  "candidate_commit": "97fbb64b70a44ac5314c5169da19131b2280389e",
+  "app_version_name": "0.1.0",
+  "apk_variant": "pilot",
+  "apk_sha256": "1a83931bedd6c66366018d7562e674c620c6d1baa79273dcc102d1f633ce0564",
   "avd": "",
   "emulator_api": "",
   "decision": "GO_DEFERRED",
-  "decision_reason": "Operator-observed controlled-emulator runtime evidence not yet captured, and UIX-7 closure debt remains open. Implementation is complete and JVM-unit-verified; GO is deferred, not fabricated.",
+  "decision_reason": "Release candidate 97fbb64 and its pilot APK (sha256 1a83931...) are built and bound, and the fail-closed operator runner (scripts/uix8_operator_runner.sh) is ready. Operator-observed controlled-emulator runtime evidence for the 21 scenarios is NOT yet captured, and UIX-7 closure debt remains open. GO is deferred, not fabricated (UIX8BOPS-R070).",
   "uix7_closure_debt": "open",
   "uix7_risk_waiver": null,
   "automated_test_evidence": {
@@ -19,26 +19,143 @@
     "note": "Money-integrity (Long) + bounded-retry + migrated repository/mapping tests all green (local JBR JDK 21). Authoritative CI on the exact candidate SHA is still required (UIX8-R045)."
   },
   "rows": [
-    {"id": "install-upgrade",        "classification": "hardware_independent", "evidence_source": "pending", "status": "PENDING"},
-    {"id": "activation-login",       "classification": "hardware_independent", "evidence_source": "pending", "status": "PENDING"},
-    {"id": "product-load",           "classification": "hardware_independent", "evidence_source": "pending", "status": "PENDING"},
-    {"id": "search",                 "classification": "hardware_independent", "evidence_source": "pending", "status": "PENDING"},
-    {"id": "category-filter",        "classification": "hardware_independent", "evidence_source": "pending", "status": "PENDING"},
-    {"id": "cart-operations",        "classification": "hardware_independent", "evidence_source": "pending", "status": "PENDING"},
-    {"id": "background-restoration", "classification": "hardware_independent", "evidence_source": "pending", "status": "PENDING"},
-    {"id": "process-recreation",     "classification": "hardware_independent", "evidence_source": "pending", "status": "PENDING"},
-    {"id": "online-cash-checkout",   "classification": "hardware_independent", "evidence_source": "pending", "status": "PENDING"},
-    {"id": "double-submit",          "classification": "hardware_independent", "evidence_source": "pending", "status": "PENDING"},
-    {"id": "stable-client-reference","classification": "hardware_independent", "evidence_source": "pending", "status": "PENDING"},
-    {"id": "offline-checkout",       "classification": "hardware_independent", "evidence_source": "pending", "status": "PENDING"},
-    {"id": "force-stop-restoration", "classification": "hardware_independent", "evidence_source": "pending", "status": "PENDING"},
-    {"id": "reconnect-sync",         "classification": "hardware_independent", "evidence_source": "pending", "status": "PENDING"},
-    {"id": "idempotent-retry",       "classification": "hardware_independent", "evidence_source": "pending", "status": "PENDING"},
-    {"id": "receipt-parity",         "classification": "hardware_independent", "evidence_source": "pending", "status": "PENDING"},
-    {"id": "history-parity",         "classification": "hardware_independent", "evidence_source": "pending", "status": "PENDING"},
-    {"id": "accessibility",          "classification": "hardware_independent", "evidence_source": "pending", "status": "PENDING"},
-    {"id": "font-scaling",           "classification": "hardware_independent", "evidence_source": "pending", "status": "PENDING"},
-    {"id": "error-states",           "classification": "hardware_independent", "evidence_source": "pending", "status": "PENDING"},
-    {"id": "crash-anr-log-inspect",  "classification": "hardware_independent", "evidence_source": "pending", "status": "PENDING"}
-  ]
+    {
+      "id": "install-upgrade",
+      "classification": "hardware_independent",
+      "evidence_source": "pending",
+      "status": "PENDING"
+    },
+    {
+      "id": "activation-login",
+      "classification": "hardware_independent",
+      "evidence_source": "pending",
+      "status": "PENDING"
+    },
+    {
+      "id": "product-load",
+      "classification": "hardware_independent",
+      "evidence_source": "pending",
+      "status": "PENDING"
+    },
+    {
+      "id": "search",
+      "classification": "hardware_independent",
+      "evidence_source": "pending",
+      "status": "PENDING"
+    },
+    {
+      "id": "category-filter",
+      "classification": "hardware_independent",
+      "evidence_source": "pending",
+      "status": "PENDING"
+    },
+    {
+      "id": "cart-operations",
+      "classification": "hardware_independent",
+      "evidence_source": "pending",
+      "status": "PENDING"
+    },
+    {
+      "id": "background-restoration",
+      "classification": "hardware_independent",
+      "evidence_source": "pending",
+      "status": "PENDING"
+    },
+    {
+      "id": "process-recreation",
+      "classification": "hardware_independent",
+      "evidence_source": "pending",
+      "status": "PENDING"
+    },
+    {
+      "id": "online-cash-checkout",
+      "classification": "hardware_independent",
+      "evidence_source": "pending",
+      "status": "PENDING"
+    },
+    {
+      "id": "double-submit",
+      "classification": "hardware_independent",
+      "evidence_source": "pending",
+      "status": "PENDING"
+    },
+    {
+      "id": "stable-client-reference",
+      "classification": "hardware_independent",
+      "evidence_source": "pending",
+      "status": "PENDING"
+    },
+    {
+      "id": "offline-checkout",
+      "classification": "hardware_independent",
+      "evidence_source": "pending",
+      "status": "PENDING"
+    },
+    {
+      "id": "force-stop-restoration",
+      "classification": "hardware_independent",
+      "evidence_source": "pending",
+      "status": "PENDING"
+    },
+    {
+      "id": "reconnect-sync",
+      "classification": "hardware_independent",
+      "evidence_source": "pending",
+      "status": "PENDING"
+    },
+    {
+      "id": "idempotent-retry",
+      "classification": "hardware_independent",
+      "evidence_source": "pending",
+      "status": "PENDING"
+    },
+    {
+      "id": "receipt-parity",
+      "classification": "hardware_independent",
+      "evidence_source": "pending",
+      "status": "PENDING"
+    },
+    {
+      "id": "history-parity",
+      "classification": "hardware_independent",
+      "evidence_source": "pending",
+      "status": "PENDING"
+    },
+    {
+      "id": "accessibility",
+      "classification": "hardware_independent",
+      "evidence_source": "pending",
+      "status": "PENDING"
+    },
+    {
+      "id": "font-scaling",
+      "classification": "hardware_independent",
+      "evidence_source": "pending",
+      "status": "PENDING"
+    },
+    {
+      "id": "error-states",
+      "classification": "hardware_independent",
+      "evidence_source": "pending",
+      "status": "PENDING"
+    },
+    {
+      "id": "crash-anr-log-inspect",
+      "classification": "hardware_independent",
+      "evidence_source": "pending",
+      "status": "PENDING"
+    }
+  ],
+  "apk_build": {
+    "task": "./gradlew :app:assemblePilot",
+    "jdk": "21 (Android Studio JBR)",
+    "package": "com.aishtech.poslite",
+    "version_code": 1,
+    "min_sdk": 26,
+    "target_sdk": 35,
+    "signing": "debug (installable pilot, HTTPS aishpos.online only)",
+    "apk_path": "android/app/build/outputs/apk/pilot/app-pilot.apk",
+    "apk_size_bytes": 8454631,
+    "built_on": "local JBR JDK21 (this environment)"
+  }
 }
