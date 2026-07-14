@@ -177,6 +177,30 @@ appear to conflict, the modular rule in `.claude/rules/` is authoritative.
   `.claude/rules/56-android-cashier-premium-visual-transaction-foundation.md`
   (UIX8-R001..R048).
 
+## Android cashier native premium screen rebuild (UIX-8B)
+- UIX-8B completes the native premium cashier **screen** rebuild on top of the
+  UIX-8A foundation. It rebuilds the actual surfaces — cashier home, product
+  experience, cart, native cash payment, success/receipt, transaction history —
+  and all UI states (loading/empty/offline/error/session/device) to a premium,
+  accessible, truthful standard. It stays native (no WebView cashier), reuses the
+  UIX-8A design system and integer-exact `RupiahMoney`, and never becomes a
+  second pricing/payment/QRIS/settlement/sync engine. It extends — never weakens
+  — rules 55 and 56.
+- Screens have a single authoritative ViewModel state holder; navigation never
+  duplicates checkout or shows stale receipts; the receipt binds to the current
+  transaction; cash tender is parsed via `RupiahMoney.parse`; checkout keeps the
+  ViewModel double-submit guard and stable `clientReference`; QRIS stays hidden
+  until a complete backend lifecycle exists. Accessibility (labels, focus order,
+  touch targets, font scaling, never-colour-alone) is a release gate.
+- UIX-7 closure debt stays explicit: UIX-8B development is unblocked but MUST NOT
+  create a UIX-7 GO tag, flip historical UIX-7 evidence to PASS, or claim UIX-7
+  closure. UIX-8 GO requires UIX-7 closure OR a formal auditable time-bounded
+  waiver; otherwise the honest state is `IMPLEMENTATION COMPLETE — GO DEFERRED`.
+  On-device/emulator authenticated runtime verification and the annotated GO tag
+  are operator-performed and never fabricated. See
+  `.claude/rules/57-android-cashier-premium-screen-rebuild.md`
+  (UIX8B-R001..R100).
+
 ## Authoritative CI consolidation (CICD-CTRL-2)
 - CI is consolidated into four lanes driven by a fail-closed change classifier
   (`scripts/ci/classify_changes.sh`). The single authoritative gate is **AISH POS
@@ -198,7 +222,8 @@ appear to conflict, the modular rule in `.claude/rules/` is authoritative.
 ## Pointers
 - Modular enforceable rules: `.claude/rules/` (00–90, plus 25 tenant-owner boundary,
   35 billing, 45 support/observability, 55 android cashier, 56 android cashier
-  premium visual & transaction foundation, 72 authoritative CI
+  premium visual & transaction foundation, 57 android cashier native premium
+  screen rebuild, 72 authoritative CI
   consolidation). Legacy line kept for continuity:
   35 billing-console integrity, 45 support/observability/incident governance, and
   55 android cashier experience). Root agent index: `AGENTS.md`.

@@ -47,6 +47,33 @@ grep -q "56-android-cashier-premium-visual-transaction-foundation" CLAUDE.md \
   && pass "CLAUDE.md registers rule 56" || bad "CLAUDE.md missing rule 56 pointer"
 [ -f "$ADR" ] && pass "ADR 0002 present" || bad "missing ADR $ADR"
 
+# 1b. UIX-8B screen-rebuild foundation (UIX8B-R001..R100) persisted in rule 57.
+RULE_8B=.claude/rules/57-android-cashier-premium-screen-rebuild.md
+ADR_8B=docs/adr/0003-uix8b-native-premium-cashier-screen-rebuild.md
+EVIDENCE_DOC_8B=docs/deployment/uix-8b-native-premium-cashier-screen-rebuild.md
+missing8b=""
+if [ -f "$RULE_8B" ]; then
+  for i in $(seq 1 100); do
+    id=$(printf 'UIX8B-R%03d' "$i")
+    grep -q "$id" "$RULE_8B" || missing8b="$missing8b $id"
+  done
+  [ -z "$missing8b" ] && pass "UIX8B-R001..R100 persisted in rule 57" \
+                      || bad "UIX-8B rule ids not fully persisted:$missing8b"
+else
+  bad "missing UIX-8B rule file $RULE_8B"
+fi
+grep -q "57-android-cashier-premium-screen-rebuild" CLAUDE.md \
+  && pass "CLAUDE.md registers rule 57" || bad "CLAUDE.md missing rule 57 pointer"
+[ -f "$ADR_8B" ] && pass "ADR 0003 present" || bad "missing ADR $ADR_8B"
+[ -f "$EVIDENCE_DOC_8B" ] && pass "UIX-8B evidence doc present" \
+  || bad "missing UIX-8B evidence doc $EVIDENCE_DOC_8B"
+
+# 1c. UIX-8B screen coverage — every rebuilt cashier surface layout is present.
+for L in activity_cashier activity_payment activity_receipt activity_transaction_history; do
+  [ -f "$ANDROID/res/layout/$L.xml" ] && pass "screen layout $L present" \
+    || bad "missing rebuilt screen layout $L.xml (UIX8B screen coverage)"
+done
+
 # 2. Native-architecture invariant (UIX8-R001) — no WebView cashier surface.
 if grep -rqi "WebView" "$ANDROID/java/com/aishtech/poslite/feature/cashier" 2>/dev/null; then
   bad "WebView reference in the cashier feature — native cashier invariant (UIX8-R001)"
