@@ -63,6 +63,13 @@ jobs:
         working-directory: android
         run: ./gradlew testDebugUnitTest testPilotUnitTest testReleaseUnitTest --no-daemon --stacktrace
 
+      # Android lint gate (FIX-BT-SCAN / BTPERM-R020): abortOnError catches
+      # security-relevant permission defects such as MissingPermission
+      # (e.g. BLUETOOTH_SCAN). Mandatory — never `continue-on-error` (CICD2-R013).
+      - name: Android lint (permission/security correctness)
+        working-directory: android
+        run: ./gradlew :app:lintDebug --no-daemon --stacktrace
+
       - name: Assert generated BuildConfig endpoints per variant (UIX7-R046/R049)
         working-directory: android
         run: |
