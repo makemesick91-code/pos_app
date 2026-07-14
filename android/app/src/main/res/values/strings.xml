@@ -31,6 +31,9 @@
     <string name="cashier_checkout_cash_offline">Simpan Cash Offline</string>
     <string name="cashier_offline_saved">Tersimpan offline (DRAFT)</string>
     <string name="cashier_offline_draft_label">STRUK OFFLINE / BELUM SYNC</string>
+    <!-- UIX-8C-04 — truthful offline-queued message: saved on device, waiting for sync.
+         Must NEVER claim the server completed/settled the transaction. -->
+    <string name="cashier_offline_waiting_sync">Transaksi tersimpan di perangkat ini dan menunggu sinkronisasi.</string>
     <string name="cashier_sync_now">Sync Sekarang</string>
     <string name="cashier_sync_summary">Menunggu sync: %1$d, Gagal: %2$d</string>
     <string name="cashier_syncing">Menyinkronkan transaksi offline…</string>

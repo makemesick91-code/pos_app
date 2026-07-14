@@ -42,11 +42,17 @@ class CashierViewModel(
     private var currentQuery: String = ""
     private var selectedCategoryId: Long? = null
 
-    // UIX7-R054 — the stable idempotency key for the CURRENT online checkout
-    // attempt. Minted once per cart, REUSED across retries (so a retry after a
-    // timeout is deduped by the backend rather than creating a second sale), and
-    // reset on success or any cart mutation (a changed cart is a new transaction).
-    private var pendingOnlineReference: String? = null
+    // UIX7-R054 / UIX8C-R097 — the ONE stable idempotency key for the current
+    // logical checkout. Minted once per cart and REUSED across: the online submit,
+    // a retry after a lost response, AND a governed online→offline fallback (so the
+    // offline row, the eventual sync, and the backend all dedupe on the same key
+    // rather than creating a second sale). It is reset only on a durable success or
+    // any cart mutation (a changed cart is a new logical transaction).
+    private var pendingCheckoutReference: String? = null
+
+    /** Mint the stable checkout reference once, then reuse it (UIX8C-R097). */
+    private fun checkoutReference(): String =
+        pendingCheckoutReference ?: referenceProvider().also { pendingCheckoutReference = it }
 
     /** UI state for the checkout flow. */
     sealed class CheckoutState {
@@ -243,37 +249,53 @@ class CashierViewModel(
 
     fun addToCart(product: LocalProductEntity) {
         cart.addProduct(product.id, product.name, product.effectiveSellingPrice)
-        pendingOnlineReference = null
+        pendingCheckoutReference = null
         emitCart()
     }
 
     fun updateQuantity(productId: Long, quantity: Int) {
         cart.updateQuantity(productId, quantity)
-        pendingOnlineReference = null
+        pendingCheckoutReference = null
         emitCart()
     }
 
     fun removeItem(productId: Long) {
         cart.removeProduct(productId)
-        pendingOnlineReference = null
+        pendingCheckoutReference = null
         emitCart()
     }
 
     fun clearCart() {
         cart.clear()
-        pendingOnlineReference = null
+        pendingCheckoutReference = null
         emitCart()
     }
 
     /**
-     * Submit the cart as an online CASH sale. The cart is cleared ONLY after the
-     * backend confirms the sale; on any failure the cart is kept intact so the
-     * cashier can retry (Sprint 4 runtime rule).
+     * Submit the cart as an online CASH sale, with a GOVERNED offline fallback
+     * (UIX-8C-04). The cart is cleared ONLY after either the backend confirms the
+     * sale OR a durable offline row is committed:
+     *
+     *  - server ACK            → cart cleared, [CheckoutState.Success].
+     *  - governed transport
+     *    failure (DNS/timeout/
+     *    connect/reset)        → durable offline CASH save reusing the SAME stable
+     *                            clientReference; on a durable save the cart is
+     *                            cleared and [CheckoutState.OfflineSaved] is shown
+     *                            (UIX8C-R098/R105/R107). A local-save failure keeps
+     *                            the cart (UIX8C-R108).
+     *  - canonical rejection
+     *    (any HTTP status)     → cart KEPT, [CheckoutState.Error]; NEVER offline
+     *                            success (UIX8C-R099..R102).
+     *  - TLS/unknown error     → cart KEPT, [CheckoutState.Error]; NEVER offline
+     *                            (UIX8C-R103).
+     *
+     * QRIS is never eligible here — offline is CASH-only (UIX8C-R096).
      */
     fun checkoutCash(paidAmount: Long) {
-        // UIX7-R015/R025 — a submission is already in flight; ignore the repeat
-        // tap so a double-press can never create two server transactions. The UI
-        // also disables the button, but this guard closes the tap-before-observer
+        // UIX7-R015/R025 / UIX8C-R109 — a submission is already in flight; ignore
+        // the repeat tap so a double-press can never create two transactions. The
+        // UI also disables the button, but this guard closes the tap-before-observer
         // race at the source.
         if (_checkout.value is CheckoutState.Submitting) return
         if (cart.isEmpty()) {
@@ -287,25 +309,62 @@ class CashierViewModel(
         }
 
         _checkout.value = CheckoutState.Submitting
-        // Mint the idempotency key once; a retry after a failure re-uses the same
-        // key so the backend dedupes instead of duplicating the sale (UIX7-R054/R055).
-        val reference = pendingOnlineReference ?: referenceProvider().also { pendingOnlineReference = it }
+        // Mint the ONE stable idempotency key once; reused across a retry AND the
+        // offline fallback below so the whole chain dedupes (UIX7-R054 / UIX8C-R097).
+        val reference = checkoutReference()
+        val items = cart.items()
+        val total = cart.subtotalRupiah()
         viewModelScope.launch {
-            when (val result = sales.checkoutCash(cart.items(), paidAmount, reference)) {
-                is ResultState.Success -> {
+            when (val outcome = sales.submitCash(items, paidAmount, reference)) {
+                is SalesRepository.CheckoutOutcome.Success -> {
                     cart.clear()
                     emitCart()
                     // Sale confirmed by the server → this key is spent; the next
                     // cart gets a fresh one.
-                    pendingOnlineReference = null
-                    _checkout.value = CheckoutState.Success(result.data)
+                    pendingCheckoutReference = null
+                    _checkout.value = CheckoutState.Success(outcome.sale)
                     // Stock changed on the backend (SALE_OUT) — refresh labels.
                     refreshStock()
                 }
-                // Keep pendingOnlineReference on failure so a retry re-uses it.
-                is ResultState.Error -> _checkout.value = CheckoutState.Error(result.message)
-                ResultState.Loading -> Unit
+                // UIX8C-R098 — governed transport failure → durable offline CASH
+                // fallback, reusing the SAME reference so sync/backend dedupe.
+                is SalesRepository.CheckoutOutcome.TransportUnavailable ->
+                    saveOfflineFallback(items, paidAmount, reference, total)
+                // UIX8C-R099..R103 — a canonical rejection or unsafe error must
+                // NEVER become offline success; keep the cart, show the reason.
+                is SalesRepository.CheckoutOutcome.Rejected ->
+                    _checkout.value = CheckoutState.Error(outcome.message)
+                is SalesRepository.CheckoutOutcome.Failed ->
+                    _checkout.value = CheckoutState.Error(outcome.message)
             }
+        }
+    }
+
+    /**
+     * UIX8C-R105/R106/R107/R108 — commit the durable offline CASH row (reusing the
+     * stable [reference]) and clear the cart ONLY on a durable save; a save failure
+     * preserves the cart. The [CheckoutState.OfflineSaved] state drives the truthful
+     * "saved on device, waiting for sync" UI and the sync enqueue.
+     */
+    private suspend fun saveOfflineFallback(
+        items: List<CartItem>,
+        paidAmount: Long,
+        reference: String,
+        total: Long,
+    ) {
+        when (val result = offline.createOfflineCashSale(items, paidAmount, clientReference = reference)) {
+            is OfflineSaleRepository.SaveResult.Saved -> {
+                cart.clear()
+                emitCart()
+                _checkout.value = CheckoutState.OfflineSaved(
+                    clientReference = result.clientReference,
+                    grandTotal = total,
+                    change = RupiahMoney.change(paidAmount, total),
+                )
+                refreshSyncCounts()
+            }
+            is OfflineSaleRepository.SaveResult.Error ->
+                _checkout.value = CheckoutState.Error(result.message)
         }
     }
 
@@ -329,25 +388,14 @@ class CashierViewModel(
         }
 
         _checkout.value = CheckoutState.Submitting
+        // UIX8C-R097 — reuse the ONE stable reference (an earlier online attempt on
+        // this cart may already hold one) so the manual-offline path and any prior
+        // online attempt dedupe on the same key.
+        val reference = checkoutReference()
+        val items = cart.items()
+        val total = cart.subtotalRupiah()
         viewModelScope.launch {
-            val total = cart.subtotalRupiah()
-            when (val result = offline.createOfflineCashSale(cart.items(), paidAmount)) {
-                is OfflineSaleRepository.SaveResult.Saved -> {
-                    // Local save confirmed → safe to clear the cart now.
-                    cart.clear()
-                    emitCart()
-                    _checkout.value = CheckoutState.OfflineSaved(
-                        clientReference = result.clientReference,
-                        grandTotal = total,
-                        change = RupiahMoney.change(paidAmount, total),
-                    )
-                    refreshSyncCounts()
-                }
-                is OfflineSaleRepository.SaveResult.Error -> {
-                    // Keep the cart so the cashier can retry.
-                    _checkout.value = CheckoutState.Error(result.message)
-                }
-            }
+            saveOfflineFallback(items, paidAmount, reference, total)
         }
     }
 

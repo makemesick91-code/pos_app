@@ -70,6 +70,16 @@ abstract class OfflineSaleDao {
     @Query("SELECT * FROM offline_sales WHERE localId = :localId LIMIT 1")
     abstract suspend fun getOfflineSaleWithItems(localId: Long): LocalOfflineSaleEntity?
 
+    /**
+     * UIX-8C-04 (UIX8C-R097/R109) — look up an existing offline row by its stable
+     * clientReference so a repeated fallback (rapid taps, an online attempt then a
+     * governed offline retry with the SAME reference) reconciles to the one
+     * existing local transaction instead of creating a duplicate. Backed by the
+     * unique index on `clientReference`.
+     */
+    @Query("SELECT * FROM offline_sales WHERE clientReference = :clientReference LIMIT 1")
+    abstract suspend fun findByClientReference(clientReference: String): LocalOfflineSaleEntity?
+
     @Query(
         "UPDATE offline_sales SET syncStatus = 'SYNCING', lastAttemptedAt = :attemptedAt, " +
             "updatedAt = :attemptedAt WHERE localId = :localId"
