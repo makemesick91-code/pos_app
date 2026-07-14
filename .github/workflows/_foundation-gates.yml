@@ -30,6 +30,9 @@ jobs:
           bash scripts/uix7_pilot_connectivity_gate.sh
           bash scripts/uix7_runtime_closure_gate.sh
 
+      - name: UIX-8C foundation gate
+        run: bash scripts/uix8c_foundation_gate.sh
+
       - name: CICD-CTRL-2 CI architecture gate
         run: bash scripts/ci/cicd_ctrl_2_gate.sh
 
@@ -38,3 +41,6 @@ jobs:
 
       - name: UIX-7 runtime closure gate self-tests
         run: bash tests/ci/uix7_runtime_closure_gate_test.sh
+
+      - name: UIX-8C foundation gate self-tests
+        run: bash scripts/tests/uix8c_foundation_gate_test.sh

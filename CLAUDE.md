@@ -234,6 +234,29 @@ appear to conflict, the modular rule in `.claude/rules/` is authoritative.
   `.claude/rules/59-android-release-runtime-closure-ops-foundation.md`
   (UIX8BOPS-R001..R078).
 
+## Android cashier full premium delivery & closure train (UIX-8C)
+- UIX-8C is the final premium Android delivery train that drives the native
+  cashier (`com.aishtech.poslite`) to genuine UIX-7/UIX-8 runtime closure. It
+  extends — never weakens — rules 55/56/57/58/59. UIX-8C-01 (this sprint) ships
+  governance/architecture/inventory/foundation ONLY: rule set UIX8C-R001..R030
+  (`.claude/rules/61-android-cashier-full-premium-delivery-foundation.md`), the
+  screen inventory + dependency graph
+  (`docs/architecture/uix-8c-android-screen-state-architecture.md`), the
+  screen/state/accessibility matrix
+  (`docs/testing/uix-8c-screen-state-accessibility-matrix.md`), the delivery
+  plan for UIX-8C-02..09 (`docs/deployment/uix-8c-delivery-plan.md`), ADR 0004,
+  and a fail-closed foundation gate (`scripts/uix8c_foundation_gate.sh`). No
+  runtime code change, no visual rebuild, no physical campaign, no GO tag.
+- UIX-8C creates NO separate GO tag (UIX8C-R002); closure is recorded against
+  the existing UIX-7/UIX-8 GO discipline. The immutable failed physical run
+  `run-97fbb64-2af94aa` (R01 PENDING, R11 FAIL, R18 FAIL) is preserved verbatim
+  and never flipped to PASS (UIX8C-R003). Whole-Rupiah integer money stays
+  mandatory; canonical HTTP rejection never becomes offline success; cart
+  clears only after a durable save; stable `clientReference`; duplicate
+  sale/payment is automatic NO-GO. UIX-7 stays `NO-GO — GO DEFERRED`; UIX-8
+  stays `IMPLEMENTATION COMPLETE — GO DEFERRED`. Absence of evidence stays
+  NO-GO (UIX8C-R030). See `.claude/rules/61-...` (UIX8C-R001..R030).
+
 ## Authoritative CI consolidation (CICD-CTRL-2)
 - CI is consolidated into four lanes driven by a fail-closed change classifier
   (`scripts/ci/classify_changes.sh`). The single authoritative gate is **AISH POS
@@ -256,8 +279,9 @@ appear to conflict, the modular rule in `.claude/rules/` is authoritative.
 - Modular enforceable rules: `.claude/rules/` (00–90, plus 25 tenant-owner boundary,
   35 billing, 45 support/observability, 55 android cashier, 56 android cashier
   premium visual & transaction foundation, 57 android cashier native premium
-  screen rebuild, 58 android bluetooth permission foundation, 72 authoritative CI
-  consolidation). Legacy line kept for continuity:
+  screen rebuild, 58 android bluetooth permission foundation, 59 android release
+  runtime-closure ops, 61 android full premium delivery & closure train, 72
+  authoritative CI consolidation). Legacy line kept for continuity:
   35 billing-console integrity, 45 support/observability/incident governance, and
   55 android cashier experience). Root agent index: `AGENTS.md`.
 - Full project rules & rule-set IDs (incl. UIX3-R001..R016): `docs/PROJECT_RULES.md`.

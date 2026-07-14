@@ -1,0 +1,42 @@
+{
+  "record_kind": "immutable_failed_physical_run",
+  "sprint": "UIX-8C",
+  "note": "Genuine, operator-observed physical-device run. Preserved verbatim under UIX8C-R003. NEVER edit a FAIL/PENDING row into PASS. Absence/failure of evidence stays NO-GO (UIX8C-R030). Superseding this run requires a fresh APK bound to a new commit (UIX8C-R004) captured only after code freeze (UIX8C-R005/R024).",
+  "run_id": "run-97fbb64-2af94aa",
+  "runtime_anchor_commit": "97fbb64",
+  "repository_head_commit": "2af94aa7b563926501857bb8b72c5cfab809fb32",
+  "apk_variant": "pilot",
+  "apk_sha256": "1a83931bedd6c66366018d7562e674c620c6d1baa79273dcc102d1f633ce0564",
+  "evidence_source": "physical",
+  "environment": "https://aishpos.online/",
+  "decision": "NO_GO",
+  "decision_reason": "Physical run produced genuine failures/pending: R01 identity not visible (PENDING), R11 offline CASH not durably saved (FAIL), R18 layout collapse at 130% font (FAIL). These are the UIX-8C remediation targets and MUST NOT be represented as PASS.",
+  "uix7_status": "NO-GO — GO DEFERRED",
+  "uix8_status": "IMPLEMENTATION COMPLETE — GO DEFERRED",
+  "findings": [
+    {
+      "id": "R01",
+      "title": "Authenticated tenant/outlet identity not visible on cashier surface",
+      "classification": "hardware_independent",
+      "evidence_source": "physical",
+      "status": "PENDING",
+      "observation": "Tenant/outlet/cashier/device context header was not clearly presented; identity truthfulness could not be confirmed (UIX8C-R010)."
+    },
+    {
+      "id": "R11",
+      "title": "Offline CASH sale not persisted durably",
+      "classification": "hardware_independent",
+      "evidence_source": "physical",
+      "status": "FAIL",
+      "observation": "Under governed transport failure the CASH sale was not durably saved before the cart cleared; transaction was at risk of loss (violates UIX8C-R012/R013/R014). Remediation owned by UIX-8C-06. DO NOT FLIP TO PASS."
+    },
+    {
+      "id": "R18",
+      "title": "Layout collapse at 130% font scale",
+      "classification": "hardware_independent",
+      "evidence_source": "physical",
+      "status": "FAIL",
+      "observation": "Primary workflow layout collapsed / clipped primary actions at 130% font (violates UIX8C-R021). Remediation owned by UIX-8C-09. DO NOT FLIP TO PASS."
+    }
+  ]
+}
