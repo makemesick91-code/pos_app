@@ -39,6 +39,9 @@ jobs:
       - name: UIX-8C-03 cashier/catalog/cart gate
         run: bash scripts/uix8c_cashier_catalog_cart_gate.sh
 
+      - name: UIX-8C-04 offline cash durability gate
+        run: bash scripts/uix8c_offline_cash_durability_gate.sh
+
       - name: CICD-CTRL-2 CI architecture gate
         run: bash scripts/ci/cicd_ctrl_2_gate.sh
 
@@ -56,3 +59,6 @@ jobs:
 
       - name: UIX-8C-03 cashier/catalog/cart gate self-tests
         run: bash scripts/tests/uix8c_cashier_catalog_cart_gate_test.sh
+
+      - name: UIX-8C-04 offline cash durability gate self-tests
+        run: bash scripts/tests/uix8c_offline_cash_durability_gate_test.sh
