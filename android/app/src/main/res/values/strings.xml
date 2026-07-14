@@ -39,6 +39,46 @@
     <string name="cashier_stock_refresh">Refresh Stok</string>
     <string name="qris_offline_blocked">QRIS membutuhkan koneksi internet</string>
 
+    <!-- UIX-8B — truthful product-list states (loading vs empty-catalog vs no-match vs error) -->
+    <string name="cashier_products_loading">Memuat produk…</string>
+    <string name="cashier_products_no_match">Tidak ada produk yang cocok dengan pencarian.</string>
+    <string name="cashier_products_error">Gagal memuat produk. Coba lagi.</string>
+
+    <!-- UIX-8B — accessibility content descriptions (icon/ambiguous controls). -->
+    <string name="cd_search_products">Cari produk berdasarkan nama, SKU, atau barcode</string>
+    <string name="cd_paid_amount">Nominal uang tunai yang diterima dalam rupiah</string>
+    <string name="cd_checkout_online">Bayar tunai dan kirim transaksi ke server</string>
+    <string name="cd_checkout_offline">Simpan transaksi tunai offline di perangkat</string>
+    <string name="cd_clear_cart">Kosongkan keranjang</string>
+    <string name="cd_cart_total">Total keranjang saat ini</string>
+
+    <!-- UIX-8B — native cash payment tender sheet -->
+    <string name="pay_sheet_title">Pembayaran Tunai</string>
+    <string name="pay_sheet_due_label">Total tagihan</string>
+    <string name="pay_sheet_tender_hint">Uang diterima (Rp)</string>
+    <string name="pay_sheet_exact">Uang Pas</string>
+    <string name="pay_sheet_change_label">Kembalian: %1$s</string>
+    <string name="pay_sheet_enter_tender">Masukkan nominal uang diterima.</string>
+    <string name="pay_sheet_short">Kurang %1$s dari total.</string>
+    <string name="pay_sheet_pay_online">Bayar Tunai</string>
+    <string name="pay_sheet_pay_offline">Simpan Offline</string>
+    <string name="cd_pay_sheet_tender">Nominal uang tunai yang diterima dalam rupiah</string>
+
+    <!-- UIX-8B — transaction history -->
+    <string name="cashier_history">Riwayat</string>
+    <string name="history_title">Riwayat Transaksi</string>
+    <string name="history_loading">Memuat riwayat…</string>
+    <string name="history_empty">Belum ada transaksi tersimpan di perangkat ini.</string>
+    <string name="history_error">Gagal memuat riwayat. Coba lagi.</string>
+    <string name="history_ref">Ref: %1$s</string>
+    <string name="history_invoice">No: %1$s</string>
+    <string name="hist_status_pending">Menunggu sinkronisasi</string>
+    <string name="hist_status_syncing">Sedang disinkronkan</string>
+    <string name="hist_status_synced">Tersinkron</string>
+    <string name="hist_status_failed">Gagal — perlu tindakan</string>
+    <string name="hist_status_conflict">Konflik — perlu tinjauan</string>
+    <string name="hist_status_unknown">Status tidak diketahui</string>
+
     <!-- Sprint 5 — QRIS payment -->
     <string name="qris_title">Pembayaran QRIS</string>
     <string name="qris_payload_heading">Kode QR (teks):</string>

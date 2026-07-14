@@ -16,6 +16,7 @@ import com.aishtech.poslite.core.ServiceLocator
 import com.aishtech.poslite.core.money.RupiahMoney
 import com.aishtech.poslite.data.repository.CartRepository
 import com.aishtech.poslite.databinding.ActivityCashierBinding
+import com.aishtech.poslite.feature.history.TransactionHistoryActivity
 import com.aishtech.poslite.feature.receipt.ReceiptActivity
 import com.aishtech.poslite.feature.reports.ReportsActivity
 import com.aishtech.poslite.feature.sync.OfflineSalesSyncScheduler
@@ -25,7 +26,7 @@ import kotlinx.coroutines.launch
  * Cashier foundation screen: manual sync, local product search, and a
  * cash-first in-memory cart. Checkout/payment is a Sprint 4 concern.
  */
-class CashierActivity : AppCompatActivity() {
+class CashierActivity : AppCompatActivity(), PaymentSheetFragment.Host {
 
     private lateinit var binding: ActivityCashierBinding
     private lateinit var viewModel: CashierViewModel
@@ -67,19 +68,22 @@ class CashierActivity : AppCompatActivity() {
         binding.buttonReports.setOnClickListener {
             startActivity(Intent(this, ReportsActivity::class.java))
         }
+        binding.buttonHistory.setOnClickListener {
+            startActivity(Intent(this, TransactionHistoryActivity::class.java))
+        }
         // UIX7-R016 — clearing the cart is destructive; confirm before discarding
         // so an accidental tap can never wipe an in-progress sale. Uses the
         // canonical UIX-1 microcopy already shipped in strings.xml.
         binding.buttonClearCart.setOnClickListener { confirmClearCart() }
-        binding.buttonCheckout.setOnClickListener {
-            viewModel.checkoutCash(readPaidAmount())
-        }
-        // Sprint 7 — offline CASH checkout: store locally, then kick a background
-        // sync. The worker is network-constrained so it waits for connectivity.
-        binding.buttonCheckoutOffline.setOnClickListener {
-            viewModel.checkoutCashOffline(readPaidAmount())
-            OfflineSalesSyncScheduler.enqueue(context)
-        }
+        // UIX-8B — the single checkout CTA opens the native cash tender sheet
+        // (quick tender, manual entry, integer-exact change). Online and offline
+        // confirm both live in the sheet and delegate to the same guarded VM, so
+        // the double-submit guard, stable clientReference, and durable-save
+        // protections are unchanged. The legacy inline paid field + separate
+        // offline button are superseded and taken out of the flow.
+        binding.buttonCheckout.setOnClickListener { openPaymentSheet() }
+        binding.inputPaidAmount.visibility = View.GONE
+        binding.buttonCheckoutOffline.visibility = View.GONE
         binding.buttonSyncNow.setOnClickListener {
             viewModel.syncNow()
             OfflineSalesSyncScheduler.enqueue(context)
@@ -105,15 +109,19 @@ class CashierActivity : AppCompatActivity() {
     private fun observe() {
         viewModel.products.observe(this) { products ->
             adapter.submitList(products)
-            binding.textEmpty.visibility = if (products.isEmpty()) View.VISIBLE else View.GONE
         }
+        // UIX8B-R023/R024 — truthful product-list state (loading / empty-catalog /
+        // no-match / error) instead of a silent empty swap.
+        viewModel.productsState.observe(this) { renderProducts(it) }
         // Sprint 8 — informational stock labels; the adapter re-renders when the
         // backend stock fetch resolves. Never blocks the product list or a sale.
         viewModel.stockLabels.observe(this) { labels ->
             adapter.setStockLabels(labels)
         }
-        viewModel.subtotal.observe(this) { subtotal ->
-            binding.textCartTotal.text = "Total: ${formatPrice(subtotal)}"
+        // UIX8B-R044 — render the authoritative whole-rupiah integer total, never
+        // a recomputed float, so the shown total matches the checkout amount.
+        viewModel.subtotalRupiah.observe(this) { total ->
+            binding.textCartTotal.text = "Total: ${RupiahMoney.format(total)}"
         }
         viewModel.cartItems.observe(this) { items ->
             val count = items.sumOf { it.quantity }
@@ -173,10 +181,14 @@ class CashierActivity : AppCompatActivity() {
             is CashierViewModel.CheckoutState.Success -> {
                 val sale = state.sale
                 result.visibility = View.VISIBLE
+                // UIX8B-R044/R047/R063 — the canonical server total/change are
+                // whole-rupiah strings; parse to Long and render through the single
+                // formatter. A missing value renders "Tidak tersedia" (never a
+                // fabricated 0 via the old toDoubleOrNull() ?: 0.0 float path).
                 result.text = getString(R.string.cashier_checkout_success) +
                     "\nInvoice: ${sale.invoiceNumber}" +
-                    "\nTotal: ${formatPrice(sale.grandTotal?.toDoubleOrNull() ?: 0.0)}" +
-                    "\nKembalian: ${formatPrice(sale.changeTotal?.toDoubleOrNull() ?: 0.0)}" +
+                    "\nTotal: ${RupiahMoney.formatOrUnavailable(RupiahMoney.parse(sale.grandTotal))}" +
+                    "\nKembalian: ${RupiahMoney.formatOrUnavailable(RupiahMoney.parse(sale.changeTotal))}" +
                     "\n" + getString(R.string.cashier_view_receipt)
                 // Sprint 6 — tap the result to open the receipt for this sale.
                 result.setOnClickListener { openReceipt(sale.id) }
@@ -215,17 +227,55 @@ class CashierActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-    // UIX-8 — read the tendered cash as whole rupiah through the single canonical
-    // parser. It tolerates "Rp"/thousands grouping and discards any decimal part
-    // (rupiah is whole), and returns null for blank/garbage input. A null becomes
-    // -1 so the ViewModel rejects it as insufficient instead of the old
-    // toDoubleOrNull() path, which fabricated 0 and mis-parsed "25.000" as 25.
-    private fun readPaidAmount(): Long =
-        RupiahMoney.parse(binding.inputPaidAmount.text?.toString()) ?: -1L
+    // UIX-8B — open the native cash tender sheet for the current cart total. The
+    // sheet is presentation-only; confirming routes back through onCashTender to
+    // the guarded ViewModel checkout. Never opened for an empty/zero cart.
+    private fun openPaymentSheet() {
+        val due = viewModel.subtotalRupiah.value ?: 0L
+        if (due <= 0L || viewModel.cartItems.value.isNullOrEmpty()) return
+        PaymentSheetFragment.newInstance(due)
+            .show(supportFragmentManager, PaymentSheetFragment.TAG)
+    }
 
-    // UIX7-R019/R029 — money is rendered only through the single canonical
-    // whole-rupiah formatter. Legacy Double amounts are bridged without a fresh
-    // float calculation.
-    private fun formatPrice(value: Double): String =
-        RupiahMoney.format(RupiahMoney.fromDouble(value))
+    override fun onCashTender(paidAmount: Long, offline: Boolean) {
+        if (offline) {
+            viewModel.checkoutCashOffline(paidAmount)
+            OfflineSalesSyncScheduler.enqueue(applicationContext)
+        } else {
+            viewModel.checkoutCash(paidAmount)
+        }
+    }
+
+    // UIX8B-R023/R024/R029 — drive the product area's truthful states. A load
+    // failure surfaces an error message but never clears the last product list or
+    // the cart; the RecyclerView keeps its content behind the overlay.
+    private fun renderProducts(state: CashierViewModel.ProductsState) {
+        val progress = binding.progressProducts
+        val empty = binding.textEmpty
+        when (state) {
+            CashierViewModel.ProductsState.Loading -> {
+                progress.visibility = View.VISIBLE
+                empty.visibility = View.GONE
+            }
+            is CashierViewModel.ProductsState.Loaded -> {
+                progress.visibility = View.GONE
+                empty.visibility = View.GONE
+            }
+            CashierViewModel.ProductsState.EmptyCatalog -> {
+                progress.visibility = View.GONE
+                empty.text = getString(R.string.cashier_empty)
+                empty.visibility = View.VISIBLE
+            }
+            is CashierViewModel.ProductsState.NoMatch -> {
+                progress.visibility = View.GONE
+                empty.text = getString(R.string.cashier_products_no_match)
+                empty.visibility = View.VISIBLE
+            }
+            is CashierViewModel.ProductsState.Error -> {
+                progress.visibility = View.GONE
+                empty.text = getString(R.string.cashier_products_error)
+                empty.visibility = View.VISIBLE
+            }
+        }
+    }
 }

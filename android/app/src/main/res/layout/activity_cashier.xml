@@ -1,28 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- UIX-8B — Cashier home. Tokenized (no raw dp/sp), accessible (content
+     descriptions + >=48dp targets), product area dominant, truthful states. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:background="@color/bg_default"
+    android:padding="@dimen/space_lg">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/cashier_title"
-        android:textSize="20sp"
-        android:textStyle="bold" />
+        android:textAppearance="@style/TextAppearance.Aish.PageTitle" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="@dimen/space_sm"
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
         <Button
             android:id="@+id/buttonSync"
+            style="@style/Widget.Aish.Button.Secondary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:minHeight="@dimen/touch_target_min"
             android:text="@string/cashier_sync" />
 
         <TextView
@@ -30,32 +34,46 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="@dimen/space_md"
             android:text="@string/cashier_sync_idle"
-            android:textSize="13sp" />
+            android:textAppearance="@style/TextAppearance.Aish.BodySmall" />
 
-        <!-- Sprint 9 — open the lightweight daily summary / closing screen. -->
+        <!-- Open the lightweight daily summary / closing screen. -->
         <Button
             android:id="@+id/buttonReports"
+            style="@style/Widget.Aish.Button.Secondary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="@dimen/space_sm"
+            android:minHeight="@dimen/touch_target_min"
             android:text="@string/cashier_reports" />
+
+        <!-- UIX-8B — open the transaction-history screen. -->
+        <Button
+            android:id="@+id/buttonHistory"
+            style="@style/Widget.Aish.Button.Secondary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_sm"
+            android:minHeight="@dimen/touch_target_min"
+            android:text="@string/cashier_history" />
 
     </LinearLayout>
 
-    <!-- Sprint 7 — offline sync queue summary + manual sync trigger. -->
+    <!-- Offline sync queue summary + manual sync trigger. -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="@dimen/space_xs"
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
         <Button
             android:id="@+id/buttonSyncNow"
+            style="@style/Widget.Aish.Button.Secondary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:minHeight="@dimen/touch_target_min"
             android:text="@string/cashier_sync_now" />
 
         <TextView
@@ -63,9 +81,9 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="@dimen/space_md"
             android:text="@string/cashier_sync_summary"
-            android:textSize="13sp" />
+            android:textAppearance="@style/TextAppearance.Aish.BodySmall" />
 
     </LinearLayout>
 
@@ -73,8 +91,10 @@
         android:id="@+id/inputSearch"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:minHeight="@dimen/input_height"
+        android:layout_marginTop="@dimen/space_sm"
         android:hint="@string/cashier_search_hint"
+        android:contentDescription="@string/cd_search_products"
         android:inputType="text"
         android:maxLines="1"
         android:autofillHints="" />
@@ -83,7 +103,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginTop="8dp">
+        android:layout_marginTop="@dimen/space_sm">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/listProducts"
@@ -91,13 +111,23 @@
             android:layout_height="match_parent"
             android:clipToPadding="false" />
 
+        <ProgressBar
+            android:id="@+id/progressProducts"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
         <TextView
             android:id="@+id/textEmpty"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:gravity="center"
+            android:padding="@dimen/space_lg"
             android:text="@string/cashier_empty"
-            android:textSize="14sp"
+            android:textAppearance="@style/TextAppearance.Aish.Body"
+            android:textColor="@color/text_secondary"
             android:visibility="gone" />
 
     </FrameLayout>
@@ -105,7 +135,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_marginVertical="8dp"
+        android:layout_marginVertical="@dimen/space_sm"
         android:background="@color/divider" />
 
     <TextView
@@ -113,23 +143,25 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/cashier_cart_empty"
-        android:textSize="14sp" />
+        android:textAppearance="@style/TextAppearance.Aish.Body" />
 
     <TextView
         android:id="@+id/textCartTotal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="@dimen/space_xs"
         android:text="@string/cashier_total_zero"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        android:contentDescription="@string/cd_cart_total"
+        android:textAppearance="@style/TextAppearance.Aish.SectionTitle" />
 
     <EditText
         android:id="@+id/inputPaidAmount"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:minHeight="@dimen/input_height"
+        android:layout_marginTop="@dimen/space_sm"
         android:hint="@string/cashier_paid_hint"
+        android:contentDescription="@string/cd_paid_amount"
         android:inputType="numberDecimal"
         android:maxLines="1"
         android:autofillHints="" />
@@ -137,43 +169,52 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="@dimen/space_sm"
         android:orientation="horizontal">
 
         <Button
             android:id="@+id/buttonClearCart"
+            style="@style/Widget.Aish.Button.Secondary"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:minHeight="@dimen/touch_target_min"
+            android:contentDescription="@string/cd_clear_cart"
             android:text="@string/cashier_clear_cart" />
 
         <Button
             android:id="@+id/buttonCheckout"
+            style="@style/Widget.Aish.Button.Pay"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="@dimen/space_sm"
+            android:minHeight="@dimen/button_pay_height"
             android:enabled="false"
+            android:contentDescription="@string/cd_checkout_online"
             android:text="@string/cashier_checkout_cash" />
 
     </LinearLayout>
 
-    <!-- Sprint 7 — offline CASH checkout (stores locally, syncs later). -->
+    <!-- Offline CASH checkout (stores locally, syncs later). -->
     <Button
         android:id="@+id/buttonCheckoutOffline"
+        style="@style/Widget.Aish.Button.Secondary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="@dimen/space_sm"
+        android:minHeight="@dimen/touch_target_min"
         android:enabled="false"
+        android:contentDescription="@string/cd_checkout_offline"
         android:text="@string/cashier_checkout_cash_offline" />
 
     <TextView
         android:id="@+id/textCheckoutResult"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="@dimen/space_sm"
         android:text=""
-        android:textSize="14sp"
+        android:textAppearance="@style/TextAppearance.Aish.Body"
         android:visibility="gone" />
 
 </LinearLayout>

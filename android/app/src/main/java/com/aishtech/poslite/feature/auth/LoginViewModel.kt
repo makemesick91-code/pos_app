@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aishtech.poslite.core.util.Event
 import com.aishtech.poslite.core.util.ResultState
 import com.aishtech.poslite.data.repository.AuthRepository
 import com.aishtech.poslite.data.repository.DeviceRepository
@@ -31,13 +32,22 @@ class LoginViewModel(
     sealed class UiState {
         data object Idle : UiState()
         data object Loading : UiState()
-        data object Success : UiState()
         data class Blocked(val message: String) : UiState()
         data class Error(val message: String) : UiState()
     }
 
+    /**
+     * UIX8B-R008 — navigation is a one-time event, not sticky state. Delivered
+     * through [Event] so a rotation/process-recreation that re-observes the last
+     * value does NOT re-launch the destination.
+     */
+    enum class Nav { CASHIER, SUBSCRIPTION }
+
     private val _state = MutableLiveData<UiState>(UiState.Idle)
     val state: LiveData<UiState> = _state
+
+    private val _nav = MutableLiveData<Event<Nav>>()
+    val nav: LiveData<Event<Nav>> = _nav
 
     fun login(email: String, password: String) {
         if (email.isBlank() || password.isBlank()) {
@@ -59,6 +69,7 @@ class LoginViewModel(
             is ResultState.Success -> {
                 if (!SubscriptionStatusDisplay.isAllowed(status.data)) {
                     _state.value = UiState.Blocked(SubscriptionStatusDisplay.blockedReason(status.data))
+                    _nav.value = Event(Nav.SUBSCRIPTION)
                     return
                 }
                 registerDevice()
@@ -69,10 +80,14 @@ class LoginViewModel(
     }
 
     private suspend fun registerDevice() {
-        _state.value = when (deviceRepository.registerCurrentDevice()) {
-            is ResultState.Success -> UiState.Success
-            is ResultState.Error -> UiState.Blocked("Perangkat tidak dapat diaktifkan. Periksa batas perangkat langganan.")
-            ResultState.Loading -> UiState.Loading
+        when (deviceRepository.registerCurrentDevice()) {
+            is ResultState.Success -> {
+                _state.value = UiState.Idle
+                _nav.value = Event(Nav.CASHIER)
+            }
+            is ResultState.Error ->
+                _state.value = UiState.Blocked("Perangkat tidak dapat diaktifkan. Periksa batas perangkat langganan.")
+            ResultState.Loading -> _state.value = UiState.Loading
         }
     }
 }

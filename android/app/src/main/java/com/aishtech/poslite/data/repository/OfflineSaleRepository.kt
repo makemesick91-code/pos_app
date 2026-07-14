@@ -183,6 +183,14 @@ class OfflineSaleRepository(
 
     suspend fun failedCount(): Int = offlineSaleDao.countFailed()
 
+    /**
+     * UIX-8B — recent local sales for the transaction-history screen, newest
+     * first and bounded (UIX8B-R059/R062). The local queue is the device's
+     * transaction record; each row appears once.
+     */
+    suspend fun recentSales(limit: Int = 100): List<LocalOfflineSaleEntity> =
+        offlineSaleDao.getRecent(limit)
+
     private fun amount(value: Double): String = String.format(Locale.US, "%.2f", value)
 
     private fun isoUtc(epochMillis: Long): String {

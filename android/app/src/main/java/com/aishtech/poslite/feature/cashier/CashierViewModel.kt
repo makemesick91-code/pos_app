@@ -49,17 +49,40 @@ class CashierViewModel(
         data class Error(val message: String) : CheckoutState()
     }
 
+    /**
+     * UIX8B-R023/R024/R029 — truthful product-list state. A load distinguishes
+     * "still loading", "catalog is empty (needs sync)", "no search match", and
+     * "load failed" instead of silently swapping to an empty list. A failure NEVER
+     * clears the cart (the cart is separate authoritative state).
+     */
+    sealed class ProductsState {
+        data object Loading : ProductsState()
+        data class Loaded(val products: List<LocalProductEntity>) : ProductsState()
+        data object EmptyCatalog : ProductsState()
+        data class NoMatch(val query: String) : ProductsState()
+        data class Error(val message: String) : ProductsState()
+    }
+
     /** Summary of the local offline sync queue shown to the cashier. */
     data class SyncCounts(val pending: Int, val failed: Int)
 
     private val _products = MutableLiveData<List<LocalProductEntity>>(emptyList())
     val products: LiveData<List<LocalProductEntity>> = _products
 
+    private val _productsState = MutableLiveData<ProductsState>(ProductsState.Loading)
+    val productsState: LiveData<ProductsState> = _productsState
+
     private val _cartItems = MutableLiveData<List<CartItem>>(emptyList())
     val cartItems: LiveData<List<CartItem>> = _cartItems
 
     private val _subtotal = MutableLiveData(0.0)
     val subtotal: LiveData<Double> = _subtotal
+
+    // UIX8B-R033/R044 — the authoritative cart total is whole-rupiah integer.
+    // The UI renders THIS (never a recomputed float) so the displayed total can
+    // never diverge from the checkout amount.
+    private val _subtotalRupiah = MutableLiveData(0L)
+    val subtotalRupiah: LiveData<Long> = _subtotalRupiah
 
     private val _syncStatus = MutableLiveData("Belum disinkronkan")
     val syncStatus: LiveData<String> = _syncStatus
@@ -82,8 +105,19 @@ class CashierViewModel(
     val stockLabels: LiveData<Map<Long, String>> = _stockLabels
 
     fun search(query: String) {
+        _productsState.value = ProductsState.Loading
         viewModelScope.launch {
-            _products.value = catalogRepository.search(query)
+            try {
+                val results = catalogRepository.search(query)
+                _products.value = results
+                _productsState.value =
+                    if (results.isNotEmpty()) ProductsState.Loaded(results)
+                    else emptyProductsState(query)
+            } catch (e: Exception) {
+                // UIX8B-R029 — a product-load failure surfaces an error state but
+                // NEVER clears the cart; the last-known list is left untouched.
+                _productsState.value = ProductsState.Error(e.message.orEmpty())
+            }
         }
     }
 
@@ -263,5 +297,19 @@ class CashierViewModel(
     private fun emitCart() {
         _cartItems.value = cart.items()
         _subtotal.value = cart.subtotal()
+        _subtotalRupiah.value = cart.subtotalRupiah()
+    }
+
+    companion object {
+        /**
+         * UIX8B-R023 — decide the truthful empty state when a search returns no
+         * products. A blank query with no results means the local catalog itself
+         * is empty (needs a sync); a non-blank query means no product matched the
+         * term. Pure and side-effect-free so it is unit-testable without the Room/
+         * repository stack.
+         */
+        fun emptyProductsState(query: String): ProductsState =
+            if (query.isBlank()) ProductsState.EmptyCatalog
+            else ProductsState.NoMatch(query)
     }
 }
