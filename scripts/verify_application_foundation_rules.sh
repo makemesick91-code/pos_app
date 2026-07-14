@@ -260,14 +260,17 @@ for i in $(seq -w 1 78); do
 done
 [ -z "$missing_ops" ] && pass "UIX8BOPS-R001..R078 persisted" || bad "release ops rule ids not fully persisted:$missing_ops"
 
-# 5i. Android full premium delivery & closure foundation (UIX8C-R001..R060, UIX-8C).
+# 5i. Android full premium delivery & closure foundation (UIX8C-R001..R095, UIX-8C).
 [ -f .claude/rules/61-android-cashier-full-premium-delivery-foundation.md ] && pass "UIX-8C delivery rule present" || bad "missing .claude/rules/61-android-cashier-full-premium-delivery-foundation.md"
 missing_uix8c=""
-for i in $(seq -w 1 60); do
+for i in $(seq -w 1 95); do
   id="UIX8C-R0$i"
   grep -q "$id" .claude/rules/61-android-cashier-full-premium-delivery-foundation.md || missing_uix8c="$missing_uix8c $id"
 done
-[ -z "$missing_uix8c" ] && pass "UIX8C-R001..R060 persisted" || bad "UIX-8C rule ids not fully persisted:$missing_uix8c"
+[ -z "$missing_uix8c" ] && pass "UIX8C-R001..R095 persisted" || bad "UIX-8C rule ids not fully persisted:$missing_uix8c"
+# UIX-8C-03 dedicated cashier/catalog/cart gate present.
+[ -x scripts/uix8c_cashier_catalog_cart_gate.sh ] && pass "UIX-8C-03 cashier/catalog/cart gate present" || bad "missing scripts/uix8c_cashier_catalog_cart_gate.sh"
+[ -x scripts/tests/uix8c_cashier_catalog_cart_gate_test.sh ] && pass "UIX-8C-03 cashier/catalog/cart gate tests present" || bad "missing scripts/tests/uix8c_cashier_catalog_cart_gate_test.sh"
 # UIX-8C foundation + design-system artifacts + fail-closed gates present.
 [ -x scripts/uix8c_foundation_gate.sh ] && pass "UIX-8C foundation gate present" || bad "missing scripts/uix8c_foundation_gate.sh"
 [ -x scripts/tests/uix8c_foundation_gate_test.sh ] && pass "UIX-8C foundation gate tests present" || bad "missing scripts/tests/uix8c_foundation_gate_test.sh"

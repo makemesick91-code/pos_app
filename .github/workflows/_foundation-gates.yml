@@ -36,6 +36,9 @@ jobs:
       - name: UIX-8C-02 design-system gate
         run: bash scripts/uix8c_design_system_gate.sh
 
+      - name: UIX-8C-03 cashier/catalog/cart gate
+        run: bash scripts/uix8c_cashier_catalog_cart_gate.sh
+
       - name: CICD-CTRL-2 CI architecture gate
         run: bash scripts/ci/cicd_ctrl_2_gate.sh
 
@@ -50,3 +53,6 @@ jobs:
 
       - name: UIX-8C-02 design-system gate self-tests
         run: bash scripts/tests/uix8c_design_system_gate_test.sh
+
+      - name: UIX-8C-03 cashier/catalog/cart gate self-tests
+        run: bash scripts/tests/uix8c_cashier_catalog_cart_gate_test.sh

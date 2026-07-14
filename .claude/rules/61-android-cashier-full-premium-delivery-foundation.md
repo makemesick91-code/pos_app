@@ -195,6 +195,86 @@ extend — never weaken — rules 55/56/57/58/59 and UIX8C-R001..R030.
   stays `IMPLEMENTATION COMPLETE — GO DEFERRED` until genuinely closed against the
   UIX-7/UIX-8 GO discipline, regardless of any `uix-8c-NN-*-go` sprint tag.
 
+## UIX-8C-03 — Premium cashier home, product catalog, search, category & cart
+Introduced by UIX-8C-03 (premium rebuild of the cashier home, canonical context
+header, product catalog + truthful states, product search, category filter, and
+the deterministic integer-exact cart). These rules are the permanent
+cashier-experience baseline for every subsequent Android sprint and extend —
+never weaken — rules 55/56/57/58/59 and UIX8C-R001..R060.
+
+### Cashier home & authorization
+- **UIX8C-R061** — Cashier Home is the canonical operational surface for Android
+  cashier users.
+- **UIX8C-R062** — Cashier Home must display canonical tenant, outlet, cashier,
+  device, and connectivity context (sourced from authenticated `auth/me`; a
+  missing value renders "Tidak tersedia", and online is claimed only when
+  identity resolved from the server this session — online ≠ merely connected).
+- **UIX8C-R063** — Android UI must never trust raw client-supplied tenant or
+  outlet identifiers for authorization.
+- **UIX8C-R064** — Cashier UI must never expose platform-admin or owner controls.
+
+### Product catalog & truthful states
+- **UIX8C-R065** — Product catalog data remains tenant and outlet scoped.
+- **UIX8C-R066** — Product loading, loaded, empty, no-result, unavailable,
+  offline-cached, and error states remain distinct.
+- **UIX8C-R067** — Loading state must never be displayed as an empty catalog.
+- **UIX8C-R068** — Search no-result must never be displayed as an empty catalog.
+- **UIX8C-R069** — Backend error must not silently erase an existing valid cart.
+- **UIX8C-R070** — Offline cached catalog must be labelled truthfully.
+- **UIX8C-R071** — Product stock and availability status must be textual and not
+  color-only.
+- **UIX8C-R072** — An unavailable or out-of-stock product cannot be added to the
+  cart.
+- **UIX8C-R073** — Product price uses the canonical whole-Rupiah formatter.
+
+### Search & category filter
+- **UIX8C-R074** — Search and category filtering must not mutate cart content.
+- **UIX8C-R075** — Clearing search or category filters restores the canonical
+  catalog state.
+
+### Cart integrity
+- **UIX8C-R076** — Cart add, increment, decrement, remove, and clear operations
+  remain deterministic.
+- **UIX8C-R077** — Cart quantities must never become zero or negative inside a
+  valid cart row.
+- **UIX8C-R078** — Cart totals use canonical whole-Rupiah integer calculations.
+- **UIX8C-R079** — UI must not duplicate pricing, discount, tax, stock,
+  entitlement, or payment business rules.
+- **UIX8C-R080** — Clear-cart is destructive and requires explicit confirmation.
+- **UIX8C-R081** — Cancelling clear-cart preserves the cart unchanged.
+- **UIX8C-R082** — Configuration changes must preserve valid cart state.
+- **UIX8C-R083** — Expected process recreation must restore valid cart state
+  where supported.
+- **UIX8C-R084** — API loading or error transitions must preserve a valid
+  existing cart.
+- **UIX8C-R085** — Checkout CTA is disabled or unavailable when the cart is empty
+  or invalid.
+
+### Responsive, font-scale & layout integrity
+- **UIX8C-R086** — Checkout CTA remains visible or scroll-reachable at 130% font
+  scale.
+- **UIX8C-R087** — Product catalog remains visible or scroll-reachable at 130%
+  font scale.
+- **UIX8C-R088** — Cart, totals, and quantity controls remain visible or
+  scroll-reachable at 130% font scale.
+- **UIX8C-R089** — Product, category, tenant, outlet, and cashier long names wrap
+  or ellipsize safely.
+- **UIX8C-R090** — Product and cart interactive targets remain at least 48dp.
+
+### Accessibility & performance
+- **UIX8C-R091** — Product, quantity, remove, search, category, and checkout
+  controls have meaningful accessibility semantics.
+- **UIX8C-R092** — Focus order follows context, search, categories, products,
+  cart, totals, and checkout.
+- **UIX8C-R093** — Cashier screen rendering must remain lightweight and avoid
+  unbounded layout work.
+
+### Release discipline
+- **UIX8C-R094** — Cashier catalog/cart regression is a sprint release blocker.
+- **UIX8C-R095** — UIX-8C-03 implementation GO does not imply UIX-7/UIX-8 runtime
+  GO. UIX-7 stays `NO-GO — GO DEFERRED` and UIX-8 stays `IMPLEMENTATION COMPLETE
+  — GO DEFERRED`; R11 offline CASH durability stays UNRESOLVED / out of scope.
+
 ## Scope guard for UIX-8C-01
 - UIX-8C-01 does not fix R11 (offline CASH durability), does not perform a broad
   runtime visual rebuild, does not modify runtime evidence/manifest state, does
@@ -212,6 +292,19 @@ extend — never weaken — rules 55/56/57/58/59 and UIX8C-R001..R030.
   the sprint-scoped tag `uix-8c-02-premium-design-system-hardening-go` under
   UIX8C-R002. Full per-screen rebuilds continue in UIX-8C-03..09.
 
+## Scope guard for UIX-8C-03
+- UIX-8C-03 rebuilds the premium cashier home, canonical context header, product
+  catalog + truthful states, product search, category filter, and the
+  deterministic integer-exact cart (UIX8C-R061..R095). It does NOT fix R11
+  (offline CASH durability), does NOT change `SaleService`/backend financial
+  behaviour, does NOT alter Room offline transaction semantics, payment
+  idempotency, or canonical runtime-evidence results, does NOT rebuild
+  payment/receipt/history, does NOT run a physical campaign, and does NOT create
+  a UIX-7 or UIX-8 GO tag. Checkout changes are limited to a safe handoff to the
+  existing governed payment sheet. It MAY create the sprint-scoped tag
+  `uix-8c-03-premium-cashier-catalog-cart-go` under UIX8C-R002. Full per-screen
+  rebuilds continue in UIX-8C-04..09.
+
 ## ADR requirement
 A material change to the delivery-train architecture, navigation graph, screen
 state architecture, component architecture, adaptive layout, receipt/payment
@@ -223,7 +316,16 @@ recorded by `docs/adr/0005-uix-8c-02-premium-design-system-hardening.md`.
 
 ## Enforcement
 - `scripts/verify_application_foundation_rules.sh` checks this rule file exists
-  and that `UIX8C-R001..R060` are persisted.
+  and that `UIX8C-R001..R095` are persisted.
+- `scripts/uix8c_cashier_catalog_cart_gate.sh` (fail-closed) enforces the
+  UIX-8C-03 cashier/catalog/cart baseline (UIX8C-R061..R095): rule persistence,
+  the canonical context component + include, the category filter + adapter, the
+  truthful catalog states, the whole-Rupiah formatter, the clear-cart
+  confirmation, search-clear + retry affordances, ≥48dp touch targets,
+  font-scale/accessibility test presence, status-not-colour-alone, no premature
+  UIX-7/UIX-8 GO, immutable failed physical evidence, and the sprint-tag
+  semantics. Its self-tests are
+  `scripts/tests/uix8c_cashier_catalog_cart_gate_test.sh`.
 - `scripts/uix8c_foundation_gate.sh` (fail-closed) validates rule persistence,
   the screen inventory, the state/accessibility matrix, the ADR, the immutable
   failed physical run record, UIX-7/UIX-8 deferred status, the umbrella/final

@@ -36,13 +36,13 @@ UIX8_EVID="docs/deployment/uix-8-runtime-evidence.json"
 [ -f "$RULE" ] && pass "modular rule 61 present" || bad "missing $RULE"
 [ -f "$PROJECT_RULES" ] && pass "PROJECT_RULES present" || bad "missing $PROJECT_RULES"
 missing_ids=""
-for i in $(seq -w 1 60); do
+for i in $(seq -w 1 95); do
   id="UIX8C-R0$i"
   if grep -q "$id" "$RULE" 2>/dev/null && grep -q "$id" "$PROJECT_RULES" 2>/dev/null; then :; else
     missing_ids="$missing_ids $id"
   fi
 done
-[ -z "$missing_ids" ] && pass "UIX8C-R001..R060 persisted (rule + PROJECT_RULES)" \
+[ -z "$missing_ids" ] && pass "UIX8C-R001..R095 persisted (rule + PROJECT_RULES)" \
   || bad "UIX8C rule ids not fully persisted:$missing_ids"
 
 # 2. Foundation / architecture / matrix / delivery docs + ADRs present, and the

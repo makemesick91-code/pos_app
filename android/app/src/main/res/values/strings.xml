@@ -43,6 +43,10 @@
     <string name="cashier_products_loading">Memuat produk…</string>
     <string name="cashier_products_no_match">Tidak ada produk yang cocok dengan pencarian.</string>
     <string name="cashier_products_error">Gagal memuat produk. Coba lagi.</string>
+    <string name="cashier_products_offline_cached">Menampilkan katalog tersimpan (offline).</string>
+    <string name="cashier_category_all">Semua</string>
+    <string name="cashier_search_clear">Hapus</string>
+    <string name="cashier_retry">Coba Lagi</string>
 
     <!-- UIX-8B — accessibility content descriptions (icon/ambiguous controls). -->
     <string name="cd_search_products">Cari produk berdasarkan nama, SKU, atau barcode</string>
@@ -194,6 +198,8 @@
     <string name="ctx_network_online">Daring</string>
     <string name="ctx_network_offline">Luring</string>
     <string name="ctx_placeholder">—</string>
+    <string name="ctx_business_label">Bisnis</string>
+    <string name="ctx_unavailable">Tidak tersedia</string>
 
     <!-- UIX-8C-02 accessibility content descriptions -->
     <string name="cd_state_loading">Sedang memuat konten</string>

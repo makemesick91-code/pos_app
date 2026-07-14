@@ -34,6 +34,28 @@ interface ProductDao {
     @Query("SELECT * FROM products WHERE isActive = 1 ORDER BY name LIMIT :limit")
     suspend fun getActiveProducts(limit: Int = 200): List<LocalProductEntity>
 
+    // UIX8C-R065 — category filtering stays tenant/outlet scoped by running against
+    // the already-scoped local catalog; it re-queries products only and never
+    // touches cart state (UIX8C-R074). Same active + LIMIT discipline as above.
+    @Query("SELECT * FROM products WHERE isActive = 1 AND categoryId = :categoryId ORDER BY name LIMIT :limit")
+    suspend fun getActiveProductsByCategory(categoryId: Long, limit: Int = 200): List<LocalProductEntity>
+
+    @Query(
+        """
+        SELECT * FROM products
+        WHERE isActive = 1
+          AND categoryId = :categoryId
+          AND (
+            name LIKE '%' || :query || '%'
+            OR sku LIKE '%' || :query || '%'
+            OR barcode LIKE '%' || :query || '%'
+          )
+        ORDER BY name
+        LIMIT :limit
+        """
+    )
+    suspend fun searchActiveProductsByCategory(query: String, categoryId: Long, limit: Int = 50): List<LocalProductEntity>
+
     @Query("SELECT * FROM products WHERE id = :id LIMIT 1")
     suspend fun findById(id: Long): LocalProductEntity?
 

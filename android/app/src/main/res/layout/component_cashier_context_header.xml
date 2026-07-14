@@ -1,21 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- UIX-8C-02 — reusable compact cashier context header (UIX8C-R049,
-     UIX8B-R025): outlet / cashier / device + network + sync state. Long
-     names ellipsize (never clip a primary action). Status uses text + a
-     chip colour, never colour alone. Presentation only — no business logic. -->
+<!-- UIX-8C-03 — canonical cashier context header (UIX8C-R061/R062, UIX8C-R049,
+     UIX8B-R025): business / outlet / cashier / device identity + a truthful
+     network state, fed only by authenticated auth/me (never client input,
+     UIX8C-R063). Long names ellipsize (never clip a primary action, UIX8C-R049/
+     R089). Status uses text + a chip colour, never colour alone (UIX8C-R047).
+     Presentation only — no business logic. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/contextHeader"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:paddingVertical="@dimen/space_xs">
+    android:contentDescription="@string/cd_context_header"
+    android:background="@color/surface_default"
+    android:padding="@dimen/space_sm">
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/textContextBusiness"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:contentDescription="@string/cd_context_business"
+            android:text="@string/ctx_placeholder"
+            android:textAppearance="@style/TextAppearance.Aish.Label" />
 
         <TextView
             android:id="@+id/textContextOutlet"
@@ -32,6 +46,16 @@
             android:layout_height="wrap_content"
             android:maxLines="1"
             android:ellipsize="end"
+            android:text="@string/ctx_placeholder"
+            android:textAppearance="@style/TextAppearance.Aish.Caption" />
+
+        <TextView
+            android:id="@+id/textContextDevice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:contentDescription="@string/cd_context_device"
             android:text="@string/ctx_placeholder"
             android:textAppearance="@style/TextAppearance.Aish.Caption" />
     </LinearLayout>

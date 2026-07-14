@@ -8,6 +8,7 @@ import com.aishtech.poslite.core.money.RupiahMoney
 import com.aishtech.poslite.core.util.ResultState
 import com.aishtech.poslite.data.local.entity.LocalProductEntity
 import com.aishtech.poslite.data.remote.dto.SaleDto
+import com.aishtech.poslite.data.repository.AuthRepository
 import com.aishtech.poslite.data.repository.CartRepository
 import com.aishtech.poslite.data.repository.CatalogRepository
 import com.aishtech.poslite.data.repository.OfflineSaleRepository
@@ -29,8 +30,17 @@ class CashierViewModel(
     private val cart: CartRepository,
     private val offline: OfflineSaleRepository,
     private val stock: StockRepository,
+    private val auth: AuthRepository? = null,
+    private val deviceName: String = "",
+    private val allCategoriesLabel: String = "Semua",
     private val referenceProvider: () -> String = { UUID.randomUUID().toString() },
 ) : ViewModel() {
+
+    // UIX8C-R066/R074/R075 — the current filter is the (query, categoryId) pair.
+    // Search and category selection each mutate exactly one axis and re-run the
+    // SAME combined query, so they compose and neither ever touches the cart.
+    private var currentQuery: String = ""
+    private var selectedCategoryId: Long? = null
 
     // UIX7-R054 — the stable idempotency key for the CURRENT online checkout
     // attempt. Minted once per cart, REUSED across retries (so a retry after a
@@ -104,18 +114,89 @@ class CashierViewModel(
     private val _stockLabels = MutableLiveData<Map<Long, String>>(emptyMap())
     val stockLabels: LiveData<Map<Long, String>> = _stockLabels
 
-    fun search(query: String) {
-        _productsState.value = ProductsState.Loading
+    // UIX8C-R061/R062 — canonical cashier context header. Starts offline/unknown
+    // ("Tidak tersedia") and is filled from auth/me; a failure keeps a truthful
+    // offline presentation rather than a stale claim.
+    private val _context = MutableLiveData(
+        CashierContextPresenter.present(me = null, deviceName = deviceName, reachable = false),
+    )
+    val context: LiveData<CashierContext> = _context
+
+    // UIX8C-R074/R075 — the category filter chip row ("Semua" + active categories).
+    private val _categories = MutableLiveData<List<CategoryOption>>(
+        listOf(CategoryOption(id = null, name = allCategoriesLabel, selected = true)),
+    )
+    val categories: LiveData<List<CategoryOption>> = _categories
+
+    /** Resolve the canonical cashier context for the home header. Best-effort:
+     *  a failure leaves the truthful offline presentation intact. */
+    fun loadContext() {
+        val repo = auth ?: return
+        viewModelScope.launch {
+            when (val result = repo.me()) {
+                is ResultState.Success ->
+                    _context.value = CashierContextPresenter.present(result.data, deviceName, reachable = true)
+                is ResultState.Error ->
+                    _context.value = CashierContextPresenter.present(null, deviceName, reachable = false)
+                ResultState.Loading -> Unit
+            }
+        }
+    }
+
+    /** Load the active categories for the filter row, preserving the selection. */
+    fun loadCategories() {
         viewModelScope.launch {
             try {
-                val results = catalogRepository.search(query)
+                val loaded = catalogRepository.categories()
+                _categories.value = CategoryOption.build(loaded, selectedCategoryId, allCategoriesLabel)
+            } catch (_: Exception) {
+                // Categories are a navigation aid only; on failure keep "Semua".
+                _categories.value = listOf(CategoryOption(id = null, name = allCategoriesLabel, selected = selectedCategoryId == null))
+            }
+        }
+    }
+
+    /**
+     * Update the search term. Search only re-queries the product list against the
+     * current category; it NEVER mutates the cart (UIX8C-R074).
+     */
+    fun search(query: String) {
+        currentQuery = query
+        applyFilters()
+    }
+
+    /**
+     * Select a category (null = "Semua"/all). Re-queries the product list under
+     * the current search term; clearing to null restores the canonical catalog
+     * (UIX8C-R075). Never mutates the cart (UIX8C-R074).
+     */
+    fun selectCategory(categoryId: Long?) {
+        if (categoryId == selectedCategoryId) return
+        selectedCategoryId = categoryId
+        _categories.value = _categories.value?.map { it.copy(selected = it.id == categoryId) }
+        applyFilters()
+    }
+
+    /** UIX8C-R069 — re-run the current filter after an error, without changing
+     *  the query, category, or cart. */
+    fun retry() = applyFilters()
+
+    /** Re-run the combined (query, category) query and map the result to a
+     *  truthful product state. A failure surfaces Error but NEVER clears the cart. */
+    private fun applyFilters() {
+        _productsState.value = ProductsState.Loading
+        val query = currentQuery
+        val categoryId = selectedCategoryId
+        viewModelScope.launch {
+            try {
+                val results = catalogRepository.search(query, categoryId)
                 _products.value = results
                 _productsState.value =
                     if (results.isNotEmpty()) ProductsState.Loaded(results)
-                    else emptyProductsState(query)
+                    else emptyProductsState(query, filterActive = categoryId != null)
             } catch (e: Exception) {
-                // UIX8B-R029 — a product-load failure surfaces an error state but
-                // NEVER clears the cart; the last-known list is left untouched.
+                // UIX8B-R029 / UIX8C-R069 — a product-load failure surfaces an error
+                // state but NEVER clears the cart; the last-known list is untouched.
                 _productsState.value = ProductsState.Error(e.message.orEmpty())
             }
         }
@@ -149,7 +230,8 @@ class CashierViewModel(
                 is ResultState.Success -> {
                     _syncStatus.value =
                         "Tersinkron: ${result.data.products} produk, ${result.data.categories} kategori"
-                    search("")
+                    loadCategories()
+                    applyFilters()
                     refreshStock()
                 }
                 is ResultState.Error -> _syncStatus.value = result.message
@@ -308,8 +390,16 @@ class CashierViewModel(
          * term. Pure and side-effect-free so it is unit-testable without the Room/
          * repository stack.
          */
-        fun emptyProductsState(query: String): ProductsState =
-            if (query.isBlank()) ProductsState.EmptyCatalog
+        fun emptyProductsState(query: String): ProductsState = emptyProductsState(query, filterActive = false)
+
+        /**
+         * UIX8C-R067/R068 — filter-aware truthful empty state. Only a blank query
+         * with NO active category filter is a genuinely empty catalog (needs a
+         * sync); a search term OR an active category with no results is a
+         * "no match" (never presented as an empty catalog).
+         */
+        fun emptyProductsState(query: String, filterActive: Boolean): ProductsState =
+            if (query.isBlank() && !filterActive) ProductsState.EmptyCatalog
             else ProductsState.NoMatch(query)
     }
 }

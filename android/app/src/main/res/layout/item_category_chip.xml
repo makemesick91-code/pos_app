@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- UIX-8C-03 — one product-category filter chip (UIX8C-R074/R075). Selection is
+     conveyed by text + background/foreground tokens AND a state/content
+     description, never colour alone (UIX8C-R047/R071). The chip's touchable area
+     is >= 48dp (UIX8C-R090) via touch_target_min. Long category names ellipsize
+     and never clip (UIX8C-R049/R089). Fully tokenized — no raw values. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/chipCategory"
+    style="@style/Widget.Aish.StatusChip"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:minHeight="@dimen/touch_target_min"
+    android:minWidth="@dimen/touch_target_min"
+    android:gravity="center"
+    android:layout_marginEnd="@dimen/space_sm"
+    android:maxLines="1"
+    android:ellipsize="end"
+    android:focusable="true"
+    android:clickable="true"
+    android:textAppearance="@style/TextAppearance.Aish.Badge" />

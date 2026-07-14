@@ -7,4 +7,12 @@
     <string name="cd_login_password">Kolom kata sandi untuk masuk</string>
     <string name="cd_qris_receipt_affordance">Status pembayaran QRIS. Ketuk untuk melihat struk.</string>
     <string name="cd_receipt_print">Cetak struk transaksi</string>
+    <string name="cd_context_header">Konteks kasir: bisnis, outlet, kasir, dan perangkat</string>
+    <string name="cd_context_business">Nama bisnis</string>
+    <string name="cd_context_device">Perangkat kasir</string>
+    <string name="cd_category_filter">Filter kategori produk</string>
+    <string name="cd_category_selected">Kategori dipilih</string>
+    <string name="cd_category_unselected">Kategori</string>
+    <string name="cd_search_clear">Hapus kata kunci pencarian</string>
+    <string name="cd_retry_products">Muat ulang daftar produk</string>
 </resources>
