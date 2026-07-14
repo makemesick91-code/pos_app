@@ -145,3 +145,52 @@ presents and orchestrates only.
   verification, offline/reconnect verification, synthetic cleanup, and evidence
   closure are complete; on-device evidence is operator-captured and never
   fabricated.
+
+## Physical-device runtime closure & GO discipline (runtime-closure)
+- UIX7-R052 — Device activation must bind the authenticated Cashier, tenant,
+  outlet, device identifier, and activation state without granting cross-tenant
+  or elevated (Platform Admin / Tenant Owner) access.
+- UIX7-R053 — A transaction may be presented as successful only after the
+  required durable local save or canonical server acknowledgement defined by the
+  transaction mode (online = server ack; offline = durable local save).
+- UIX7-R054 — Every transaction attempt must use a stable idempotency key
+  (`clientReference`) preserved across retries, process restart, and reconnect.
+- UIX7-R055 — Rapid tap, retry, reconnect, and worker replay must produce
+  exactly one canonical financial transaction.
+- UIX7-R056 — Offline transactions must survive force-stop, process death,
+  application restart, device restart where supported, and temporary loss of
+  connectivity.
+- UIX7-R057 — A local transaction may transition to synced only after canonical
+  server acknowledgement is durably recorded.
+- UIX7-R058 — Cart total, transaction total, payment total, change, receipt
+  total, history total, and backend total must match exactly using integer
+  monetary units (whole rupiah).
+- UIX7-R059 — A stale previous receipt or transaction result must never be
+  displayed as the result of the current cart.
+- UIX7-R060 — QRIS created or awaiting payment must never be presented as paid,
+  confirmed, settled, or successful.
+- UIX7-R061 — QRIS status transitions must be monotonic, auditable, idempotent,
+  tenant-scoped, and correlated to exactly one transaction.
+- UIX7-R062 — Runtime evidence must be captured from an actual physical device
+  and must not be replaced by emulator or unit-test evidence.
+- UIX7-R063 — Runtime logs and screenshots must redact credentials, tokens,
+  customer PII, payment secrets, and QR payloads.
+- UIX7-R064 — Accessibility verification must include TalkBack, focus order,
+  semantic labels, touch targets, font scaling, error announcements, and the
+  primary cashier workflows.
+- UIX7-R065 — All synthetic Cashier, device, product, transaction, payment,
+  QRIS, sync queue, and test artifacts must be removed or deactivated before
+  UIX-7 GO.
+- UIX7-R066 — UIX-7 GO requires local, origin, VPS, final evidence commit, and
+  annotated tag peeled commit to exact-match.
+- UIX7-R067 — Any runtime-discovered source defect requires regression tests and
+  one authoritative full CI on the final candidate.
+- UIX7-R068 — Evidence-only closure may use lightweight CI only when the
+  CICD-CTRL-2 classifier proves that no executable, source, workflow, rules,
+  dependency, schema, config, or test file changed.
+- UIX7-R069 — A runtime defect involving financial correctness, transaction
+  loss, duplication, authorization, tenant isolation, QRIS false-success, or
+  credential leakage is an automatic NO-GO.
+- UIX7-R070 — Physical-device runtime verification, cleanup, evidence, VPS
+  synchronization, DMS non-regression, and tag exact-match are all mandatory for
+  GO.

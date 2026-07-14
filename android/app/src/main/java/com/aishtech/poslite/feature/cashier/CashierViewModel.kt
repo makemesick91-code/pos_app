@@ -14,6 +14,7 @@ import com.aishtech.poslite.data.repository.SalesRepository
 import com.aishtech.poslite.data.repository.StockRepository
 import com.aishtech.poslite.feature.sync.CatalogSyncManager
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 /**
  * Drives the cashier screen: local product search, cash-first cart, manual
@@ -27,7 +28,14 @@ class CashierViewModel(
     private val cart: CartRepository,
     private val offline: OfflineSaleRepository,
     private val stock: StockRepository,
+    private val referenceProvider: () -> String = { UUID.randomUUID().toString() },
 ) : ViewModel() {
+
+    // UIX7-R054 — the stable idempotency key for the CURRENT online checkout
+    // attempt. Minted once per cart, REUSED across retries (so a retry after a
+    // timeout is deduped by the backend rather than creating a second sale), and
+    // reset on success or any cart mutation (a changed cart is a new transaction).
+    private var pendingOnlineReference: String? = null
 
     /** UI state for the checkout flow. */
     sealed class CheckoutState {
@@ -117,21 +125,25 @@ class CashierViewModel(
 
     fun addToCart(product: LocalProductEntity) {
         cart.addProduct(product.id, product.name, product.effectiveSellingPrice)
+        pendingOnlineReference = null
         emitCart()
     }
 
     fun updateQuantity(productId: Long, quantity: Int) {
         cart.updateQuantity(productId, quantity)
+        pendingOnlineReference = null
         emitCart()
     }
 
     fun removeItem(productId: Long) {
         cart.removeProduct(productId)
+        pendingOnlineReference = null
         emitCart()
     }
 
     fun clearCart() {
         cart.clear()
+        pendingOnlineReference = null
         emitCart()
     }
 
@@ -156,15 +168,22 @@ class CashierViewModel(
         }
 
         _checkout.value = CheckoutState.Submitting
+        // Mint the idempotency key once; a retry after a failure re-uses the same
+        // key so the backend dedupes instead of duplicating the sale (UIX7-R054/R055).
+        val reference = pendingOnlineReference ?: referenceProvider().also { pendingOnlineReference = it }
         viewModelScope.launch {
-            when (val result = sales.checkoutCash(cart.items(), paidAmount)) {
+            when (val result = sales.checkoutCash(cart.items(), paidAmount, reference)) {
                 is ResultState.Success -> {
                     cart.clear()
                     emitCart()
+                    // Sale confirmed by the server → this key is spent; the next
+                    // cart gets a fresh one.
+                    pendingOnlineReference = null
                     _checkout.value = CheckoutState.Success(result.data)
                     // Stock changed on the backend (SALE_OUT) — refresh labels.
                     refreshStock()
                 }
+                // Keep pendingOnlineReference on failure so a retry re-uses it.
                 is ResultState.Error -> _checkout.value = CheckoutState.Error(result.message)
                 ResultState.Loading -> Unit
             }

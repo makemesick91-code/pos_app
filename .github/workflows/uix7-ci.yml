@@ -20,9 +20,15 @@ jobs:
       - name: UIX-7 pilot connectivity & network-security gate (UIX7-R045..R051)
         run: bash scripts/uix7_pilot_connectivity_gate.sh
 
-      - name: UIX-7 rules present (UIX7-R001..R051)
+      - name: UIX-7 physical-device runtime closure gate (UIX7-R052..R070)
+        run: bash scripts/uix7_runtime_closure_gate.sh
+
+      - name: UIX-7 runtime closure gate self-tests
+        run: bash tests/ci/uix7_runtime_closure_gate_test.sh
+
+      - name: UIX-7 rules present (UIX7-R001..R070)
         run: |
-          for i in $(seq -w 1 51); do
+          for i in $(seq -w 1 70); do
             grep -q "UIX7-R0$i" docs/PROJECT_RULES.md
             grep -q "UIX7-R0$i" docs/foundation/uix-7-android-cashier-experience-remediation.md
             grep -q "UIX7-R0$i" .claude/rules/55-android-cashier-experience.md

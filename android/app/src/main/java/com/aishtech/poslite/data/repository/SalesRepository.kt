@@ -20,7 +20,12 @@ import java.util.Locale
  */
 class SalesRepository(private val api: PosApiService) {
 
-    suspend fun checkoutCash(items: List<CartItem>, paidAmount: Double): ResultState<SaleDto> {
+    suspend fun checkoutCash(
+        items: List<CartItem>,
+        paidAmount: Double,
+        clientReference: String? = null,
+        clientCreatedAt: String? = null,
+    ): ResultState<SaleDto> {
         if (items.isEmpty()) {
             return ResultState.Error("Keranjang kosong.")
         }
@@ -30,6 +35,15 @@ class SalesRepository(private val api: PosApiService) {
                 CreateSaleItemRequestDto(productId = it.productId, qty = it.quantity)
             },
             payment = CashPaymentRequestDto(paidAmount = formatAmount(paidAmount)),
+            // UIX7-R054/R055 — an online checkout carries a stable client_reference so
+            // that a retry after a lost response (e.g. a read timeout AFTER the server
+            // has already committed the sale) is deduped by the backend
+            // (SaleService::createCashSale) instead of creating a second sale. The
+            // whole backend chain (StoreSaleRequest → SaleService → unique index) has
+            // supported this since Sprint 7; only the online client had omitted it.
+            source = clientReference?.let { "ANDROID_ONLINE" },
+            clientReference = clientReference,
+            clientCreatedAt = clientCreatedAt,
         )
 
         return try {
