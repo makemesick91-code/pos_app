@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- UIX-8C-02 — reusable LOADING state (UIX8C-R050). Include-able; a loading
+     state must never erase existing content, so hosts overlay/toggle it. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/stateLoading"
+    style="@style/Widget.Aish.StateContainer"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:importantForAccessibility="yes"
+    android:contentDescription="@string/cd_state_loading">
+
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="@dimen/touch_target_min"
+        android:minHeight="@dimen/touch_target_min" />
+
+    <TextView
+        android:id="@+id/textStateLoading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_md"
+        android:gravity="center"
+        android:text="@string/state_loading_default"
+        android:textAppearance="@style/TextAppearance.Aish.Body"
+        android:textColor="@color/text_secondary" />
+</LinearLayout>

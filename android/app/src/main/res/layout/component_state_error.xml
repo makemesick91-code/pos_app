@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- UIX-8C-02 — reusable ERROR state with retry (UIX8C-R048/R050,
+     UIX8B-R024). Error text is readable and announced; retry is >=48dp. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/stateError"
+    style="@style/Widget.Aish.StateContainer"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/textStateError"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/state_error_default"
+        android:contentDescription="@string/cd_state_error"
+        android:textAppearance="@style/TextAppearance.Aish.Body"
+        android:textColor="@color/text_primary" />
+
+    <Button
+        android:id="@+id/buttonStateRetry"
+        style="@style/Widget.Aish.Button.Secondary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_md"
+        android:minHeight="@dimen/touch_target_min"
+        android:contentDescription="@string/cd_state_retry"
+        android:text="@string/state_retry" />
+</LinearLayout>

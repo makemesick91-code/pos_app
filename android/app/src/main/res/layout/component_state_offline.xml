@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- UIX-8C-02 — reusable OFFLINE / cached state (UIX8C-R047/R050). Offline is
+     conveyed by a text label (never colour alone) plus a paired status chip. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/stateOffline"
+    style="@style/Widget.Aish.StateContainer"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/chipOffline"
+        style="@style/Widget.Aish.StatusChip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/state_offline_bg"
+        android:textColor="@color/state_offline_fg"
+        android:text="@string/ctx_network_offline" />
+
+    <TextView
+        android:id="@+id/textStateOffline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_sm"
+        android:gravity="center"
+        android:text="@string/state_offline_default"
+        android:textAppearance="@style/TextAppearance.Aish.Body"
+        android:textColor="@color/text_secondary" />
+</LinearLayout>

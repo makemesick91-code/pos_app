@@ -176,4 +176,29 @@
 
     <!-- Future state (no active button) -->
     <string name="uix_coming_soon">SEGERA HADIR: %1$s — menunggu aturan backend.</string>
+
+    <!-- ===== UIX-8C-02 — reusable component library (state components +
+         cashier context header). Text roles present for previews; screens
+         override at bind time. Status is text + colour, never colour alone. ===== -->
+    <string name="state_loading_default">Memuat…</string>
+    <string name="state_empty_default">Belum ada data.</string>
+    <string name="state_no_result_default">Tidak ada hasil yang cocok.</string>
+    <string name="state_error_default">Terjadi kesalahan. Coba lagi.</string>
+    <string name="state_offline_default">Sedang offline — sebagian data mungkin tertunda.</string>
+    <string name="state_unavailable">Tidak tersedia</string>
+    <string name="state_retry">Coba Lagi</string>
+
+    <string name="ctx_outlet_label">Outlet</string>
+    <string name="ctx_cashier_label">Kasir</string>
+    <string name="ctx_device_label">Perangkat</string>
+    <string name="ctx_network_online">Daring</string>
+    <string name="ctx_network_offline">Luring</string>
+    <string name="ctx_placeholder">—</string>
+
+    <!-- UIX-8C-02 accessibility content descriptions -->
+    <string name="cd_state_loading">Sedang memuat konten</string>
+    <string name="cd_state_error">Terjadi kesalahan saat memuat konten</string>
+    <string name="cd_state_retry">Muat ulang konten</string>
+    <string name="cd_network_status">Status koneksi jaringan</string>
+    <string name="cd_sync_status">Status sinkronisasi transaksi</string>
 </resources>
