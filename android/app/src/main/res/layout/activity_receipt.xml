@@ -3,15 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:padding="@dimen/space_lg">
 
     <TextView
         android:id="@+id/textTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/receipt_title"
-        android:textSize="18sp"
-        android:textStyle="bold"
+        android:textAppearance="@style/TextAppearance.Aish.PageTitle"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -20,7 +19,7 @@
         android:id="@+id/textInvoice"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="@dimen/space_md"
         app:layout_constraintTop_toBottomOf="@id/textTitle"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -29,7 +28,7 @@
         android:id="@+id/textReceiptStatus"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="@dimen/space_xs"
         app:layout_constraintTop_toBottomOf="@id/textInvoice"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -38,7 +37,7 @@
         android:id="@+id/textBlockReason"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="@dimen/space_xs"
         android:visibility="gone"
         android:textColor="@color/action_destructive"
         app:layout_constraintTop_toBottomOf="@id/textReceiptStatus"
@@ -49,9 +48,9 @@
         android:id="@+id/previewScroll"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="@dimen/space_md"
         android:background="@color/bg_subtle"
-        android:padding="8dp"
+        android:padding="@dimen/space_sm"
         app:layout_constraintTop_toBottomOf="@id/textBlockReason"
         app:layout_constraintBottom_toTopOf="@id/buttonPrint"
         app:layout_constraintStart_toStartOf="parent"
@@ -62,7 +61,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="monospace"
-            android:textSize="12sp"
+            android:textSize="@dimen/text_label"
             android:textColor="@color/text_primary" />
 
     </ScrollView>
@@ -79,8 +78,11 @@
 
     <Button
         android:id="@+id/buttonPrint"
+        style="@style/Widget.Aish.Button.Primary"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:minHeight="@dimen/touch_target_min"
+        android:contentDescription="@string/cd_receipt_print"
         android:text="@string/receipt_print"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"

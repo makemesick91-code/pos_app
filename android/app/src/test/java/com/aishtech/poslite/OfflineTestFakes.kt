@@ -80,6 +80,9 @@ class FakeOfflineDb : OfflineSaleDao(), OfflineSaleItemDao {
             .sortedBy { it.createdAt }
             .take(limit)
 
+    override suspend fun getRecent(limit: Int): List<LocalOfflineSaleEntity> =
+        sales.values.sortedByDescending { it.createdAt }.take(limit)
+
     override suspend fun getOfflineSaleWithItems(localId: Long): LocalOfflineSaleEntity? = sales[localId]
 
     override suspend fun markSyncing(localId: Long, attemptedAt: Long) {

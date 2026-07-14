@@ -68,8 +68,10 @@ grep -q "57-android-cashier-premium-screen-rebuild" CLAUDE.md \
 [ -f "$EVIDENCE_DOC_8B" ] && pass "UIX-8B evidence doc present" \
   || bad "missing UIX-8B evidence doc $EVIDENCE_DOC_8B"
 
-# 1c. UIX-8B screen coverage — every rebuilt cashier surface layout is present.
-for L in activity_cashier activity_payment activity_receipt activity_transaction_history; do
+# 1c. UIX-8B screen coverage — every rebuilt cashier surface is present. The
+# native cash payment surface is a bottom sheet (view_payment_sheet) that reuses
+# the guarded CashierViewModel checkout, not a second payment engine/activity.
+for L in activity_cashier view_payment_sheet activity_receipt activity_transaction_history; do
   [ -f "$ANDROID/res/layout/$L.xml" ] && pass "screen layout $L present" \
     || bad "missing rebuilt screen layout $L.xml (UIX8B screen coverage)"
 done
@@ -99,9 +101,12 @@ grep -q "subtotalRupiah" "$ANDROID/java/com/aishtech/poslite/data/repository/Car
 grep -q "paidAmount: Long" "$ANDROID/java/com/aishtech/poslite/data/repository/SalesRepository.kt" \
   && pass "online checkout takes whole-rupiah Long" \
   || bad "SalesRepository.checkoutCash not migrated to Long"
-grep -q "RupiahMoney.parse" "$ANDROID/java/com/aishtech/poslite/feature/cashier/CashierActivity.kt" \
-  && pass "tendered cash parsed via RupiahMoney.parse" \
-  || bad "CashierActivity does not parse cash via RupiahMoney.parse"
+# UIX-8B — cash tender is entered in the native payment sheet (PaymentSheetFragment)
+# in the cashier feature; it is still parsed via RupiahMoney.parse (never a
+# fabricated 0). Grep the cashier feature package so the check tracks the refactor.
+grep -rq "RupiahMoney.parse" "$ANDROID/java/com/aishtech/poslite/feature/cashier" \
+  && pass "tendered cash parsed via RupiahMoney.parse (cashier feature)" \
+  || bad "cashier feature does not parse cash via RupiahMoney.parse"
 
 # 5. Bounded-retry marker (UIX8-R023).
 grep -q "MAX_SYNC_ATTEMPTS" "$ANDROID/java/com/aishtech/poslite/data/repository/OfflineSaleRepository.kt" \

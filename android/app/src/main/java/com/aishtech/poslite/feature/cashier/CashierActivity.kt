@@ -16,6 +16,7 @@ import com.aishtech.poslite.core.ServiceLocator
 import com.aishtech.poslite.core.money.RupiahMoney
 import com.aishtech.poslite.data.repository.CartRepository
 import com.aishtech.poslite.databinding.ActivityCashierBinding
+import com.aishtech.poslite.feature.history.TransactionHistoryActivity
 import com.aishtech.poslite.feature.receipt.ReceiptActivity
 import com.aishtech.poslite.feature.reports.ReportsActivity
 import com.aishtech.poslite.feature.sync.OfflineSalesSyncScheduler
@@ -25,7 +26,7 @@ import kotlinx.coroutines.launch
  * Cashier foundation screen: manual sync, local product search, and a
  * cash-first in-memory cart. Checkout/payment is a Sprint 4 concern.
  */
-class CashierActivity : AppCompatActivity() {
+class CashierActivity : AppCompatActivity(), PaymentSheetFragment.Host {
 
     private lateinit var binding: ActivityCashierBinding
     private lateinit var viewModel: CashierViewModel
@@ -67,19 +68,22 @@ class CashierActivity : AppCompatActivity() {
         binding.buttonReports.setOnClickListener {
             startActivity(Intent(this, ReportsActivity::class.java))
         }
+        binding.buttonHistory.setOnClickListener {
+            startActivity(Intent(this, TransactionHistoryActivity::class.java))
+        }
         // UIX7-R016 — clearing the cart is destructive; confirm before discarding
         // so an accidental tap can never wipe an in-progress sale. Uses the
         // canonical UIX-1 microcopy already shipped in strings.xml.
         binding.buttonClearCart.setOnClickListener { confirmClearCart() }
-        binding.buttonCheckout.setOnClickListener {
-            viewModel.checkoutCash(readPaidAmount())
-        }
-        // Sprint 7 — offline CASH checkout: store locally, then kick a background
-        // sync. The worker is network-constrained so it waits for connectivity.
-        binding.buttonCheckoutOffline.setOnClickListener {
-            viewModel.checkoutCashOffline(readPaidAmount())
-            OfflineSalesSyncScheduler.enqueue(context)
-        }
+        // UIX-8B — the single checkout CTA opens the native cash tender sheet
+        // (quick tender, manual entry, integer-exact change). Online and offline
+        // confirm both live in the sheet and delegate to the same guarded VM, so
+        // the double-submit guard, stable clientReference, and durable-save
+        // protections are unchanged. The legacy inline paid field + separate
+        // offline button are superseded and taken out of the flow.
+        binding.buttonCheckout.setOnClickListener { openPaymentSheet() }
+        binding.inputPaidAmount.visibility = View.GONE
+        binding.buttonCheckoutOffline.visibility = View.GONE
         binding.buttonSyncNow.setOnClickListener {
             viewModel.syncNow()
             OfflineSalesSyncScheduler.enqueue(context)
@@ -223,13 +227,24 @@ class CashierActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-    // UIX-8 — read the tendered cash as whole rupiah through the single canonical
-    // parser. It tolerates "Rp"/thousands grouping and discards any decimal part
-    // (rupiah is whole), and returns null for blank/garbage input. A null becomes
-    // -1 so the ViewModel rejects it as insufficient instead of the old
-    // toDoubleOrNull() path, which fabricated 0 and mis-parsed "25.000" as 25.
-    private fun readPaidAmount(): Long =
-        RupiahMoney.parse(binding.inputPaidAmount.text?.toString()) ?: -1L
+    // UIX-8B — open the native cash tender sheet for the current cart total. The
+    // sheet is presentation-only; confirming routes back through onCashTender to
+    // the guarded ViewModel checkout. Never opened for an empty/zero cart.
+    private fun openPaymentSheet() {
+        val due = viewModel.subtotalRupiah.value ?: 0L
+        if (due <= 0L || viewModel.cartItems.value.isNullOrEmpty()) return
+        PaymentSheetFragment.newInstance(due)
+            .show(supportFragmentManager, PaymentSheetFragment.TAG)
+    }
+
+    override fun onCashTender(paidAmount: Long, offline: Boolean) {
+        if (offline) {
+            viewModel.checkoutCashOffline(paidAmount)
+            OfflineSalesSyncScheduler.enqueue(applicationContext)
+        } else {
+            viewModel.checkoutCash(paidAmount)
+        }
+    }
 
     // UIX8B-R023/R024/R029 — drive the product area's truthful states. A load
     // failure surfaces an error message but never clears the last product list or

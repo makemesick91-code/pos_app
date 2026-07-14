@@ -100,4 +100,12 @@ abstract class OfflineSaleDao {
 
     @Query("SELECT COUNT(*) FROM offline_sales WHERE syncStatus = 'FAILED'")
     abstract suspend fun countFailed(): Int
+
+    /**
+     * UIX-8B — the most recent local sales for the transaction-history screen,
+     * newest first and bounded (UIX8B-R059/R062). Rows are already tenant/device
+     * scoped by the per-tenant Room database (UIX-7); each localId appears once.
+     */
+    @Query("SELECT * FROM offline_sales ORDER BY createdAt DESC LIMIT :limit")
+    abstract suspend fun getRecent(limit: Int): List<LocalOfflineSaleEntity>
 }

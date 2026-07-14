@@ -7,75 +7,77 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/space_lg">
 
         <TextView
             android:id="@+id/textTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/subscription_title"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.Aish.PageTitle" />
 
         <ProgressBar
             android:id="@+id/progress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="@dimen/space_md"
             android:visibility="gone" />
 
         <TextView
             android:id="@+id/textStatus"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:layout_marginTop="@dimen/space_md"
+            android:textAppearance="@style/TextAppearance.Aish.SectionTitle" />
 
         <TextView
             android:id="@+id/textPlan"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textSize="16sp" />
+            android:layout_marginTop="@dimen/space_sm"
+            android:textAppearance="@style/TextAppearance.Aish.Body" />
 
         <TextView
             android:id="@+id/textDevices"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:textSize="16sp" />
+            android:layout_marginTop="@dimen/space_xs"
+            android:textAppearance="@style/TextAppearance.Aish.Body" />
 
         <TextView
             android:id="@+id/textReason"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="@dimen/space_sm"
             android:textColor="@color/action_destructive"
-            android:textSize="14sp"
+            android:textAppearance="@style/TextAppearance.Aish.Body"
             android:visibility="gone" />
 
         <TextView
             android:id="@+id/textError"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="@dimen/space_md"
             android:textColor="@color/action_destructive"
             android:visibility="gone" />
 
         <Button
             android:id="@+id/buttonRetry"
+            style="@style/Widget.Aish.Button.Secondary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/space_lg"
+            android:minHeight="@dimen/touch_target_min"
             android:text="@string/subscription_retry" />
 
         <Button
             android:id="@+id/buttonBack"
+            style="@style/Widget.Aish.Button.Secondary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="@dimen/space_sm"
+            android:minHeight="@dimen/touch_target_min"
             android:text="@string/subscription_logout" />
 
     </LinearLayout>

@@ -8,68 +8,71 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="@dimen/space_xl">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:text="@string/qris_title"
-            android:textSize="22sp"
-            android:textStyle="bold" />
+            android:textAppearance="@style/TextAppearance.Aish.PageTitle" />
 
         <TextView
             android:id="@+id/textSaleId"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:textSize="14sp" />
+            android:layout_marginTop="@dimen/space_lg"
+            android:textAppearance="@style/TextAppearance.Aish.Body" />
 
         <TextView
             android:id="@+id/textAmount"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:layout_marginTop="@dimen/space_sm"
+            android:textAppearance="@style/TextAppearance.Aish.SectionTitle" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/space_lg"
             android:text="@string/qris_payload_heading"
-            android:textSize="12sp" />
+            android:textAppearance="@style/TextAppearance.Aish.Label" />
 
         <TextView
             android:id="@+id/textQrPayload"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="@dimen/space_xs"
             android:background="@color/scrim_subtle"
-            android:padding="12dp"
+            android:padding="@dimen/space_md"
             android:fontFamily="monospace"
-            android:textSize="13sp"
+            android:textSize="@dimen/text_body_small"
             android:textIsSelectable="true" />
 
         <TextView
             android:id="@+id/textStatus"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:textSize="16sp" />
+            android:layout_marginTop="@dimen/space_lg"
+            android:focusable="true"
+            android:clickable="true"
+            android:contentDescription="@string/cd_qris_receipt_affordance"
+            android:textAppearance="@style/TextAppearance.Aish.Body" />
 
         <TextView
             android:id="@+id/textExpiredAt"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textSize="13sp" />
+            android:layout_marginTop="@dimen/space_sm"
+            android:textAppearance="@style/TextAppearance.Aish.BodySmall" />
 
         <Button
             android:id="@+id/buttonRefresh"
+            style="@style/Widget.Aish.Button.Secondary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="@dimen/space_xl"
+            android:minHeight="@dimen/touch_target_min"
             android:text="@string/qris_refresh" />
 
         <ProgressBar
@@ -77,7 +80,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/space_lg"
             android:visibility="gone" />
 
     </LinearLayout>

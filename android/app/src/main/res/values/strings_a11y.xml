@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Aish POS — UIX-8B accessibility strings (content descriptions).
+     Merged with strings.xml at build time; kept separate so the shared
+     strings.xml owner is not touched. Referenced by cashier XML layouts. -->
+<resources>
+    <string name="cd_login_email">Kolom alamat email untuk masuk</string>
+    <string name="cd_login_password">Kolom kata sandi untuk masuk</string>
+    <string name="cd_qris_receipt_affordance">Status pembayaran QRIS. Ketuk untuk melihat struk.</string>
+    <string name="cd_receipt_print">Cetak struk transaksi</string>
+</resources>
