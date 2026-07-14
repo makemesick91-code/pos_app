@@ -1,5 +1,6 @@
 package com.aishtech.poslite.data.repository
 
+import com.aishtech.poslite.core.money.RupiahMoney
 import com.aishtech.poslite.feature.cashier.CartItem
 
 /**
@@ -44,7 +45,14 @@ class CartRepository {
 
     fun itemCount(): Int = items.values.sumOf { it.quantity }
 
-    fun subtotal(): Double = items.values.sumOf { it.lineTotal }
+    /**
+     * UIX-8 — the authoritative basket total in whole rupiah, summed through
+     * [RupiahMoney] over integer line totals so it is exact for any basket size.
+     */
+    fun subtotalRupiah(): Long = RupiahMoney.subtotal(items.values.map { it.lineTotalRupiah })
+
+    /** Legacy Double projection of [subtotalRupiah] for display/DTO edges only. */
+    fun subtotal(): Double = subtotalRupiah().toDouble()
 
     fun isEmpty(): Boolean = items.isEmpty()
 }

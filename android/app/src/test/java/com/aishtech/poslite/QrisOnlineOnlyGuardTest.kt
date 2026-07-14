@@ -52,7 +52,7 @@ class QrisOnlineOnlyGuardTest {
 
         val result = repository.createOfflineCashSale(
             items = listOf(CartItem(1L, "Kopi", 10000.0, 1)),
-            paidAmount = 10000.0,
+            paidAmount = 10000L,
         )
         assertTrue(result is OfflineSaleRepository.SaveResult.Saved)
         assertEquals(1, db.countPending())

@@ -150,6 +150,33 @@ appear to conflict, the modular rule in `.claude/rules/` is authoritative.
   device evidence is captured — never fabricated. See
   `.claude/rules/55-android-cashier-experience.md` (UIX7-R001..R044).
 
+## Android cashier premium visual & transaction foundation (UIX-8)
+- UIX-8 is a premium visual + transaction-experience remediation of the native
+  Android Cashier (`com.aishtech.poslite`). It extends — never weakens — rule 55.
+  It stays native (no WebView cashier), keeps Room/WorkManager/device activation,
+  and never becomes a second pricing/payment/QRIS/settlement/sync engine.
+- The on-device design system (Material 3 semantic tokens in
+  `res/values/colors.xml|dimens.xml|styles.xml|themes.xml`, zero hardcoded hex in
+  layouts, `Widget.Aish.*`/`TextAppearance.Aish.*`) is the single visual source of
+  truth; the brand gradient is a sparing accent only. Authoritative money is
+  whole-rupiah integer (`RupiahMoney`, `Long`): the cart/checkout arithmetic is
+  integer-exact and projects to legacy Double only at one storage/DTO boundary;
+  tendered cash is parsed via `RupiahMoney.parse` (never a fabricated 0). Offline
+  sync retries are bounded (`OfflineSaleRepository.MAX_SYNC_ATTEMPTS`) so a poison
+  row cannot starve the queue yet stays FAILED/visible. Stable `clientReference`,
+  ViewModel double-submit guard, durable-save-before-cart-clear, and orphan-SYNCING
+  recovery are preserved.
+- UIX-7 closure debt stays explicit: UIX-8 development is unblocked but MUST NOT
+  create a UIX-7 GO tag, alter historical UIX-7 evidence to PASS, or claim UIX-7
+  runtime closure is complete. UIX-8 GO requires UIX-7 closure OR a formal,
+  auditable, time-bounded risk acceptance (never declaring UIX-7 PASS); otherwise
+  the honest state is `IMPLEMENTATION COMPLETE — GO DEFERRED`. On-device/emulator
+  authenticated runtime verification and the annotated GO tag are operator-
+  performed and never fabricated. Closure gate:
+  `scripts/uix8_runtime_closure_gate.sh` (fail-closed). See
+  `.claude/rules/56-android-cashier-premium-visual-transaction-foundation.md`
+  (UIX8-R001..R048).
+
 ## Authoritative CI consolidation (CICD-CTRL-2)
 - CI is consolidated into four lanes driven by a fail-closed change classifier
   (`scripts/ci/classify_changes.sh`). The single authoritative gate is **AISH POS
@@ -170,7 +197,8 @@ appear to conflict, the modular rule in `.claude/rules/` is authoritative.
 
 ## Pointers
 - Modular enforceable rules: `.claude/rules/` (00–90, plus 25 tenant-owner boundary,
-  35 billing, 45 support/observability, 55 android cashier, 72 authoritative CI
+  35 billing, 45 support/observability, 55 android cashier, 56 android cashier
+  premium visual & transaction foundation, 72 authoritative CI
   consolidation). Legacy line kept for continuity:
   35 billing-console integrity, 45 support/observability/incident governance, and
   55 android cashier experience). Root agent index: `AGENTS.md`.

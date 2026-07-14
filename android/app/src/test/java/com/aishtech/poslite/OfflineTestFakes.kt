@@ -68,13 +68,14 @@ class FakeOfflineDb : OfflineSaleDao(), OfflineSaleItemDao {
         items.forEach { this.items.add(it.copy(localId = ++itemSeq)) }
     }
 
-    override suspend fun getPendingOrFailed(limit: Int): List<LocalOfflineSaleEntity> =
+    override suspend fun getPendingOrFailed(limit: Int, maxAttempts: Int): List<LocalOfflineSaleEntity> =
         sales.values
             .filter {
                 it.syncStatus == OfflineSyncStatus.PENDING ||
-                    it.syncStatus == OfflineSyncStatus.FAILED ||
                     // UIX7-R009/R012 — recover orphaned in-flight (crashed mid-attempt) rows.
-                    it.syncStatus == OfflineSyncStatus.SYNCING
+                    it.syncStatus == OfflineSyncStatus.SYNCING ||
+                    // UIX-8 bounded retry — FAILED only while under the attempt cap.
+                    (it.syncStatus == OfflineSyncStatus.FAILED && it.syncAttemptCount < maxAttempts)
             }
             .sortedBy { it.createdAt }
             .take(limit)

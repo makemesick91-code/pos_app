@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aishtech.poslite.core.money.RupiahMoney
 import com.aishtech.poslite.core.util.ResultState
 import com.aishtech.poslite.data.local.entity.LocalProductEntity
 import com.aishtech.poslite.data.remote.dto.SaleDto
@@ -43,7 +44,8 @@ class CashierViewModel(
         data object Submitting : CheckoutState()
         data class Success(val sale: SaleDto) : CheckoutState()
         // Sprint 7 — the sale is stored locally as an OFFLINE DRAFT (not synced).
-        data class OfflineSaved(val clientReference: String, val grandTotal: Double, val change: Double) : CheckoutState()
+        // UIX-8 — draft totals are whole-rupiah Long (integer-exact, never float).
+        data class OfflineSaved(val clientReference: String, val grandTotal: Long, val change: Long) : CheckoutState()
         data class Error(val message: String) : CheckoutState()
     }
 
@@ -152,7 +154,7 @@ class CashierViewModel(
      * backend confirms the sale; on any failure the cart is kept intact so the
      * cashier can retry (Sprint 4 runtime rule).
      */
-    fun checkoutCash(paidAmount: Double) {
+    fun checkoutCash(paidAmount: Long) {
         // UIX7-R015/R025 — a submission is already in flight; ignore the repeat
         // tap so a double-press can never create two server transactions. The UI
         // also disables the button, but this guard closes the tap-before-observer
@@ -162,7 +164,8 @@ class CashierViewModel(
             _checkout.value = CheckoutState.Error("Keranjang kosong.")
             return
         }
-        if (paidAmount < cart.subtotal()) {
+        // UIX-8 — integer-exact sufficiency check (whole rupiah), never float.
+        if (!RupiahMoney.isSufficient(paidAmount, cart.subtotalRupiah())) {
             _checkout.value = CheckoutState.Error("Uang dibayar kurang dari total.")
             return
         }
@@ -196,21 +199,22 @@ class CashierViewModel(
      * the cashier does not lose the transaction (Sprint 7 runtime rule). QRIS is
      * never eligible for this path — offline is CASH-only.
      */
-    fun checkoutCashOffline(paidAmount: Double) {
+    fun checkoutCashOffline(paidAmount: Long) {
         // UIX7-R015/R025 — reject a re-entrant submit (see checkoutCash).
         if (_checkout.value is CheckoutState.Submitting) return
         if (cart.isEmpty()) {
             _checkout.value = CheckoutState.Error("Keranjang kosong.")
             return
         }
-        if (paidAmount < cart.subtotal()) {
+        // UIX-8 — integer-exact sufficiency check (whole rupiah), never float.
+        if (!RupiahMoney.isSufficient(paidAmount, cart.subtotalRupiah())) {
             _checkout.value = CheckoutState.Error("Uang dibayar kurang dari total.")
             return
         }
 
         _checkout.value = CheckoutState.Submitting
         viewModelScope.launch {
-            val total = cart.subtotal()
+            val total = cart.subtotalRupiah()
             when (val result = offline.createOfflineCashSale(cart.items(), paidAmount)) {
                 is OfflineSaleRepository.SaveResult.Saved -> {
                     // Local save confirmed → safe to clear the cart now.
@@ -219,7 +223,7 @@ class CashierViewModel(
                     _checkout.value = CheckoutState.OfflineSaved(
                         clientReference = result.clientReference,
                         grandTotal = total,
-                        change = paidAmount - total,
+                        change = RupiahMoney.change(paidAmount, total),
                     )
                     refreshSyncCounts()
                 }

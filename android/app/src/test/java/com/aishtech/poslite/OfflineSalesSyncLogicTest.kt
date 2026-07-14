@@ -84,7 +84,7 @@ class OfflineSalesSyncLogicTest {
         assertEquals(OfflineSyncStatus.FAILED, sale.syncStatus)
         assertEquals(1, sale.syncAttemptCount)
         // Still in the queue for retry.
-        assertTrue(db.getPendingOrFailed(10).isNotEmpty())
+        assertTrue(db.getPendingOrFailed(10, OfflineSaleRepository.MAX_SYNC_ATTEMPTS).isNotEmpty())
     }
 
     @Test
@@ -109,7 +109,7 @@ class OfflineSalesSyncLogicTest {
         assertEquals(OfflineSyncStatus.SYNCING, db.sales.values.single().syncStatus)
 
         // The recovery queue must pick it up...
-        assertTrue(db.getPendingOrFailed(10).isNotEmpty())
+        assertTrue(db.getPendingOrFailed(10, OfflineSaleRepository.MAX_SYNC_ATTEMPTS).isNotEmpty())
 
         // ...and a successful replay drives it to SYNCED with the server id.
         val summary = repo(db, listOf(Response.success(SaleResponse(data = sampleSale(id = 77))))).syncPending()
@@ -131,6 +131,38 @@ class OfflineSalesSyncLogicTest {
 
         // A synced sale is never re-attempted.
         db.markSynced(db.sales.keys.first(), 1L, "INV", 3_000L)
-        assertEquals(0, db.getPendingOrFailed(10).size)
+        assertEquals(0, db.getPendingOrFailed(10, OfflineSaleRepository.MAX_SYNC_ATTEMPTS).size)
+    }
+
+    // UIX-8 bounded retry — a poison row that has exhausted the attempt cap is no
+    // longer auto-retried and cannot starve the queue, yet it stays FAILED and
+    // visible (not silently dropped); a newer pending sale still syncs.
+    @Test
+    fun `failed sale past the retry cap is excluded but newer sales still sync`() = runTest {
+        val db = FakeOfflineDb()
+        // A poison row already at the cap (oldest → would otherwise head the queue).
+        db.insertOfflineSaleWithItems(
+            pendingSale("poison").copy(
+                syncStatus = OfflineSyncStatus.FAILED,
+                syncAttemptCount = OfflineSaleRepository.MAX_SYNC_ATTEMPTS,
+                createdAt = 1L,
+            ),
+            emptyList(),
+        )
+        // A fresh pending sale created later.
+        db.insertOfflineSaleWithItems(pendingSale("fresh").copy(createdAt = 2L), emptyList())
+
+        // The capped row is not eligible; only the fresh one is.
+        val eligible = db.getPendingOrFailed(10, OfflineSaleRepository.MAX_SYNC_ATTEMPTS)
+        assertEquals(1, eligible.size)
+        assertEquals("fresh", eligible.single().clientReference)
+
+        val summary = repo(db, listOf(Response.success(SaleResponse(data = sampleSale(id = 55))))).syncPending()
+        assertEquals(1, summary.synced)
+
+        // The poison row is untouched and STILL FAILED (visible, not dropped).
+        val poison = db.sales.values.first { it.clientReference == "poison" }
+        assertEquals(OfflineSyncStatus.FAILED, poison.syncStatus)
+        assertEquals(1, db.countFailed())
     }
 }
