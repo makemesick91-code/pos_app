@@ -52,11 +52,18 @@ class OfflineSaleRepository(
      * Snapshot the cart into the local offline queue. Returns [SaveResult.Saved]
      * only when the sale AND its items are persisted; on any failure returns
      * [SaveResult.Error] and stores nothing (so the caller keeps the cart).
+     *
+     * UIX-8C-04 (UIX8C-R097/R109) — [clientReference] may be supplied so a
+     * governed online→offline fallback reuses the SAME stable idempotency key that
+     * the online attempt used (rather than minting a new one). The save is
+     * idempotent on that key: if a row already exists (a repeated fallback / rapid
+     * tap), the existing row is returned and NO duplicate is created.
      */
     suspend fun createOfflineCashSale(
         items: List<com.aishtech.poslite.feature.cashier.CartItem>,
         paidAmount: Long,
         storeId: Long? = null,
+        clientReference: String? = null,
     ): SaveResult {
         if (items.isEmpty()) {
             return SaveResult.Error("Keranjang kosong.")
@@ -71,10 +78,17 @@ class OfflineSaleRepository(
         }
         val change = RupiahMoney.change(paidAmount, subtotal)
 
-        val clientReference = referenceProvider()
+        val reference = clientReference ?: referenceProvider()
+
+        // UIX8C-R109 — idempotent fallback: if this reference is already queued,
+        // reconcile to the existing durable row instead of creating a second one.
+        offlineSaleDao.findByClientReference(reference)?.let {
+            return SaveResult.Saved(it.localId, it.clientReference)
+        }
+
         val ts = clock()
         val sale = LocalOfflineSaleEntity(
-            clientReference = clientReference,
+            clientReference = reference,
             storeId = storeId,
             saleDate = isoUtc(ts),
             subtotal = subtotal.toDouble(),
@@ -103,8 +117,14 @@ class OfflineSaleRepository(
 
         return try {
             val localId = offlineSaleDao.insertOfflineSaleWithItems(sale, itemEntities)
-            SaveResult.Saved(localId, clientReference)
+            SaveResult.Saved(localId, reference)
         } catch (e: Exception) {
+            // UIX8C-R109 — a concurrent insert (rapid tap) that lost the race to the
+            // unique clientReference index reconciles to the winning row rather than
+            // failing (which would falsely keep the cart on an already-durable save).
+            offlineSaleDao.findByClientReference(reference)?.let {
+                return SaveResult.Saved(it.localId, it.clientReference)
+            }
             SaveResult.Error(e.message ?: "Gagal menyimpan transaksi offline.")
         }
     }

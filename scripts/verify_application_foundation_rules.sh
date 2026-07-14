@@ -260,14 +260,14 @@ for i in $(seq -w 1 78); do
 done
 [ -z "$missing_ops" ] && pass "UIX8BOPS-R001..R078 persisted" || bad "release ops rule ids not fully persisted:$missing_ops"
 
-# 5i. Android full premium delivery & closure foundation (UIX8C-R001..R095, UIX-8C).
+# 5i. Android full premium delivery & closure foundation (UIX8C-R001..R130, UIX-8C).
 [ -f .claude/rules/61-android-cashier-full-premium-delivery-foundation.md ] && pass "UIX-8C delivery rule present" || bad "missing .claude/rules/61-android-cashier-full-premium-delivery-foundation.md"
 missing_uix8c=""
-for i in $(seq -w 1 95); do
-  id="UIX8C-R0$i"
+for i in $(seq 1 130); do
+  id="$(printf 'UIX8C-R%03d' "$i")"
   grep -q "$id" .claude/rules/61-android-cashier-full-premium-delivery-foundation.md || missing_uix8c="$missing_uix8c $id"
 done
-[ -z "$missing_uix8c" ] && pass "UIX8C-R001..R095 persisted" || bad "UIX-8C rule ids not fully persisted:$missing_uix8c"
+[ -z "$missing_uix8c" ] && pass "UIX8C-R001..R130 persisted" || bad "UIX-8C rule ids not fully persisted:$missing_uix8c"
 # UIX-8C-03 dedicated cashier/catalog/cart gate present.
 [ -x scripts/uix8c_cashier_catalog_cart_gate.sh ] && pass "UIX-8C-03 cashier/catalog/cart gate present" || bad "missing scripts/uix8c_cashier_catalog_cart_gate.sh"
 [ -x scripts/tests/uix8c_cashier_catalog_cart_gate_test.sh ] && pass "UIX-8C-03 cashier/catalog/cart gate tests present" || bad "missing scripts/tests/uix8c_cashier_catalog_cart_gate_test.sh"
@@ -276,12 +276,21 @@ done
 [ -x scripts/tests/uix8c_foundation_gate_test.sh ] && pass "UIX-8C foundation gate tests present" || bad "missing scripts/tests/uix8c_foundation_gate_test.sh"
 [ -x scripts/uix8c_design_system_gate.sh ] && pass "UIX-8C-02 design-system gate present" || bad "missing scripts/uix8c_design_system_gate.sh"
 [ -x scripts/tests/uix8c_design_system_gate_test.sh ] && pass "UIX-8C-02 design-system gate tests present" || bad "missing scripts/tests/uix8c_design_system_gate_test.sh"
+# UIX-8C-04 dedicated offline CASH durability gate present.
+[ -x scripts/uix8c_offline_cash_durability_gate.sh ] && pass "UIX-8C-04 offline cash durability gate present" || bad "missing scripts/uix8c_offline_cash_durability_gate.sh"
+[ -x scripts/tests/uix8c_offline_cash_durability_gate_test.sh ] && pass "UIX-8C-04 offline cash durability gate tests present" || bad "missing scripts/tests/uix8c_offline_cash_durability_gate_test.sh"
 for d in docs/foundation/uix-8c-full-premium-android-cashier.md \
          docs/architecture/uix-8c-android-screen-state-architecture.md \
          docs/testing/uix-8c-screen-state-accessibility-matrix.md \
          docs/deployment/uix-8c-delivery-plan.md \
          docs/adr/0004-uix-8c-full-premium-rebuild.md \
-         docs/adr/0005-uix-8c-02-premium-design-system-hardening.md; do
+         docs/adr/0005-uix-8c-02-premium-design-system-hardening.md \
+         docs/adr/0006-uix-8c-04-offline-cash-durability.md \
+         docs/architecture/uix-8c-04-offline-cash-root-cause-analysis.md \
+         docs/architecture/uix-8c-04-offline-cash-durability-architecture.md \
+         docs/testing/uix-8c-04-offline-cash-idempotency-test-matrix.md \
+         docs/security/uix-8c-04-offline-cash-threat-model.md \
+         docs/deployment/uix-8c-04-deployment-evidence.md; do
   [ -f "$d" ] && pass "UIX-8C doc $(basename "$d")" || bad "missing UIX-8C doc $d"
 done
 # The immutable failed physical run is recorded and never flipped to PASS (UIX8C-R003).

@@ -29,6 +29,7 @@ class SalesRepositoryTest {
 
     private class FakeApi(
         private val result: Response<SaleResponse>,
+        private val throwOnCreate: Throwable? = null,
     ) : PosApiService {
         var captured: CreateSaleRequestDto? = null
 
@@ -65,6 +66,7 @@ class SalesRepositoryTest {
 
         override suspend fun createSale(request: CreateSaleRequestDto): Response<SaleResponse> {
             captured = request
+            throwOnCreate?.let { throw it }
             return result
         }
     }
@@ -178,5 +180,59 @@ class SalesRepositoryTest {
         val request = api.captured!!
         assertEquals(null, request.clientReference)
         assertEquals(null, request.source)
+    }
+
+    // --- UIX-8C-04 submitCash / CheckoutOutcome (governed-fallback classification).
+
+    private val cart = listOf(CartItem(1L, "Kopi", 10000.0, 1))
+
+    @Test
+    fun `submitCash success carries the sale and sends the online reference`() = runTest {
+        val api = FakeApi(Response.success(SaleResponse(data = sampleSale())))
+        val outcome = SalesRepository(api).submitCash(cart, 10000L, "ref-ok")
+
+        assertTrue(outcome is SalesRepository.CheckoutOutcome.Success)
+        assertEquals("ref-ok", api.captured!!.clientReference)
+        assertEquals("ANDROID_ONLINE", api.captured!!.source)
+    }
+
+    // UIX8C-R099..R102 — a REACHABLE server that returns a canonical rejection is
+    // NEVER eligible for offline fallback; it maps to Rejected, not TransportUnavailable.
+    @Test
+    fun `submitCash maps an http rejection to Rejected (never offline)`() = runTest {
+        val error = Response.error<SaleResponse>(422, "{}".toResponseBody("application/json".toMediaType()))
+        val outcome = SalesRepository(FakeApi(error)).submitCash(cart, 10000L, "ref-422")
+
+        assertTrue(outcome is SalesRepository.CheckoutOutcome.Rejected)
+        assertEquals(422, (outcome as SalesRepository.CheckoutOutcome.Rejected).code)
+    }
+
+    @Test
+    fun `submitCash maps a 403 to Rejected (never offline)`() = runTest {
+        val error = Response.error<SaleResponse>(403, "{}".toResponseBody("application/json".toMediaType()))
+        val outcome = SalesRepository(FakeApi(error)).submitCash(cart, 10000L, "ref-403")
+        assertTrue(outcome is SalesRepository.CheckoutOutcome.Rejected)
+    }
+
+    // UIX8C-R098 — a governed transport failure maps to TransportUnavailable (eligible).
+    @Test
+    fun `submitCash maps a transport failure to TransportUnavailable`() = runTest {
+        val api = FakeApi(
+            Response.success(SaleResponse(data = sampleSale())),
+            throwOnCreate = java.net.UnknownHostException("aishpos.online"),
+        )
+        val outcome = SalesRepository(api).submitCash(cart, 10000L, "ref-dns")
+        assertTrue(outcome is SalesRepository.CheckoutOutcome.TransportUnavailable)
+    }
+
+    // UIX8C-R103 — a TLS/security failure is NEVER eligible for offline fallback.
+    @Test
+    fun `submitCash maps a tls failure to Failed (never offline)`() = runTest {
+        val api = FakeApi(
+            Response.success(SaleResponse(data = sampleSale())),
+            throwOnCreate = javax.net.ssl.SSLHandshakeException("bad cert"),
+        )
+        val outcome = SalesRepository(api).submitCash(cart, 10000L, "ref-tls")
+        assertTrue(outcome is SalesRepository.CheckoutOutcome.Failed)
     }
 }

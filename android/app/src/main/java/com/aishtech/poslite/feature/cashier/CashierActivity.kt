@@ -209,11 +209,18 @@ class CashierActivity : AppCompatActivity(), PaymentSheetFragment.Host {
                 binding.buttonCheckoutOffline.isEnabled = false
             }
             is CashierViewModel.CheckoutState.OfflineSaved -> {
+                // UIX8C-R114 — a durable offline row exists (whether the operator
+                // chose offline OR an online attempt degraded via the governed
+                // fallback). Schedule the bounded, connectivity-constrained sync
+                // here so BOTH paths reconnect-and-sync (enqueueUniqueWork KEEP is
+                // idempotent, so a redundant enqueue is harmless).
+                OfflineSalesSyncScheduler.enqueue(applicationContext)
                 // Offline draft receipt — clearly NOT a final server receipt.
                 result.visibility = View.VISIBLE
                 result.setOnClickListener(null)
                 result.text = getString(R.string.cashier_offline_saved) +
                     "\n" + getString(R.string.cashier_offline_draft_label) +
+                    "\n" + getString(R.string.cashier_offline_waiting_sync) +
                     "\nRef: ${state.clientReference}" +
                     "\nTotal: ${RupiahMoney.format(state.grandTotal)}" +
                     "\nKembalian: ${RupiahMoney.format(state.change)}"
@@ -282,9 +289,11 @@ class CashierActivity : AppCompatActivity(), PaymentSheetFragment.Host {
     }
 
     override fun onCashTender(paidAmount: Long, offline: Boolean) {
+        // Both paths schedule the offline sync when they reach OfflineSaved
+        // (see renderCheckout); the online path additionally falls back to a
+        // durable offline save on a governed transport failure (UIX-8C-04).
         if (offline) {
             viewModel.checkoutCashOffline(paidAmount)
-            OfflineSalesSyncScheduler.enqueue(applicationContext)
         } else {
             viewModel.checkoutCash(paidAmount)
         }

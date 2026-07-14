@@ -119,6 +119,21 @@ UIX8C-R001..R060 and rules 55/56/57.
 - **UIX8C-R095** — A UIX-8C-03 sprint-scoped GO tag never asserts UIX-7 or UIX-8
   runtime closure.
 
+### UIX-8C-04 offline CASH durability & idempotent-recovery rules (R096..R130)
+
+UIX-8C-04 adds the permanent offline-durability / transport-safety / idempotency
+baseline (UIX8C-R096..R130, rule 61): CASH-only offline capability, one stable
+`clientReference` across the online attempt / fallback / restart / reconnect /
+worker replay, a typed transport classifier (only genuine transport failures are
+offline-eligible; HTTP 4xx/409, TLS, and unknown errors never are), atomic
+durable Room persistence, cart-clear-only-after-durability with cart preservation
+on save failure, distinct PENDING/SYNCING/SYNCED/FAILED/CONFLICT states, bounded
+WorkManager retry, orphan-SYNCING recovery, backend-replay idempotency (exactly
+one sale/payment/item-set, no duplicate inventory), truthful offline-queued UI,
+and the automatic NO-GO on any durability/duplication/loss defect. The historical
+failed physical R11 stays immutable (UIX8C-R129) and a UIX-8C-04 implementation
+GO never implies UIX-7/UIX-8 runtime GO (UIX8C-R130).
+
 ## Scope of UIX-8C-01
 
 Governance + architecture + inventory + foundation only: rule set
@@ -167,10 +182,37 @@ runtime evidence, run a physical campaign, or create a UIX-7/UIX-8 GO tag. It MA
 carry the sprint-scoped tag `uix-8c-03-premium-cashier-home-catalog-cart-go`
 (UIX8C-R002/R060/R095), which records only this sprint's implementation closure.
 
+## Scope of UIX-8C-04
+
+UIX-8C-04 fixes the P1 offline CASH durability defect behind the physical R11
+failure, **without** rebuilding the premium payment/receipt/history screens and
+**without** changing `SaleService`/backend financial behaviour (the backend
+already dedupes; UIX-8C-04 only adds backend idempotency regression tests). It
+delivers: the rule set UIX8C-R096..R130; a typed
+`core/network/TransportFailureClassifier`; a governed online→offline CASH fallback
+in `SalesRepository.submitCash` + `CashierViewModel.checkoutCash`; a stable
+`clientReference` reused across the online attempt/fallback/restart/reconnect/
+worker replay; an idempotent, atomic durable `OfflineSaleRepository`/Room save
+(`findByClientReference` reconciliation); cart-clear-only-after-durability; the
+truthful `cashier_offline_waiting_sync` state; bounded WorkManager retry +
+orphan-SYNCING recovery (preserved); Android + backend idempotency regressions;
+and the fail-closed `scripts/uix8c_offline_cash_durability_gate.sh`. It does
+**not** enable QRIS offline, run a physical campaign, flip the historical R11
+evidence to PASS, or create a UIX-7/UIX-8 GO tag. It MAY carry the sprint-scoped
+tag `uix-8c-04-offline-cash-durability-idempotent-recovery-go`. A fresh physical
+R11 revalidation remains mandatory after final code freeze. UIX-7 stays `NO-GO —
+GO DEFERRED` and UIX-8 stays `IMPLEMENTATION COMPLETE — GO DEFERRED`.
+
 ## Enforcement gates
 
 - `scripts/verify_application_foundation_rules.sh` — checks rule 61 exists and
-  that `UIX8C-R001..R095` are persisted.
+  that `UIX8C-R001..R130` are persisted.
+- `scripts/uix8c_offline_cash_durability_gate.sh` (fail-closed) — the UIX-8C-04
+  offline CASH durability baseline (R096..R130): typed classifier, no catch-all
+  offline fallback, QRIS-offline prohibition, atomic Room save,
+  cart-clear-after-save, stable `clientReference`, bounded retry, orphan
+  recovery, Android + backend idempotency tests, no float money, immutable
+  failed-run, UIX-7/UIX-8 deferred, no premature GO.
 - `scripts/uix8c_foundation_gate.sh` (fail-closed) — governance, inventory,
   immutable failed-run record, UIX-7/UIX-8 deferred status, no premature GO.
 - `scripts/uix8c_design_system_gate.sh` (fail-closed) — the UIX-8C-02

@@ -287,6 +287,30 @@ appear to conflict, the modular rule in `.claude/rules/` is authoritative.
   NOT fix R11, and its sprint tag
   `uix-8c-03-premium-cashier-catalog-cart-go` never asserts UIX-7/UIX-8 runtime
   closure.
+- UIX-8C-04 (offline CASH durability & idempotent recovery) fixes the P1
+  financial-integrity defect behind the physical R11 failure (UIX8C-R096..R130):
+  an eligible online CASH checkout that cannot reach the backend now degrades to a
+  **durable** local transaction instead of a hard failure that persisted nothing.
+  It adds a typed `TransportFailureClassifier` (only genuine transport/
+  unavailability failures are offline-eligible; HTTP 4xx/409, TLS, serialization,
+  and unknown errors are NEVER converted to offline success), a governed
+  online→offline CASH fallback (`SalesRepository.submitCash` +
+  `CashierViewModel.checkoutCash`), one stable `clientReference` reused across the
+  online attempt/fallback/process-restart/reconnect/worker-replay, an atomic
+  idempotent durable Room save (`OfflineSaleRepository.createOfflineCashSale` +
+  `findByClientReference`), cart-clear-only-after-durable-save with cart
+  preservation on save failure, the truthful `cashier_offline_waiting_sync` state,
+  and preserved bounded WorkManager retry + orphan-SYNCING recovery. The backend
+  already dedupes by `(tenant, store, client_reference)`; UIX-8C-04 adds Android +
+  backend idempotency regressions (exactly one sale/payment/item-set, no duplicate
+  inventory) but changes no `SaleService`/Room/financial behaviour. Enforced by the
+  fail-closed `scripts/uix8c_offline_cash_durability_gate.sh` (+ self-tests) and
+  ADR 0006. It does NOT rebuild the premium payment/receipt screens, enable QRIS
+  offline, run a physical campaign, or flip the historical R11 evidence to PASS;
+  its sprint tag `uix-8c-04-offline-cash-durability-idempotent-recovery-go` never
+  asserts UIX-7/UIX-8 runtime closure. A fresh physical R11 revalidation stays
+  mandatory after final code freeze; UIX-7 stays `NO-GO — GO DEFERRED` and UIX-8
+  stays `IMPLEMENTATION COMPLETE — GO DEFERRED`.
 
 ## Authoritative CI consolidation (CICD-CTRL-2)
 - CI is consolidated into four lanes driven by a fail-closed change classifier
