@@ -1,8 +1,7 @@
 # UIX-8C-06 — Deployment & Sprint GO Evidence
 
-Premium receipt, transaction history & printer failure states. This document is
-finalized by the post-merge evidence-only PR; fields not knowable before
-deployment are marked `TO BE FINALIZED BY POST-MERGE EVIDENCE PR` until then.
+Premium receipt, transaction history & printer failure states. Finalized by the
+post-merge evidence-only PR.
 
 ## Summary
 
@@ -21,10 +20,14 @@ deployment are marked `TO BE FINALIZED BY POST-MERGE EVIDENCE PR` until then.
 ## Implementation
 
 - Implementation branch: `feature/uix-8c-06-premium-receipt-history-printer-states`
-- Implementation PR: `TO BE FINALIZED BY POST-MERGE EVIDENCE PR`
-- Implementation candidate SHA: `TO BE FINALIZED BY POST-MERGE EVIDENCE PR`
-- Implementation merge commit / runtime source anchor: `TO BE FINALIZED BY POST-MERGE EVIDENCE PR`
-- Authoritative full CI (exact SHA): `TO BE FINALIZED BY POST-MERGE EVIDENCE PR`
+- Implementation PR: **#77**
+- Implementation candidate SHA: **`efc537f`** (`efc537f9f9431c956952b87e33583c64a8a482ec`)
+- Implementation merge commit / runtime source anchor: **`3f9abe1`**
+  (`3f9abe13bae8d6989c5594d6cce9a42777da9d5b`)
+- Authoritative full CI (exact candidate SHA `efc537f`): run **29381595347** — **SUCCESS**
+  (classify → full CI; Android all-variant, foundation/design/CI-architecture gates,
+  backend full suite + governance smoke, security; evidence lane skipped;
+  authoritative summary PASS)
 
 ## Scope delivered
 
@@ -36,38 +39,48 @@ deployment are marked `TO BE FINALIZED BY POST-MERGE EVIDENCE PR` until then.
 - `PrinterCoordinator` (non-financial, concurrency-guarded) + typed `PrinterFailure`
   / `PrintOutcome`; bounded timeout, connect/write split, catch-all; least-privilege
   permissions (no `BLUETOOTH_SCAN`).
-- Rules `UIX8C-R171..R210` (rule 61, PROJECT_RULES, foundation doc, CLAUDE.md).
-- Fail-closed gate `scripts/uix8c_receipt_history_printer_gate.sh` (+ self-tests),
-  wired into the authoritative CI foundation lane.
-- Backend regression fence `Uix8c06ReceiptHistoryParityTest` (no backend source
-  change).
+- Rules `UIX8C-R171..R210` (rule 61, PROJECT_RULES, foundation doc, CLAUDE.md), ADR 0008.
+- Fail-closed gate `scripts/uix8c_receipt_history_printer_gate.sh` (+ 14-case
+  self-test), wired into the authoritative CI foundation lane.
+- Backend regression fence `Uix8c06ReceiptHistoryParityTest` (no backend source change).
 
-## Verification
+## Verification (candidate `efc537f`, CI run 29381595347)
 
-- Android unit tests (debug): PASS locally — `TO BE FINALIZED` (CI totals).
-- All-variant Android build (debug/pilot/release) + lint: `TO BE FINALIZED BY POST-MERGE EVIDENCE PR`.
-- Backend targeted parity fence: PASS (3 tests, 21 assertions).
-- Backend full suite: `TO BE FINALIZED BY POST-MERGE EVIDENCE PR`.
-- Foundation/gate chain (`verify_application_foundation_rules.sh`,
-  `uix8c_foundation_gate.sh`, `uix8c_receipt_history_printer_gate.sh` + self-test,
-  prior UIX-8C gates): `TO BE FINALIZED BY POST-MERGE EVIDENCE PR`.
+- Android unit tests (debug/pilot/release): PASS (all three variants).
+- All-variant Android build (`assemble{Debug,Pilot,Release}`) + lint
+  (`lint{Debug,Pilot,Release}`): PASS.
+- Backend full suite: **1525 passed / 0 failed** (45,180 assertions), incl. the new
+  3-test / 21-assertion `Uix8c06ReceiptHistoryParityTest`.
+- Foundation/gate chain: `verify_application_foundation_rules.sh`,
+  `uix8c_foundation_gate.sh`, `uix8c_design_system_gate.sh`,
+  `uix8c_cashier_catalog_cart_gate.sh`, `uix8c_offline_cash_durability_gate.sh`,
+  `uix8c_payment_offline_sync_ux_gate.sh`, `uix8c_receipt_history_printer_gate.sh`
+  (+ all self-tests) — PASS.
 
 ## Deployment (shared VPS) & DMS non-regression
 
-- Deployment commit (local = origin = VPS): `TO BE FINALIZED BY POST-MERGE EVIDENCE PR`
-- Aish health (`/`, `/health/live`, `/health/ready`): `TO BE FINALIZED BY POST-MERGE EVIDENCE PR`
-- Services (nginx / php8.5-fpm `aish-pos` / postgresql / `aish-pos-queue-worker`): `TO BE FINALIZED`
-- Runtime ownership `www-data:www-data`, root-owned runtime files = 0, pending migrations = 0: `TO BE FINALIZED`
-- DaengtisiaMS HEAD unchanged (`8b0bb6a`), worktree clean, php8.3-fpm/nginx/postgres/queue active: `TO BE FINALIZED`
-
-> UIX-8C-06 is Android + governance + docs + a backend **test-only** fence. No
-> backend source/schema/dependency change → the VPS sync is a fast-forward Git
-> sync with no migration/composer/cache-rebuild step.
+- Deployment method: governed Git fast-forward (`git merge --ff-only origin/main`);
+  Android + governance + docs + a backend **test-only** fence → no migration,
+  composer, npm, or cache-rebuild step.
+- Deployment commit (local = origin = VPS `/var/www/aish-pos`): **`3f9abe1`**
+- Aish pre-deploy HEAD: `949f1a1` → post-deploy HEAD: `3f9abe1`; worktree clean
+  before and after.
+- Aish health: `/` = 200, `/health/live` = 200, `/health/ready` = 200.
+- Aish services active: nginx, php8.5-fpm (`aish-pos`), postgresql,
+  `aish-pos-queue-worker`.
+- Runtime ownership `www-data:www-data`; root-owned runtime files under
+  `storage/framework` + `bootstrap/cache` = **0**; pending migrations = **0**.
+- DaengtisiaMS non-regression: HEAD **`8b0bb6a`** unchanged before and after,
+  worktree clean; php8.3-fpm / nginx / postgresql / `daengtisiams-queue-worker`
+  active. **DMS unaffected — PASS.**
 
 ## Sprint GO tag
 
 - Target: `uix-8c-06-premium-receipt-history-printer-failure-states-go`
-- Final tagged (evidence) commit: `TO BE FINALIZED BY POST-MERGE EVIDENCE PR`
+- Evidence PR: this PR (post-merge deployment evidence).
+- Final tagged (evidence) commit: the merge commit of this evidence PR on `main`,
+  a docs/evidence-only descendant of the runtime source anchor `3f9abe1`
+  (exact hash recorded in the annotated tag message).
 
 ## Closure statement
 
