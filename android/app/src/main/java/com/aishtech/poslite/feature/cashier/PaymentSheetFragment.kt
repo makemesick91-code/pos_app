@@ -63,7 +63,7 @@ class PaymentSheetFragment : BottomSheetDialogFragment() {
 
     private fun bindQuickTenders() {
         binding.buttonQuickExact.setOnClickListener { setTender(amountDue) }
-        val quicks = quickTenders(amountDue)
+        val quicks = QuickTenderCalculator.options(amountDue)
         val buttons = listOf(binding.buttonQuick1, binding.buttonQuick2, binding.buttonQuick3)
         buttons.forEachIndexed { i, button ->
             val value = quicks.getOrNull(i)
@@ -82,30 +82,41 @@ class PaymentSheetFragment : BottomSheetDialogFragment() {
         binding.inputSheetTender.setSelection(binding.inputSheetTender.text?.length ?: 0)
     }
 
-    private fun currentPaid(): Long? = RupiahMoney.parse(binding.inputSheetTender.text?.toString())
-
+    /**
+     * UIX8C-R136/R137/R139/R140 — render change + validation through the single
+     * pure [TenderValidator]. Empty vs garbage/overflow vs insufficient are
+     * distinct, truthful messages; the confirm actions are enabled ONLY for a fully
+     * valid tender so an insufficient/invalid amount can never enter checkout.
+     */
     private fun renderChange() {
-        val paid = currentPaid()
-        val sufficient = paid != null && RupiahMoney.isSufficient(paid, amountDue)
-        when {
-            paid == null -> binding.textSheetChange.text = getString(R.string.pay_sheet_enter_tender)
-            !sufficient -> binding.textSheetChange.text = getString(
-                R.string.pay_sheet_short,
-                RupiahMoney.format(amountDue - paid),
-            )
-            else -> binding.textSheetChange.text = getString(
-                R.string.pay_sheet_change_label,
-                RupiahMoney.format(RupiahMoney.change(paid, amountDue)),
-            )
+        val result = TenderValidator.validate(binding.inputSheetTender.text?.toString(), amountDue)
+        when (result) {
+            is TenderValidator.Result.Empty ->
+                binding.textSheetChange.text = getString(R.string.pay_sheet_enter_tender)
+            is TenderValidator.Result.Invalid ->
+                binding.textSheetChange.text = getString(R.string.pay_sheet_invalid_tender)
+            is TenderValidator.Result.Insufficient ->
+                binding.textSheetChange.text = getString(
+                    R.string.pay_sheet_short,
+                    RupiahMoney.format(result.shortBy),
+                )
+            is TenderValidator.Result.Valid ->
+                binding.textSheetChange.text = getString(
+                    R.string.pay_sheet_change_label,
+                    RupiahMoney.format(result.change),
+                )
         }
-        binding.buttonSheetPayOnline.isEnabled = sufficient
-        binding.buttonSheetPayOffline.isEnabled = sufficient
+        val canSubmit = TenderValidator.canSubmit(result)
+        binding.buttonSheetPayOnline.isEnabled = canSubmit
+        binding.buttonSheetPayOffline.isEnabled = canSubmit
     }
 
     private fun confirm(offline: Boolean) {
-        val paid = currentPaid() ?: return
-        if (!RupiahMoney.isSufficient(paid, amountDue)) return
-        (activity as? Host)?.onCashTender(paid, offline)
+        // Re-validate at confirm time so a race or stale click can never submit an
+        // invalid tender (UIX8C-R139); the canonical VM guard is the last defense.
+        val result = TenderValidator.validate(binding.inputSheetTender.text?.toString(), amountDue)
+        val valid = result as? TenderValidator.Result.Valid ?: return
+        (activity as? Host)?.onCashTender(valid.tender, offline)
         dismiss()
     }
 
@@ -122,19 +133,11 @@ class PaymentSheetFragment : BottomSheetDialogFragment() {
             PaymentSheetFragment().apply { arguments = bundleOf(ARG_DUE to amountDue) }
 
         /**
-         * Up to three round-up cash shortcuts strictly greater than [due], on a
-         * natural cash-denomination ladder. Pure and testable; never suggests a
-         * value ≤ due (that is the separate "Uang Pas" exact button).
+         * Backward-compatible shim: the authoritative quick-tender logic now lives
+         * in the pure, overflow-safe [QuickTenderCalculator] (UIX-8C-05). Kept so
+         * existing callers/tests keep working; new code should call
+         * [QuickTenderCalculator.options] directly.
          */
-        fun quickTenders(due: Long): List<Long> {
-            if (due <= 0L) return emptyList()
-            val steps = listOf(5_000L, 10_000L, 20_000L, 50_000L, 100_000L)
-            return steps
-                .map { step -> ((due + step - 1L) / step) * step }
-                .filter { it > due }
-                .distinct()
-                .sorted()
-                .take(3)
-        }
+        fun quickTenders(due: Long): List<Long> = QuickTenderCalculator.options(due)
     }
 }

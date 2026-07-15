@@ -1,10 +1,13 @@
 package com.aishtech.poslite.feature.cashier
 
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.Network
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
@@ -16,6 +19,7 @@ import com.aishtech.poslite.R
 import com.aishtech.poslite.core.ServiceLocator
 import com.aishtech.poslite.core.device.DeviceInfoProvider
 import com.aishtech.poslite.core.money.RupiahMoney
+import com.aishtech.poslite.core.util.EventObserver
 import com.aishtech.poslite.data.repository.CartRepository
 import com.aishtech.poslite.databinding.ActivityCashierBinding
 import com.aishtech.poslite.feature.history.TransactionHistoryActivity
@@ -34,6 +38,10 @@ class CashierActivity : AppCompatActivity(), PaymentSheetFragment.Host {
     private lateinit var viewModel: CashierViewModel
     private lateinit var adapter: ProductListAdapter
     private lateinit var categoryAdapter: CategoryFilterAdapter
+
+    // UIX8C-R156 — reconnect detection (registered in onStart, cleared in onStop).
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
+    private var networkWasLost = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -113,6 +121,38 @@ class CashierActivity : AppCompatActivity(), PaymentSheetFragment.Host {
         viewModel.loadContext()
     }
 
+    // UIX8C-R156 — observe default-network availability for a truthful reconnect
+    // signal. Only a genuine unavailable→available transition fires the one-shot
+    // feedback (the callback fires onAvailable at registration too, which we skip);
+    // it NEVER creates sync work itself — the governed WorkManager scheduler owns
+    // the actual reconnect sync via its NetworkType.CONNECTED constraint.
+    override fun onStart() {
+        super.onStart()
+        val cm = getSystemService(ConnectivityManager::class.java) ?: return
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onLost(network: Network) {
+                networkWasLost = true
+            }
+
+            override fun onAvailable(network: Network) {
+                if (networkWasLost) {
+                    networkWasLost = false
+                    runOnUiThread { viewModel.onConnectivityRestored() }
+                }
+            }
+        }
+        networkCallback = callback
+        cm.registerDefaultNetworkCallback(callback)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        networkCallback?.let { cb ->
+            getSystemService(ConnectivityManager::class.java)?.unregisterNetworkCallback(cb)
+        }
+        networkCallback = null
+    }
+
     private fun setupList() {
         adapter = ProductListAdapter(onAdd = { viewModel.addToCart(it) })
         binding.listProducts.layoutManager = LinearLayoutManager(this)
@@ -163,6 +203,12 @@ class CashierActivity : AppCompatActivity(), PaymentSheetFragment.Host {
             if (syncing) binding.textSyncStatus.text = getString(R.string.cashier_syncing)
         }
         viewModel.checkout.observe(this) { state -> renderCheckout(state) }
+        // UIX8C-R156 — one-shot, informative reconnect feedback. It does NOT
+        // create sync work (the canonical unique-work scheduler dedupes that);
+        // it only tells the operator the pending queue can resume.
+        viewModel.reconnected.observe(this, EventObserver {
+            Toast.makeText(this, R.string.cashier_reconnected, Toast.LENGTH_SHORT).show()
+        })
         // UIX8C-R061/R062 — canonical cashier context header.
         viewModel.context.observe(this) { renderContext(it) }
         // UIX8C-R074 — category filter chips.

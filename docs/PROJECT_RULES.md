@@ -1687,7 +1687,7 @@ experience over existing Android/backend domain services. Modular rule:
 23. `CICD2-R023` — CI runtime savings never override absence-of-proof governance.
 24. `CICD2-R024` — Shared-VPS source synchronization must not regress DaengtisiaMS.
 
-## Aish POS UIX-8C — Full Premium Android Cashier Delivery & Closure Foundation (UIX8C-R001..UIX8C-R060)
+## Aish POS UIX-8C — Full Premium Android Cashier Delivery & Closure Foundation (UIX8C-R001..UIX8C-R170)
 
 Authoritative rule text: `.claude/rules/61-android-cashier-full-premium-delivery-foundation.md`.
 Foundation narrative: `docs/foundation/uix-8c-full-premium-android-cashier.md`.
@@ -1857,3 +1857,58 @@ sprint-scoped tag `uix-8c-04-offline-cash-durability-idempotent-recovery-go` rec
 remediation + automated verification only and never asserts UIX-7/UIX-8 runtime closure; the
 historical failed physical run `run-97fbb64-2af94aa` (R11 FAIL) stays immutable and a fresh
 physical R11 revalidation remains mandatory after final code freeze.
+
+### UIX-8C-05 — Premium cash payment, offline queue & sync recovery UX (UIX8C-R131..R170)
+
+131. `UIX8C-R131` — The payment sheet is a presentation surface and must delegate financial and transaction authority to the canonical ViewModel, repository, and domain flow.
+132. `UIX8C-R132` — UIX-8C-05 must reuse the UIX-8C-04 transport classifier, durable offline persistence, stable `clientReference`, WorkManager, and backend idempotency foundation.
+133. `UIX8C-R133` — UIX-8C-05 must not introduce a second checkout, offline persistence, sync, or backend sale path.
+134. `UIX8C-R134` — Offline payment capability remains CASH-only; QRIS and every server-confirmed payment method remain online-only.
+135. `UIX8C-R135` — Amount due comes from the canonical cart snapshot and whole-Rupiah calculation.
+136. `UIX8C-R136` — Tender and change use whole-Rupiah integer types and never floating-point financial values.
+137. `UIX8C-R137` — Manual tender parsing is locale-safe, overflow-safe, deterministic, and rejects malformed values.
+138. `UIX8C-R138` — Quick-tender options are derived from or validated against the canonical amount due.
+139. `UIX8C-R139` — Insufficient tender cannot enter the checkout submission path.
+140. `UIX8C-R140` — Change equals tender minus canonical amount due and must never be negative.
+141. `UIX8C-R141` — One visible payment interaction owns at most one active logical checkout attempt.
+142. `UIX8C-R142` — Rapid taps, repeated callbacks, rotation, or view recreation must not submit a second logical transaction.
+143. `UIX8C-R143` — Submit controls remain guarded while the canonical checkout attempt is active.
+144. `UIX8C-R144` — Online success is displayed only after canonical server acknowledgement.
+145. `UIX8C-R145` — Offline queued success is displayed only after durable local database commit.
+146. `UIX8C-R146` — Offline queued, PENDING, SYNCING, RETRYING, FAILED, CONFLICT, SYNCED, and online-success states remain semantically distinct.
+147. `UIX8C-R147` — Offline queued or PENDING UI must never claim server synchronization or payment settlement.
+148. `UIX8C-R148` — SYNCED is displayed only after durable canonical acknowledgement is recorded locally.
+149. `UIX8C-R149` — Canonical HTTP, authentication, authorization, entitlement, tenant, outlet, device, validation, and TLS rejection remain explicit failures and must not appear as offline queued success.
+150. `UIX8C-R150` — UIX-8C-05 must reuse the UIX-8C-04 typed transport classifier without broad catch-all fallback.
+151. `UIX8C-R151` — UIX-8C-05 must reuse the UIX-8C-04 stable `clientReference` without regeneration during retry, rotation, restart, or reconnect.
+152. `UIX8C-R152` — UIX-8C-05 must reuse the UIX-8C-04 atomic Room persistence and must not clear the cart independently.
+153. `UIX8C-R153` — Dismissing or recreating the payment sheet must not cancel, duplicate, or mutate an already durable transaction.
+154. `UIX8C-R154` — Process restoration derives durable transaction truth from Room and canonical repositories, not stale in-memory UI events.
+155. `UIX8C-R155` — A previous success, receipt, tender, or change result must never be replayed for a new checkout.
+156. `UIX8C-R156` — Reconnect feedback is informative and must not create duplicate sync work.
+157. `UIX8C-R157` — Safe manual retry reuses the existing transaction and `clientReference` and does not create a new logical checkout.
+158. `UIX8C-R158` — Manual retry must respect canonical state, idempotency, network constraints, worker coordination, and bounded retry policy.
+159. `UIX8C-R159` — Manual retry must not run concurrently with an active worker for the same transaction without governed coordination.
+160. `UIX8C-R160` — Conflict state is explicit, preserves evidence, and must not be silently converted to success or a new transaction.
+161. `UIX8C-R161` — Payment errors expose truthful, actionable, accessible text without leaking secrets or internal exception payloads.
+162. `UIX8C-R162` — Payment, status, retry, dismiss, and confirmation controls remain at least 48dp.
+163. `UIX8C-R163` — TalkBack semantics identify amount due, tender, change, payment action, offline queued state, synchronization state, retry action, and conflict state.
+164. `UIX8C-R164` — Payment focus order follows amount due, quick tender, manual tender, validation, change, cancel, and confirm.
+165. `UIX8C-R165` — Payment and sync status must not rely on color alone.
+166. `UIX8C-R166` — Payment sheet, validation, queued state, retry action, and critical status remain usable at 100%, 115%, and 130% font scale.
+167. `UIX8C-R167` — Long Rupiah values, translated labels, error messages, and status text wrap or scroll safely without hiding critical actions.
+168. `UIX8C-R168` — Printer, receipt rendering, analytics, animation, or presentation failures do not change transaction authority.
+169. `UIX8C-R169` — UIX-8C-05 source remediation and automated validation do not rewrite historical R11 evidence; fresh physical R11 revalidation remains mandatory after final code freeze.
+170. `UIX8C-R170` — UIX-8C-05 implementation GO does not imply UIX-7 or UIX-8 runtime GO.
+
+Enforcement (UIX-8C-05): `scripts/uix8c_payment_offline_sync_ux_gate.sh` (fail-closed) +
+`scripts/tests/uix8c_payment_offline_sync_ux_gate_test.sh`, wired into
+`.github/workflows/_foundation-gates.yml`, plus the extended R001..R170 persistence loops in
+`scripts/uix8c_foundation_gate.sh` and `scripts/verify_application_foundation_rules.sh`. The
+premium payment sheet reuses the UIX-8C-04 `TransportFailureClassifier`, `OfflineSaleRepository`
+durable persistence, stable `clientReference`, `OfflineSalesSyncScheduler`/WorkManager, and
+backend idempotency — no second checkout/offline/sync/backend sale path is introduced. The
+sprint-scoped tag `uix-8c-05-premium-cash-payment-offline-sync-recovery-go` records source
+remediation + automated verification only and never asserts UIX-7/UIX-8 runtime closure; the
+historical failed physical run `run-97fbb64-2af94aa` (R11 FAIL) stays immutable and a fresh
+physical R11 + payment/sync UX revalidation remains mandatory after final code freeze.

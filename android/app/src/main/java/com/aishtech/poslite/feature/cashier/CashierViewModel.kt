@@ -3,8 +3,10 @@ package com.aishtech.poslite.feature.cashier
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
 import com.aishtech.poslite.core.money.RupiahMoney
+import com.aishtech.poslite.core.util.Event
 import com.aishtech.poslite.core.util.ResultState
 import com.aishtech.poslite.data.local.entity.LocalProductEntity
 import com.aishtech.poslite.data.remote.dto.SaleDto
@@ -108,6 +110,20 @@ class CashierViewModel(
 
     private val _checkout = MutableLiveData<CheckoutState>(CheckoutState.Idle)
     val checkout: LiveData<CheckoutState> = _checkout
+
+    // UIX8C-R146 — the truthful PRESENTATION projection of the canonical checkout
+    // state. This is derived (never a second source of truth): the mapper is pure
+    // and the observer (Activity) renders THIS so "queued locally" can never be
+    // confused with "synced on the server". Sync-queue rows project through
+    // [PaymentUiStateMapper.fromSyncStatus] on the history/recovery surface.
+    val paymentUiState: LiveData<PaymentUiState> =
+        _checkout.map { PaymentUiStateMapper.fromCheckout(it) }
+
+    // UIX8C-R156 — a one-shot, informative reconnect signal. It NEVER creates sync
+    // work itself (that stays with the canonical unique-work scheduler); it only
+    // tells the UI that connectivity returned and any pending queue can resume.
+    private val _reconnected = MutableLiveData<Event<Unit>>()
+    val reconnected: LiveData<Event<Unit>> = _reconnected
 
     private val _syncCounts = MutableLiveData(SyncCounts(pending = 0, failed = 0))
     val syncCounts: LiveData<SyncCounts> = _syncCounts
@@ -408,6 +424,28 @@ class CashierViewModel(
             refreshSyncCounts()
             _offlineSyncing.value = false
         }
+    }
+
+    /**
+     * UIX8C-R157/R158/R159 — a SAFE, governed manual retry of the offline sync
+     * queue. It does NOT create a new checkout, a new `clientReference`, a new
+     * offline row, or a second sync pipeline: it delegates to the canonical
+     * [OfflineSaleRepository.syncPending], which reuses each existing row (deduped
+     * on its stable `clientReference`), respects the bounded [MAX_SYNC_ATTEMPTS]
+     * cap, and reconciles idempotently. The [_offlineSyncing] guard prevents a
+     * second manual retry from racing an in-flight one for the same rows.
+     */
+    fun requestManualRetry() = syncNow()
+
+    /**
+     * UIX8C-R156 — record that connectivity was restored. This only refreshes the
+     * truthful queue counts and emits a one-shot informative signal; it deliberately
+     * does NOT enqueue sync work (the caller uses the canonical unique-work
+     * scheduler, which dedupes) and never marks anything SYNCED.
+     */
+    fun onConnectivityRestored() {
+        refreshSyncCounts()
+        _reconnected.value = Event(Unit)
     }
 
     /** Refresh the Pending/Failed offline-queue summary. */

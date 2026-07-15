@@ -134,6 +134,29 @@ and the automatic NO-GO on any durability/duplication/loss defect. The historica
 failed physical R11 stays immutable (UIX8C-R129) and a UIX-8C-04 implementation
 GO never implies UIX-7/UIX-8 runtime GO (UIX8C-R130).
 
+### UIX-8C-05 premium cash payment & sync-recovery UX rules (R131..R170)
+
+UIX-8C-05 adds the permanent payment-presentation / sync-recovery-UX / manual-retry
+baseline (UIX8C-R131..R170, rule 61): the payment sheet is presentation-only and
+delegates to the canonical ViewModel/repository; it REUSES the UIX-8C-04 transport
+classifier, durable persistence, stable `clientReference`, WorkManager, and backend
+idempotency (no second checkout/offline/sync/backend-sale path). Amount due, tender,
+quick tender, and change are whole-Rupiah integer, locale- and overflow-safe;
+insufficient tender can never submit and change is never negative. One visible
+interaction owns at most one logical checkout (ViewModel double-submit guard);
+online success shows only on server ack and offline-queued only on a durable commit.
+The presentation states (Idle/EditingTender/Ready/SubmittingOnline/PersistingOffline/
+OnlineSuccess/OfflineQueued/Pending/Syncing/RetryScheduled/Failed/Conflict/Synced)
+are distinct; queued/PENDING never claims sync and SYNCED shows only on a recorded
+ack; invalid transitions fail closed. Process restoration derives truth from Room,
+never a stale UI event; reconnect feedback is informative and creates no duplicate
+work; a SAFE manual retry reuses the existing transaction/`clientReference`, respects
+bounded retry + worker coordination, and never runs for a CONFLICT/TLS/security
+failure. Accessibility (labels, focus order, ≥48dp, colour-independent status) and
+100/115/130% font resilience are release gates. The historical failed physical R11
+stays immutable (UIX8C-R169) and a UIX-8C-05 implementation GO never implies
+UIX-7/UIX-8 runtime GO (UIX8C-R170).
+
 ## Scope of UIX-8C-01
 
 Governance + architecture + inventory + foundation only: rule set
@@ -203,10 +226,41 @@ tag `uix-8c-04-offline-cash-durability-idempotent-recovery-go`. A fresh physical
 R11 revalidation remains mandatory after final code freeze. UIX-7 stays `NO-GO —
 GO DEFERRED` and UIX-8 stays `IMPLEMENTATION COMPLETE — GO DEFERRED`.
 
+## Scope of UIX-8C-05
+
+UIX-8C-05 builds the premium CASH payment sheet and the truthful offline-queue /
+sync-recovery experience ON TOP OF the UIX-8C-04 transaction foundation, **without**
+rebuilding the full receipt/history screens and **without** adding backend source
+(only a regression fence; the backend already dedupes). It delivers: the rule set
+UIX8C-R131..R170; pure, overflow-safe `TenderValidator` + `QuickTenderCalculator`;
+a truthful payment/sync presentation state machine (`PaymentUiState` +
+`PaymentUiStateMapper`, a durable save projects to OfflineQueued/Pending — never
+Synced; SYNCED only on a recorded server ack; invalid transitions fail closed); a
+governed `SyncRecoveryPresenter` (manual retry only for a still-retryable FAILED
+row, never a CONFLICT/poison/in-flight row); the ViewModel double-submit guard,
+process-restoration truth from Room, an informative reconnect signal, and a SAFE
+manual retry — all REUSING the UIX-8C-04 `TransportFailureClassifier`,
+`OfflineSaleRepository`, stable `clientReference`, `OfflineSalesSyncScheduler`/
+WorkManager, and backend idempotency (no second checkout/offline/classifier/sync/
+backend-sale path). It does **not** enable QRIS offline, convert a canonical/TLS
+rejection into offline success, run a physical campaign, flip the historical R11
+evidence to PASS, or create a UIX-7/UIX-8 GO tag. It MAY carry the sprint-scoped
+tag `uix-8c-05-premium-cash-payment-offline-sync-recovery-go`. A fresh physical R11
++ payment/sync UX revalidation remains mandatory after final code freeze. UIX-7
+stays `NO-GO — GO DEFERRED` and UIX-8 stays `IMPLEMENTATION COMPLETE — GO DEFERRED`.
+
 ## Enforcement gates
 
 - `scripts/verify_application_foundation_rules.sh` — checks rule 61 exists and
-  that `UIX8C-R001..R130` are persisted.
+  that `UIX8C-R001..R170` are persisted.
+- `scripts/uix8c_payment_offline_sync_ux_gate.sh` (fail-closed) — the UIX-8C-05
+  premium payment / offline-sync recovery UX baseline (UIX8C-R131..R170): the pure
+  presentation components, whole-Rupiah reuse, no Float/Double money, reuse of the
+  UIX-8C-04 classifier/persistence/`clientReference`/WorkManager (no second path),
+  the double-submit guard, insufficient-tender blocking, SYNCED-only-on-ack,
+  QRIS-offline prohibition, the payment/state/restoration/manual-retry/font-scale/
+  accessibility tests, immutable failed physical run, and UIX-7/UIX-8 deferred
+  status. Self-tests: `scripts/tests/uix8c_payment_offline_sync_ux_gate_test.sh`.
 - `scripts/uix8c_offline_cash_durability_gate.sh` (fail-closed) — the UIX-8C-04
   offline CASH durability baseline (R096..R130): typed classifier, no catch-all
   offline fallback, QRIS-offline prohibition, atomic Room save,
