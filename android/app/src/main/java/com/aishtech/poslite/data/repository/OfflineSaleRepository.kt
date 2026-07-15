@@ -34,7 +34,7 @@ class OfflineSaleRepository(
     private val api: PosApiService,
     private val referenceProvider: () -> String = { UUID.randomUUID().toString() },
     private val clock: () -> Long = { System.currentTimeMillis() },
-) {
+) : com.aishtech.poslite.feature.receipt.LocalReceiptSource {
 
     sealed class SaveResult {
         data class Saved(val localId: Long, val clientReference: String) : SaveResult()
@@ -210,6 +210,33 @@ class OfflineSaleRepository(
      */
     suspend fun recentSales(limit: Int = 100): List<LocalOfflineSaleEntity> =
         offlineSaleDao.getRecent(limit)
+
+    /** A durable local sale with its snapshotted line items (read-only). */
+    data class LocalSaleWithItems(
+        val sale: LocalOfflineSaleEntity,
+        val items: List<LocalOfflineSaleItemEntity>,
+    )
+
+    /**
+     * UIX-8C-06 — read the durable local transaction + its items for a receipt
+     * reopen / transaction detail, keyed by the local Room id. Read-only: it never
+     * mutates sale or sync state, so a reprint reconstructs values from the
+     * persisted snapshot and never from mutable cart state (UIX8C-R189/R193).
+     */
+    override suspend fun findSaleWithItems(localId: Long): LocalSaleWithItems? {
+        val sale = offlineSaleDao.getOfflineSaleWithItems(localId) ?: return null
+        return LocalSaleWithItems(sale, offlineSaleItemDao.getItemsForSale(sale.localId))
+    }
+
+    /**
+     * UIX-8C-06 — read the durable local transaction + items keyed by the stable
+     * clientReference (used to bind an offline receipt to the just-saved
+     * transaction). Read-only.
+     */
+    override suspend fun findSaleWithItemsByReference(clientReference: String): LocalSaleWithItems? {
+        val sale = offlineSaleDao.findByClientReference(clientReference) ?: return null
+        return LocalSaleWithItems(sale, offlineSaleItemDao.getItemsForSale(sale.localId))
+    }
 
     private fun amount(value: Double): String = String.format(Locale.US, "%.2f", value)
 

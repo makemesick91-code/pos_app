@@ -21,6 +21,7 @@ import com.aishtech.poslite.data.repository.SalesRepository
 import com.aishtech.poslite.data.repository.StockRepository
 import com.aishtech.poslite.data.repository.SubscriptionRepository
 import com.aishtech.poslite.feature.printer.BluetoothPrinterConnection
+import com.aishtech.poslite.feature.printer.PrinterCoordinator
 import com.aishtech.poslite.feature.printer.PrinterRepository
 import com.aishtech.poslite.feature.printer.PrinterSettingsStore
 import com.aishtech.poslite.feature.sync.CatalogSyncManager
@@ -109,6 +110,12 @@ object ServiceLocator {
             connection = BluetoothPrinterConnection(context),
             settingsStore = PrinterSettingsStore(context),
         )
+
+    // UIX-8C-06 — the single canonical print entry point (concurrency-guarded,
+    // non-financial). Receipt/reprint go through this, never straight to the
+    // transport.
+    fun printerCoordinator(context: Context): PrinterCoordinator =
+        PrinterCoordinator(printerRepository(context))
 
     fun catalogSyncManager(context: Context): CatalogSyncManager {
         val db = PosDatabase.getInstance(context)

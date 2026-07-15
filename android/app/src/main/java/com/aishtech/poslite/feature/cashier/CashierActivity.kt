@@ -262,14 +262,20 @@ class CashierActivity : AppCompatActivity(), PaymentSheetFragment.Host {
                 // idempotent, so a redundant enqueue is harmless).
                 OfflineSalesSyncScheduler.enqueue(applicationContext)
                 // Offline draft receipt — clearly NOT a final server receipt.
+                // UIX-8C-06 — tapping opens the truthful offline/PENDING receipt
+                // bound to this durable transaction's stable clientReference.
                 result.visibility = View.VISIBLE
-                result.setOnClickListener(null)
+                val offlineRef = state.clientReference
+                result.setOnClickListener {
+                    startActivity(ReceiptActivity.forOfflineReference(this, offlineRef))
+                }
                 result.text = getString(R.string.cashier_offline_saved) +
                     "\n" + getString(R.string.cashier_offline_draft_label) +
                     "\n" + getString(R.string.cashier_offline_waiting_sync) +
                     "\nRef: ${state.clientReference}" +
                     "\nTotal: ${RupiahMoney.format(state.grandTotal)}" +
-                    "\nKembalian: ${RupiahMoney.format(state.change)}"
+                    "\nKembalian: ${RupiahMoney.format(state.change)}" +
+                    "\n" + getString(R.string.cashier_view_receipt)
                 binding.inputPaidAmount.text?.clear()
                 val hasItems = viewModel.cartItems.value?.isNotEmpty() ?: false
                 binding.buttonCheckout.isEnabled = hasItems
@@ -288,7 +294,9 @@ class CashierActivity : AppCompatActivity(), PaymentSheetFragment.Host {
                     "\nKembalian: ${RupiahMoney.formatOrUnavailable(RupiahMoney.parse(sale.changeTotal))}" +
                     "\n" + getString(R.string.cashier_view_receipt)
                 // Sprint 6 — tap the result to open the receipt for this sale.
-                result.setOnClickListener { openReceipt(sale.id) }
+                // UIX-8C-06 — carry the stable clientReference so the receipt is
+                // bound to this exact logical transaction.
+                result.setOnClickListener { openReceipt(sale.id, sale.clientReference) }
                 binding.inputPaidAmount.text?.clear()
                 val hasItems = viewModel.cartItems.value?.isNotEmpty() ?: false
                 binding.buttonCheckout.isEnabled = hasItems
@@ -318,10 +326,8 @@ class CashierActivity : AppCompatActivity(), PaymentSheetFragment.Host {
             .show()
     }
 
-    private fun openReceipt(saleId: Long) {
-        val intent = Intent(this, ReceiptActivity::class.java)
-            .putExtra(ReceiptActivity.EXTRA_SALE_ID, saleId)
-        startActivity(intent)
+    private fun openReceipt(saleId: Long, clientReference: String?) {
+        startActivity(ReceiptActivity.forServerSale(this, saleId, clientReference))
     }
 
     // UIX-8B — open the native cash tender sheet for the current cart total. The

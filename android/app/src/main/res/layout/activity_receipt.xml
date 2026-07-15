@@ -1,91 +1,295 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- UIX-8C-06 — premium receipt / transaction-detail surface. Renders one
+     canonical transaction: truthful state (text + colour, never colour alone),
+     context, items, whole-rupiah totals, tender/change, and a typed print/reprint
+     action. Content scrolls; the primary actions stay pinned and reachable at
+     130% font (UIX8C-R206). Business truth is a projection — nothing is
+     recomputed here. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="@dimen/space_lg">
+    android:background="@color/bg_default">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:orientation="vertical"
+      android:padding="@dimen/space_lg">
 
     <TextView
         android:id="@+id/textTitle"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/receipt_title"
-        android:textAppearance="@style/TextAppearance.Aish.PageTitle"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:textAppearance="@style/TextAppearance.Aish.PageTitle" />
 
     <TextView
-        android:id="@+id/textInvoice"
-        android:layout_width="0dp"
+        android:id="@+id/textReceiptState"
+        style="@style/Widget.Aish.StatusChip"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_md"
-        app:layout_constraintTop_toBottomOf="@id/textTitle"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:layout_marginTop="@dimen/space_sm"
+        android:textAppearance="@style/TextAppearance.Aish.Status" />
 
-    <TextView
-        android:id="@+id/textReceiptStatus"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_xs"
-        app:layout_constraintTop_toBottomOf="@id/textInvoice"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <TextView
-        android:id="@+id/textBlockReason"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_xs"
-        android:visibility="gone"
-        android:textColor="@color/action_destructive"
-        app:layout_constraintTop_toBottomOf="@id/textReceiptStatus"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <ScrollView
-        android:id="@+id/previewScroll"
-        android:layout_width="0dp"
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/receiptScroll"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_weight="1"
         android:layout_marginTop="@dimen/space_md"
-        android:background="@color/bg_subtle"
-        android:padding="@dimen/space_sm"
-        app:layout_constraintTop_toBottomOf="@id/textBlockReason"
-        app:layout_constraintBottom_toTopOf="@id/buttonPrint"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        android:fillViewport="true">
 
-        <TextView
-            android:id="@+id/textPreview"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fontFamily="monospace"
-            android:textSize="@dimen/text_label"
-            android:textColor="@color/text_primary" />
+            android:orientation="vertical">
 
-    </ScrollView>
+            <TextView
+                android:id="@+id/textBusiness"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.Aish.SectionTitle"
+                android:textColor="@color/text_primary" />
+
+            <TextView
+                android:id="@+id/textOutletCashier"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:textAppearance="@style/TextAppearance.Aish.BodySmall"
+                android:textColor="@color/text_secondary" />
+
+            <TextView
+                android:id="@+id/textInvoice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:textAppearance="@style/TextAppearance.Aish.Body"
+                android:textColor="@color/text_primary" />
+
+            <TextView
+                android:id="@+id/textDate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.Aish.Caption"
+                android:textColor="@color/text_secondary" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_md"
+                android:text="@string/receipt_items_heading"
+                android:textAppearance="@style/TextAppearance.Aish.Label"
+                android:textColor="@color/text_secondary" />
+
+            <LinearLayout
+                android:id="@+id/containerItems"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:orientation="vertical" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="@dimen/space_md"
+                android:background="@color/divider" />
+
+            <LinearLayout
+                android:id="@+id/rowSubtotal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_md"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/receipt_subtotal"
+                    android:textAppearance="@style/TextAppearance.Aish.Body"
+                    android:textColor="@color/text_secondary" />
+
+                <TextView
+                    android:id="@+id/textSubtotal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Aish.MoneySecondary"
+                    android:textColor="@color/text_primary" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/rowDiscount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/receipt_discount"
+                    android:textAppearance="@style/TextAppearance.Aish.Body"
+                    android:textColor="@color/text_secondary" />
+
+                <TextView
+                    android:id="@+id/textDiscount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Aish.MoneySecondary"
+                    android:textColor="@color/text_primary" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/rowTax"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/receipt_tax"
+                    android:textAppearance="@style/TextAppearance.Aish.Body"
+                    android:textColor="@color/text_secondary" />
+
+                <TextView
+                    android:id="@+id/textTax"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Aish.MoneySecondary"
+                    android:textColor="@color/text_primary" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/receipt_grand_total"
+                    android:textAppearance="@style/TextAppearance.Aish.SectionTitle"
+                    android:textColor="@color/text_primary" />
+
+                <TextView
+                    android:id="@+id/textGrandTotal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Aish.MoneyTotal"
+                    android:textColor="@color/text_primary" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_md"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/receipt_tender"
+                    android:textAppearance="@style/TextAppearance.Aish.Body"
+                    android:textColor="@color/text_secondary" />
+
+                <TextView
+                    android:id="@+id/textTender"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Aish.MoneySecondary"
+                    android:textColor="@color/text_primary" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_xs"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/receipt_change"
+                    android:textAppearance="@style/TextAppearance.Aish.Body"
+                    android:textColor="@color/text_secondary" />
+
+                <TextView
+                    android:id="@+id/textChange"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.Aish.MoneySecondary"
+                    android:textColor="@color/text_primary" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/textPaymentMethod"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_sm"
+                android:textAppearance="@style/TextAppearance.Aish.BodySmall"
+                android:textColor="@color/text_secondary" />
+
+            <TextView
+                android:id="@+id/textNote"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_md"
+                android:padding="@dimen/space_sm"
+                android:background="@color/bg_subtle"
+                android:textAppearance="@style/TextAppearance.Aish.BodySmall"
+                android:textColor="@color/text_secondary"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <LinearLayout
+        style="@style/Widget.Aish.BottomActionRegion"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/buttonPrint"
+            style="@style/Widget.Aish.Button.Primary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/touch_target_min"
+            android:contentDescription="@string/cd_receipt_print"
+            android:text="@string/receipt_print" />
+
+        <Button
+            android:id="@+id/buttonNewTransaction"
+            style="@style/Widget.Aish.Button.Secondary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_sm"
+            android:minHeight="@dimen/touch_target_min"
+            android:contentDescription="@string/cd_receipt_new_transaction"
+            android:text="@string/receipt_new_transaction" />
+
+    </LinearLayout>
+
+  </LinearLayout>
 
     <ProgressBar
         android:id="@+id/progress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:layout_constraintTop_toTopOf="@id/previewScroll"
-        app:layout_constraintBottom_toBottomOf="@id/previewScroll"
-        app:layout_constraintStart_toStartOf="@id/previewScroll"
-        app:layout_constraintEnd_toEndOf="@id/previewScroll" />
+        android:layout_gravity="center"
+        android:visibility="gone" />
 
-    <Button
-        android:id="@+id/buttonPrint"
-        style="@style/Widget.Aish.Button.Primary"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:minHeight="@dimen/touch_target_min"
-        android:contentDescription="@string/cd_receipt_print"
-        android:text="@string/receipt_print"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>

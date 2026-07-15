@@ -1687,7 +1687,7 @@ experience over existing Android/backend domain services. Modular rule:
 23. `CICD2-R023` — CI runtime savings never override absence-of-proof governance.
 24. `CICD2-R024` — Shared-VPS source synchronization must not regress DaengtisiaMS.
 
-## Aish POS UIX-8C — Full Premium Android Cashier Delivery & Closure Foundation (UIX8C-R001..UIX8C-R170)
+## Aish POS UIX-8C — Full Premium Android Cashier Delivery & Closure Foundation (UIX8C-R001..UIX8C-R210)
 
 Authoritative rule text: `.claude/rules/61-android-cashier-full-premium-delivery-foundation.md`.
 Foundation narrative: `docs/foundation/uix-8c-full-premium-android-cashier.md`.
@@ -1900,6 +1900,49 @@ physical R11 revalidation remains mandatory after final code freeze.
 168. `UIX8C-R168` — Printer, receipt rendering, analytics, animation, or presentation failures do not change transaction authority.
 169. `UIX8C-R169` — UIX-8C-05 source remediation and automated validation do not rewrite historical R11 evidence; fresh physical R11 revalidation remains mandatory after final code freeze.
 170. `UIX8C-R170` — UIX-8C-05 implementation GO does not imply UIX-7 or UIX-8 runtime GO.
+
+### UIX-8C-06 — Premium receipt, transaction history & printer failure states (UIX8C-R171..R210)
+
+171. `UIX8C-R171` — Receipt and transaction-history surfaces are projections of canonical transaction state and must not create or mutate financial transactions.
+172. `UIX8C-R172` — Every receipt is bound to one current logical transaction through its stable clientReference and governed local or server identifiers.
+173. `UIX8C-R173` — A receipt from a previous transaction must never replace or appear as the result of the current checkout.
+174. `UIX8C-R174` — Online receipt success is shown only after canonical server acknowledgement.
+175. `UIX8C-R175` — Offline receipt success is shown only after durable local commit and must be labelled PENDING or offline-queued.
+176. `UIX8C-R176` — A receipt is labelled SYNCED only after durable canonical acknowledgement is recorded locally.
+177. `UIX8C-R177` — Receipt items, quantities, unit prices, line totals, subtotal, total, tender, and change must match the canonical transaction exactly.
+178. `UIX8C-R178` — Receipt, transaction history, local persistence, server sale, and server payment parity are mandatory release invariants.
+179. `UIX8C-R179` — Receipt and history money use canonical whole-Rupiah integer values and must never be recalculated with floating-point types.
+180. `UIX8C-R180` — Receipt references exposed to the operator use governed transaction identifiers and must not reveal secrets or unsafe internal identifiers.
+181. `UIX8C-R181` — One logical transaction produces at most one transaction-history entry after local and server records are reconciled.
+182. `UIX8C-R182` — Local pending and server-confirmed records for the same clientReference must merge rather than appear as duplicate history entries.
+183. `UIX8C-R183` — Transaction history remains scoped by canonical tenant, outlet, cashier, and device rules.
+184. `UIX8C-R184` — History states PENDING, SYNCING, RETRYING, SYNCED, FAILED, and CONFLICT remain semantically distinct.
+185. `UIX8C-R185` — History loading, empty, no-result, unavailable, and error states remain distinct.
+186. `UIX8C-R186` — Refresh, reconnect, worker acknowledgement, and process restoration must not duplicate or reorder one logical transaction incorrectly.
+187. `UIX8C-R187` — Process restoration derives receipt and history truth from Room and canonical repositories rather than stale in-memory events.
+188. `UIX8C-R188` — Starting a new transaction clears only obsolete presentation state and must not delete or mutate durable receipt/history records.
+189. `UIX8C-R189` — Reopening a receipt uses persisted canonical transaction data and must not reconstruct financial values from mutable cart state.
+190. `UIX8C-R190` — One-shot receipt, navigation, print, and success events must not replay into a different transaction after rotation or process recreation.
+191. `UIX8C-R191` — Printer availability, permission, connection, print completion, or print failure never determines financial transaction success.
+192. `UIX8C-R192` — Print failure must not roll back, duplicate, cancel, or resubmit a sale or payment.
+193. `UIX8C-R193` — Reprint is a presentation operation and must not create a new transaction, clientReference, payment, sale item, or inventory movement.
+194. `UIX8C-R194` — Printer permission requests follow least privilege and the actual printer transport in use.
+195. `UIX8C-R195` — BLUETOOTH_SCAN or discovery-related permission must not be introduced unless the application actually performs device discovery.
+196. `UIX8C-R196` — Connection to an already paired Bluetooth printer must use the minimum platform permissions required by the supported Android version.
+197. `UIX8C-R197` — Permission denied, unsupported hardware, adapter disabled, device unavailable, connection failure, timeout, write failure, and interrupted print are typed and distinct printer states.
+198. `UIX8C-R198` — Printer retry is bounded, reuses the same receipt projection, and cannot trigger checkout or transaction replay.
+199. `UIX8C-R199` — Printer callbacks, exceptions, logs, and evidence must not expose tokens, customer PII, payment secrets, or full sensitive transaction payloads.
+200. `UIX8C-R200` — Print jobs must not block the Android main thread or create unbounded connection, retry, or write loops.
+201. `UIX8C-R201` — Receipt and print content include only governed business, outlet, cashier, transaction, item, and payment fields.
+202. `UIX8C-R202` — Receipt, history, print, retry, and navigation controls remain at least 48dp.
+203. `UIX8C-R203` — TalkBack semantics identify transaction state, item details, totals, tender, change, history row, receipt action, print action, printer state, and retry action.
+204. `UIX8C-R204` — Receipt and history focus order follows transaction context, items, totals, payment details, state, print, and next action.
+205. `UIX8C-R205` — Receipt, history, and printer states must not rely on color alone.
+206. `UIX8C-R206` — Receipt, transaction history, detail, printer failure, and critical actions remain usable at 100%, 115%, and 130% system font scale.
+207. `UIX8C-R207` — Long business, outlet, cashier, product, reference, status, and error text wrap, ellipsize, or scroll safely without hiding critical actions.
+208. `UIX8C-R208` — Receipt rendering, history merging, and printer operations remain lifecycle-aware, bounded, and free from main-thread network or database work.
+209. `UIX8C-R209` — UIX-8C-06 source and automated validation do not rewrite historical physical evidence; final physical receipt/history/printer validation remains mandatory after code freeze.
+210. `UIX8C-R210` — UIX-8C-06 implementation GO does not imply UIX-7 or UIX-8 runtime GO.
 
 Enforcement (UIX-8C-05): `scripts/uix8c_payment_offline_sync_ux_gate.sh` (fail-closed) +
 `scripts/tests/uix8c_payment_offline_sync_ux_gate_test.sh`, wired into

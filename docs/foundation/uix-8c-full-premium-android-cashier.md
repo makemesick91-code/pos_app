@@ -157,6 +157,34 @@ failure. Accessibility (labels, focus order, ≥48dp, colour-independent status)
 stays immutable (UIX8C-R169) and a UIX-8C-05 implementation GO never implies
 UIX-7/UIX-8 runtime GO (UIX8C-R170).
 
+### UIX-8C-06 premium receipt, transaction history & printer failure-state rules (R171..R210)
+
+UIX-8C-06 adds the permanent receipt-projection / history-reconciliation /
+printer-reliability baseline (UIX8C-R171..R210, rule 61). The receipt and history
+surfaces are projections of canonical transaction state and never create or mutate
+a transaction. A receipt is bound to one logical transaction by its stable
+`clientReference` and governed local/server identifiers; a previous transaction's
+result can never surface for the current checkout. Online success shows only on
+server ack; an offline receipt shows only after a durable local commit and is
+labelled PENDING (SYNCED only on a recorded canonical ack). Receipt items,
+quantities, unit prices, line totals, subtotal, total, tender, and change match the
+canonical transaction exactly, in whole-Rupiah integers — never floating point.
+Transaction history is reconciled to exactly one row per logical transaction: local
+pending and server-confirmed records for the same `clientReference` merge rather
+than duplicate, a payload mismatch surfaces CONFLICT, and PENDING/SYNCING/
+RETRY_SCHEDULED/SYNCED/FAILED/CONFLICT stay distinct. Process restoration derives
+truth from Room, never a stale UI event; reopen/reprint reads persisted data.
+Printing is non-financial: availability, permission, connection, completion, or
+failure never determine transaction success, print failure never rolls back or
+duplicates a sale/payment, and reprint creates no new transaction. The printer
+exposes typed failure states (permission required/denied, unsupported, adapter
+disabled, not configured, unavailable, connection failed, timeout, write failed,
+interrupted, unknown-safe) through a single bounded, non-financial coordinator;
+permissions stay least-privilege with no `BLUETOOTH_SCAN`. Accessibility (labels,
+focus order, ≥48dp, colour-independent status) and 100/115/130% font resilience are
+release gates. The historical failed physical R11/R18 stays immutable (UIX8C-R209)
+and a UIX-8C-06 implementation GO never implies UIX-7/UIX-8 runtime GO (UIX8C-R210).
+
 ## Scope of UIX-8C-01
 
 Governance + architecture + inventory + foundation only: rule set
@@ -249,10 +277,43 @@ tag `uix-8c-05-premium-cash-payment-offline-sync-recovery-go`. A fresh physical 
 + payment/sync UX revalidation remains mandatory after final code freeze. UIX-7
 stays `NO-GO — GO DEFERRED` and UIX-8 stays `IMPLEMENTATION COMPLETE — GO DEFERRED`.
 
+## Scope of UIX-8C-06
+
+UIX-8C-06 builds the premium receipt / transaction-detail surface, the reconciled
+transaction history, and the typed printer failure-state experience
+(UIX8C-R171..R210): an immutable `ReceiptProjection` bound to one logical
+transaction, a pure `ReceiptProjector` (local + server sources, one parity type), a
+pure `TransactionHistoryReconciler` (one row per logical transaction, merge/dedup/
+conflict), durable reopen/reprint from Room, stale-result prevention via
+identity-carrying one-shot events, and a single non-financial `PrinterCoordinator`
+with typed `PrinterFailure` states, a bounded print timeout, and least-privilege
+Bluetooth permissions (no `BLUETOOTH_SCAN`). It REUSES the UIX-8C-04/05 stable
+`clientReference`, `OfflineSaleRepository`, `OfflineSyncStatus`, `RupiahMoney`,
+`PaymentUiState`, and backend idempotency — no second transaction path. It does NOT
+change `SaleService`/backend financial behaviour beyond a regression fence, does NOT
+enable QRIS offline, does NOT make the printer a transaction authority, does NOT run
+a physical campaign, and does NOT flip the historical R11/R18 evidence to PASS. It
+MAY create the sprint tag
+`uix-8c-06-premium-receipt-history-printer-failure-states-go`; that tag never
+asserts UIX-7/UIX-8 runtime closure. A fresh physical receipt/history/printer/
+large-font/TalkBack revalidation stays mandatory after final code freeze. UIX-7
+stays `NO-GO — GO DEFERRED` and UIX-8 stays `IMPLEMENTATION COMPLETE — GO DEFERRED`.
+
 ## Enforcement gates
 
 - `scripts/verify_application_foundation_rules.sh` — checks rule 61 exists and
-  that `UIX8C-R001..R170` are persisted.
+  that `UIX8C-R001..R210` are persisted.
+- `scripts/uix8c_receipt_history_printer_gate.sh` (fail-closed) — the UIX-8C-06
+  premium receipt / transaction-history / printer failure-state baseline
+  (UIX8C-R171..R210): rule persistence, required docs, the pure presentation
+  components (`ReceiptProjection`/`ReceiptProjector`, `TransactionHistoryReconciler`,
+  `PrinterCoordinator`, typed `PrinterFailure`/`PrintResult`), receipt binding to a
+  stable identity, whole-Rupiah parity tests, local/server merge + one-row-per-
+  transaction tests, the state distinctions, printer non-financial authority
+  (no sale/payment/sync/inventory reference in the printer package), reprint not
+  calling checkout, bounded retry, no `BLUETOOTH_SCAN`, 130%-font + accessibility
+  tests, immutable failed run, UIX-7/UIX-8 deferred, no premature GO. Self-tests:
+  `scripts/tests/uix8c_receipt_history_printer_gate_test.sh`.
 - `scripts/uix8c_payment_offline_sync_ux_gate.sh` (fail-closed) — the UIX-8C-05
   premium payment / offline-sync recovery UX baseline (UIX8C-R131..R170): the pure
   presentation components, whole-Rupiah reuse, no Float/Double money, reuse of the
