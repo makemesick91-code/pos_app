@@ -334,6 +334,36 @@ appear to conflict, the modular rule in `.claude/rules/` is authoritative.
   asserts UIX-7/UIX-8 runtime closure. A fresh physical R11 + payment/sync UX
   revalidation stays mandatory after final code freeze; UIX-7 stays `NO-GO — GO
   DEFERRED` and UIX-8 stays `IMPLEMENTATION COMPLETE — GO DEFERRED`.
+- UIX-8C-06 (premium receipt, transaction history & printer failure states) builds
+  the premium receipt / transaction-detail surface, the reconciled transaction
+  history, and the typed printer failure-state UX ON TOP OF the UIX-8C-04/05
+  transaction foundation (UIX8C-R171..R210): an immutable `ReceiptProjection` bound
+  to one logical transaction via its stable `clientReference` + governed local/
+  server identifiers (a previous transaction can never surface for the current
+  checkout), a pure `ReceiptProjector` (local Room + server `ReceiptDto` → one
+  parity type; whole-Rupiah `Long`, never float; server decimal strings read
+  without `RupiahMoney.parse`'s grouping semantics), truthful online/PENDING/
+  SYNCING/SYNCED/FAILED/CONFLICT receipt state (durable save → PENDING, SYNCED only
+  on recorded ack), a pure `TransactionHistoryReconciler` (one row per logical
+  transaction keyed on `clientReference`; local+server merge, payload-mismatch →
+  CONFLICT, RETRY_SCHEDULED under the bounded cap), durable reopen/reprint from Room
+  (the receipt screen IS the transaction detail), stale-result prevention via
+  identity-carrying one-shot `Event`s, and a single non-financial
+  `PrinterCoordinator` with typed `PrinterFailure`/`PrintResult` states, a bounded
+  print timeout + catch-all, and least-privilege Bluetooth permissions (no
+  `BLUETOOTH_SCAN`). It REUSES — never duplicates — the stable `clientReference`,
+  `OfflineSaleRepository` (adds read-only `findSaleWithItems*`), `OfflineSyncStatus`,
+  `RupiahMoney`, `PaymentUiState`, `ReceiptRepository`, and backend idempotency; it
+  introduces no second checkout/offline/sync/backend-sale path. Enforced by the
+  fail-closed `scripts/uix8c_receipt_history_printer_gate.sh` (+ self-tests) and ADR
+  0008. It changes no `SaleService`/Room/financial behaviour (backend regression
+  fence only), does NOT make the printer a transaction authority, does NOT create a
+  new transaction on reprint, does NOT enable QRIS offline, does NOT run a physical
+  campaign, and does NOT flip the historical R11/R18 evidence to PASS; its sprint
+  tag `uix-8c-06-premium-receipt-history-printer-failure-states-go` never asserts
+  UIX-7/UIX-8 runtime closure. A fresh physical receipt/history/printer/large-font/
+  TalkBack revalidation stays mandatory after final code freeze; UIX-7 stays `NO-GO
+  — GO DEFERRED` and UIX-8 stays `IMPLEMENTATION COMPLETE — GO DEFERRED`.
 
 ## Authoritative CI consolidation (CICD-CTRL-2)
 - CI is consolidated into four lanes driven by a fail-closed change classifier
