@@ -48,6 +48,9 @@ jobs:
       - name: UIX-8C-06 receipt / history / printer failure-state gate
         run: bash scripts/uix8c_receipt_history_printer_gate.sh
 
+      - name: UIX-8C-07 auth / device / settings / session-recovery gate
+        run: bash scripts/uix8c_auth_device_session_gate.sh
+
       - name: CICD-CTRL-2 CI architecture gate
         run: bash scripts/ci/cicd_ctrl_2_gate.sh
 
@@ -74,3 +77,6 @@ jobs:
 
       - name: UIX-8C-06 receipt / history / printer gate self-tests
         run: bash scripts/tests/uix8c_receipt_history_printer_gate_test.sh
+
+      - name: UIX-8C-07 auth / device / session gate self-tests
+        run: bash scripts/tests/uix8c_auth_device_session_gate_test.sh

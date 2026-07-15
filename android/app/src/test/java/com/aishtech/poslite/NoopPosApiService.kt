@@ -6,6 +6,7 @@ import com.aishtech.poslite.data.remote.dto.AndroidRuntimePolicyResponseDto
 import com.aishtech.poslite.data.remote.dto.CategorySyncResponse
 import com.aishtech.poslite.data.remote.dto.CreateDailyClosingRequestDto
 import com.aishtech.poslite.data.remote.dto.DeviceActivationResponseDto
+import com.aishtech.poslite.data.remote.dto.DeviceStatusResponseDto
 import com.aishtech.poslite.data.remote.dto.SyncBatchRequestDto
 import com.aishtech.poslite.data.remote.dto.SyncBatchResponseDto
 import com.aishtech.poslite.data.remote.dto.CreateQrisPaymentRequestDto
@@ -63,6 +64,7 @@ open class NoopPosApiService : PosApiService {
     override suspend fun revokeDevice(deviceId: Long): Response<RegisteredDeviceResponseDto> = error("unused")
     override suspend fun activateDevice(request: ActivateDeviceRequestDto): Response<DeviceActivationResponseDto> = error("unused")
     override suspend fun androidDeviceHeartbeat(): Response<DeviceActivationResponseDto> = error("unused")
+    override suspend fun deviceStatus(): Response<DeviceStatusResponseDto> = error("unused")
     override suspend fun getAndroidRuntimePolicy(): Response<AndroidRuntimePolicyResponseDto> = error("unused")
     override suspend fun submitSyncBatch(request: SyncBatchRequestDto): Response<SyncBatchResponseDto> = error("unused")
 }

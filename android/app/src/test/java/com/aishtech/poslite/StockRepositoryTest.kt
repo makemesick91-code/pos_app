@@ -62,6 +62,7 @@ class StockRepositoryTest {
         override suspend fun activateDevice(request: com.aishtech.poslite.data.remote.dto.ActivateDeviceRequestDto): Response<com.aishtech.poslite.data.remote.dto.DeviceActivationResponseDto> = error("unused")
         override suspend fun androidDeviceHeartbeat(): Response<com.aishtech.poslite.data.remote.dto.DeviceActivationResponseDto> = error("unused")
         override suspend fun getAndroidRuntimePolicy(): Response<com.aishtech.poslite.data.remote.dto.AndroidRuntimePolicyResponseDto> = error("unused")
+        override suspend fun deviceStatus(): Response<com.aishtech.poslite.data.remote.dto.DeviceStatusResponseDto> = error("unused")
         override suspend fun submitSyncBatch(request: com.aishtech.poslite.data.remote.dto.SyncBatchRequestDto): Response<com.aishtech.poslite.data.remote.dto.SyncBatchResponseDto> = error("unused")
 
         override suspend fun getCurrentStock(storeId: Long?, query: String?, limit: Int?): Response<CurrentStockResponseDto> {
