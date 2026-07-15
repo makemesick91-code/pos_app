@@ -29,16 +29,16 @@ class DeviceActivationController extends Controller
 
     public function activate(ActivateDeviceRequest $request): JsonResponse
     {
-        $tenant = $this->context->tenant();
-
+        // UIX-8C-08 — device-first, code-authenticated activation. This endpoint is
+        // public (a genuinely fresh device has no cashier session yet). The tenant
+        // is resolved from the single-use code itself inside the service — never
+        // from a client-supplied id or a session — and an unknown code fails closed.
         try {
-            $activation = $this->activation->activate(
-                tenant: $tenant,
+            $activation = $this->activation->activateWithCode(
                 rawToken: (string) $request->input('activation_token'),
                 fingerprint: (string) $request->input('device_fingerprint'),
                 deviceUuid: $request->input('device_uuid'),
                 label: $request->input('device_label'),
-                actor: $this->context->user(),
                 appVersion: $request->input('app_version'),
                 installationId: $request->input('installation_id'),
             );

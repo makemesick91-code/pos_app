@@ -209,6 +209,75 @@ class DeviceActivationService
     }
 
     /**
+     * UIX-8C-08 — code-authenticated, device-first activation. A genuinely fresh
+     * device (no cashier session yet) presents ONLY the single-use activation code.
+     * The tenant is resolved from the code record itself — never from client input
+     * or an authenticated session — so the device-first activation gate works
+     * without a bearer token (UIX8C-R217/R063). The code MUST already exist (issued
+     * by device:provision-activation / prepare()); this path never auto-prepares,
+     * so an unknown code can never self-provision a device (fail closed). All
+     * canonical checks (expiry, revoked, fingerprint binding, attempt cap,
+     * entitlement/lifecycle gate, single-use, idempotency) still run inside
+     * activate(); the actor is null (no user yet) which is already supported.
+     */
+    public function activateWithCode(
+        string $rawToken,
+        string $fingerprint,
+        ?string $deviceUuid = null,
+        ?string $label = null,
+        ?string $appVersion = null,
+        ?string $installationId = null,
+    ): TenantDeviceActivation {
+        $tenant = $this->resolveTenantForCode($rawToken);
+
+        return $this->activate(
+            tenant: $tenant,
+            rawToken: $rawToken,
+            fingerprint: $fingerprint,
+            deviceUuid: $deviceUuid,
+            label: $label,
+            actor: null,
+            appVersion: $appVersion,
+            installationId: $installationId,
+        );
+    }
+
+    /**
+     * Resolve the tenant a single-use activation code belongs to, by hash ONLY.
+     * The raw code is never trusted as tenant input; an unknown or (defensively)
+     * ambiguous code fails closed with no auto-prepare, so the public activation
+     * endpoint can never bind a device to a caller-chosen tenant.
+     */
+    public function resolveTenantForCode(string $rawToken): Tenant
+    {
+        $rawToken = trim($rawToken);
+
+        $min = (int) config('android_runtime_governance.activation_token.min_token_length', 8);
+        $max = (int) config('android_runtime_governance.activation_token.max_token_length', 128);
+        if (mb_strlen($rawToken) < $min || mb_strlen($rawToken) > $max) {
+            throw new AndroidRuntimeException('Activation code is invalid.', 'INVALID_ACTIVATION_TOKEN', 422);
+        }
+
+        $tokenHash = $this->hashToken($rawToken);
+        $matches = TenantDeviceActivation::query()
+            ->where('activation_token_hash', $tokenHash)
+            ->get();
+
+        // Exactly one issued code must match. Zero = unknown/expired-and-purged
+        // code; more than one = ambiguous — both fail closed (never self-provision).
+        if ($matches->count() !== 1) {
+            throw new AndroidRuntimeException('Unknown or expired activation code.', 'INVALID_ACTIVATION_TOKEN', 403);
+        }
+
+        $tenant = Tenant::query()->find($matches->first()->tenant_id);
+        if (! $tenant instanceof Tenant) {
+            throw new AndroidRuntimeException('Unknown or expired activation code.', 'INVALID_ACTIVATION_TOKEN', 403);
+        }
+
+        return $tenant;
+    }
+
+    /**
      * Bridge a pre-existing Sprint 10 RegisteredDevice to a Sprint 34 activation
      * record so the runtime gate/sync ledger has a canonical activation to reference.
      * Finds the device's usable activation or lazily creates an ACTIVATED one. A

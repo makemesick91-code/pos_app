@@ -36,9 +36,11 @@ class AndroidRuntimeApiTest extends TestCase
 
     public function test_device_can_be_activated_via_api_without_returning_token(): void
     {
+        $code = app(DeviceActivationService::class)->prepare($this->tenant)['token'];
+
         $response = $this->actingAs($this->user, 'sanctum')
             ->postJson('/api/v1/android/device/activate', [
-                'activation_token' => 'activation-token-1234',
+                'activation_token' => $code,
                 'device_fingerprint' => 'fingerprint-abcdef',
                 'device_uuid' => 'api-device-1',
                 'device_label' => 'Kasir Depan',
@@ -47,7 +49,7 @@ class AndroidRuntimeApiTest extends TestCase
             ->assertJsonPath('data.status', TenantDeviceActivation::STATUS_ACTIVATED);
 
         $body = $response->getContent();
-        $this->assertStringNotContainsString('activation-token-1234', $body);
+        $this->assertStringNotContainsString($code, $body);
         $this->assertStringNotContainsString('fingerprint-abcdef', $body);
     }
 

@@ -6,6 +6,7 @@ use App\Models\Store;
 use App\Models\Tenant;
 use App\Models\TenantDeviceActivation;
 use App\Models\User;
+use App\Services\AndroidRuntime\DeviceActivationService;
 use App\Services\AndroidRuntime\DeviceRevocationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -97,9 +98,10 @@ class DeviceStatusEndpointTest extends TestCase
             'store_id' => $otherStore->id,
             'role' => User::ROLE_CASHIER,
         ]);
+        $otherCode = app(DeviceActivationService::class)->prepare($otherTenant)['token'];
         $this->actingAs($otherUser, 'sanctum')
             ->postJson('/api/v1/android/device/activate', [
-                'activation_token' => 'other-tenant-token-1',
+                'activation_token' => $otherCode,
                 'device_fingerprint' => 'other-fingerprint-1',
                 'device_uuid' => 'shared-uuid',
                 'device_label' => 'Other',
@@ -116,9 +118,10 @@ class DeviceStatusEndpointTest extends TestCase
 
     private function activate(string $uuid): TenantDeviceActivation
     {
+        $code = app(DeviceActivationService::class)->prepare($this->tenant)['token'];
         $this->actingAs($this->user, 'sanctum')
             ->postJson('/api/v1/android/device/activate', [
-                'activation_token' => 'status-token-'.$uuid,
+                'activation_token' => $code,
                 'device_fingerprint' => 'status-fp-'.$uuid,
                 'device_uuid' => $uuid,
                 'device_label' => 'Kasir '.$uuid,
