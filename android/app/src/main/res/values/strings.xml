@@ -220,4 +220,32 @@
     <string name="cd_state_retry">Muat ulang konten</string>
     <string name="cd_network_status">Status koneksi jaringan</string>
     <string name="cd_sync_status">Status sinkronisasi transaksi</string>
+
+    <!-- UIX-8C-06 — premium receipt, transaction history and printer failure states -->
+    <string name="receipt_state_online_success">Berhasil (server)</string>
+    <string name="receipt_state_synced">Tersinkron</string>
+    <string name="receipt_state_offline_pending">Menunggu sinkronisasi</string>
+    <string name="receipt_state_syncing">Menyinkronkan…</string>
+    <string name="receipt_state_failed">Gagal sinkron</string>
+    <string name="receipt_state_conflict">Perlu peninjauan</string>
+    <string name="receipt_items_heading">Item</string>
+    <string name="receipt_reference_label">Ref: %1$s</string>
+    <string name="receipt_business_fallback">Aish POS</string>
+    <string name="receipt_outlet_cashier">Outlet: %1$s • Kasir: %2$s</string>
+    <string name="receipt_subtotal">Subtotal</string>
+    <string name="receipt_discount">Diskon</string>
+    <string name="receipt_tax">Pajak</string>
+    <string name="receipt_grand_total">Total</string>
+    <string name="receipt_tender">Bayar</string>
+    <string name="receipt_change">Kembalian</string>
+    <string name="receipt_payment_method">Metode: %1$s</string>
+    <string name="receipt_qty_price">%1$d × %2$s</string>
+    <string name="receipt_note_pending">Transaksi tersimpan di perangkat. Menunggu sinkronisasi ke server.</string>
+    <string name="receipt_note_syncing">Sedang menyinkronkan transaksi ke server.</string>
+    <string name="receipt_note_failed">Sinkronisasi tertunda. Transaksi tetap tersimpan dan akan dicoba ulang.</string>
+    <string name="receipt_note_conflict">Transaksi perlu peninjauan. Data tetap tersimpan dan tidak digandakan.</string>
+    <string name="receipt_note_not_printable">Struk final akan tersedia untuk dicetak setelah transaksi tersinkron.</string>
+    <string name="receipt_new_transaction">Transaksi baru</string>
+    <string name="receipt_print_sent">Struk terkirim ke printer.</string>
+    <string name="receipt_print_busy">Sedang mencetak…</string>
 </resources>

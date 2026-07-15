@@ -15,4 +15,8 @@
     <string name="cd_category_unselected">Kategori</string>
     <string name="cd_search_clear">Hapus kata kunci pencarian</string>
     <string name="cd_retry_products">Muat ulang daftar produk</string>
+
+    <!-- UIX-8C-06 -->
+    <string name="cd_receipt_new_transaction">Mulai transaksi baru</string>
+    <string name="cd_history_row">Transaksi %1$s, status %2$s. Ketuk untuk membuka detail.</string>
 </resources>

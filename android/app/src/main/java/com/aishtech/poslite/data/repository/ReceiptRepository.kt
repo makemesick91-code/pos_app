@@ -12,9 +12,10 @@ import com.aishtech.poslite.data.remote.dto.ReceiptDto
  * [ReceiptDto] (including `printable` / `printBlockReason`) for the UI and the
  * ESC/POS formatter to consume.
  */
-class ReceiptRepository(private val api: PosApiService) {
+class ReceiptRepository(private val api: PosApiService) :
+    com.aishtech.poslite.feature.receipt.ServerReceiptSource {
 
-    suspend fun getReceipt(saleId: Long): ResultState<ReceiptDto> {
+    override suspend fun getReceipt(saleId: Long): ResultState<ReceiptDto> {
         return try {
             val response = api.getReceipt(saleId)
             val body = response.body()
