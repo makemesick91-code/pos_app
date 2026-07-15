@@ -593,6 +593,167 @@ second transaction path.
 - **UIX8C-R210** — UIX-8C-06 implementation GO does not imply UIX-7 or UIX-8
   runtime GO.
 
+## UIX-8C-07 — Premium authentication, device activation, settings & session recovery
+Introduced by UIX-8C-07 (the premium startup/authentication/device-activation
+experience, the operational Settings surface, and safe session/process recovery)
+on top of the UIX-8C-04/05/06 transaction foundation. These rules are the
+permanent startup-state-machine / device-trust / runtime-context / tenant-isolation
+/ session-recovery / settings-truthfulness baseline for every subsequent Android
+sprint and extend — never weaken — rules 55/56/57/58/59 and UIX8C-R001..R210.
+UIX-8C-07 REUSES the stable `clientReference`, `OfflineSaleRepository` durable
+persistence, `OfflineSyncStatus`, `PaymentUiState`, receipt/history projections,
+backend Sanctum auth and the Sprint-34 device-activation/revocation domain; it
+presents and orchestrates only and introduces no second checkout, offline, sync,
+pricing, payment, or backend-sale engine.
+
+### Deterministic startup & authentication state machine
+- **UIX8C-R211** — App startup and authentication MUST be governed by a single
+  deterministic state machine (`core/startup/BootState` + pure
+  `core/startup/StartupCoordinator`); navigation decisions MUST NOT be scattered
+  across activities, fragments, interceptors, or workers in conflicting ways.
+- **UIX8C-R212** — The app MUST enter a `Ready` state only when installation
+  identity, device activation, non-revoked device, tenant binding, outlet
+  binding, a valid session (or a policy-permitted offline continuation), cashier
+  authorization for the tenant/outlet, and a matching local data partition are
+  ALL valid.
+- **UIX8C-R213** — The startup/auth states (Bootstrapping, DatabaseMigration,
+  RestoringRuntime, ActivationRequired, ActivatingDevice, LoginRequired,
+  Authenticating, Ready, OfflineReady, SessionExpired, DeviceInvalid,
+  DeviceRevoked, ContextMismatch, RecoveryRequired, RecoverableFailure,
+  FatalFailure) MUST be explicit and their transitions deterministic and tested.
+- **UIX8C-R214** — A connectivity signal MUST NOT be treated as guaranteed server
+  reachability or as proof of session/device validity.
+- **UIX8C-R215** — Startup MUST be bounded (timeout) with a recoverable error
+  path; it MUST NOT trap on an infinite splash or a crash loop.
+- **UIX8C-R216** — Startup MUST NOT flash the login screen when a valid session is
+  restorable.
+
+### Device trust foundation
+- **UIX8C-R217** — Device activation and cashier authentication are two DISTINCT
+  trust gates; satisfying one MUST NOT satisfy the other.
+- **UIX8C-R218** — Device installation identity MUST be an application-generated
+  identifier stored via Android Keystore-backed secure storage; IMEI, hardware
+  serial, MAC address, and other invasive hardware identifiers MUST NOT be used.
+- **UIX8C-R219** — The authentication token and device credentials MUST use
+  Android Keystore-backed secure storage (never plaintext preferences) and MUST
+  NOT be logged, screenshotted, or placed in analytics/crash payloads.
+- **UIX8C-R220** — A revoked or invalid device MUST fail closed: no tenant data
+  render, no sync mutation, no new print job, no new transaction; the block MUST
+  NOT be bypassable via back navigation, deep link, process restart, or offline
+  mode.
+- **UIX8C-R221** — Device validity is server-authoritative; the app MUST poll a
+  truthful device-status contract (active / revoked + reason) and MUST NOT
+  self-assert device validity from local cache.
+
+### Runtime context source of truth
+- **UIX8C-R222** — There MUST be one runtime-context source of truth
+  (`core/runtime/RuntimeContext`: tenant, outlet, cashier, device, session,
+  installation, application build); every repository, query, sync job,
+  transaction write, receipt projection, printer operation, and navigation
+  decision MUST derive its context from it.
+- **UIX8C-R223** — Tenant, outlet, cashier, and device context MUST come from
+  authenticated state, never from client-supplied UI input as authority.
+- **UIX8C-R224** — Cross-tenant cached identity is forbidden; account or device
+  switching MUST clear or re-scope tenant-scoped local data before another tenant
+  is usable.
+- **UIX8C-R225** — Runtime context MUST be validated before `Ready`; an
+  unvalidated raw cache string MUST NOT be trusted as authoritative context.
+
+### Tenant isolation fail-closed
+- **UIX8C-R226** — On any tenant mismatch (token, device binding, local cache,
+  outlet, cashier, request, database row, or restored state) the app MUST fail
+  closed: block access, render no data, run no sync, print nothing, open no
+  transaction, and MUST NOT silently fall back to the last tenant — it enters an
+  explicit recovery state.
+- **UIX8C-R227** — A tenant mismatch MUST produce an audit-safe diagnostic
+  containing no credentials, tokens, PII, or payment secrets.
+- **UIX8C-R228** — An automated tenant-isolation test MUST write Tenant A data,
+  perform a valid switch/reset, and prove Tenant B cannot read Tenant A artifacts.
+
+### Unsynced-transaction safety
+- **UIX8C-R229** — Logout, cashier switch, outlet switch, tenant switch,
+  activation reset, and cache cleanup MUST NOT delete unsynced transactions.
+- **UIX8C-R230** — Normal logout and account switch MUST be blocked while unsynced
+  transactions exist, unless a governed, tested recovery policy explicitly
+  applies.
+- **UIX8C-R231** — The unsynced gate MUST count every transaction lacking a valid
+  server acknowledgement (not only items visible in the UI); `OFFLINE_PENDING`
+  stays `OFFLINE_PENDING` until a valid ACK (UIX-8C-04/06 semantics unchanged).
+- **UIX8C-R232** — A blocked logout/switch MUST surface the pending count, the
+  reason, a "Sync sekarang" action, sync status, a safe retry, a path back to the
+  transactions, and a recovery message when sync is impossible.
+- **UIX8C-R233** — On session expiry the app MUST lock the UI, preserve the
+  same-tenant pending transactions, require re-authentication, and resume only
+  after a valid login with the same tenant/outlet.
+- **UIX8C-R234** — On a revoked or invalid device the app MUST fail closed,
+  protect the pending queue in a tenant/device-bound quarantine, never move a
+  transaction to another tenant, and show a safe support reference.
+
+### Cross-tenant cache hygiene
+- **UIX8C-R235** — A same-tenant/outlet cashier switch and a cross-tenant
+  reactivation are distinct operations and MUST be handled distinctly.
+- **UIX8C-R236** — Before another tenant can be used the app MUST: confirm no
+  unsynced transaction, stop old-context workers, revoke/clear old credentials,
+  close the old database handle, clear tenant/outlet/cashier-scoped cache, files,
+  printer job, search/history and restored navigation state, build and validate
+  the new context, and only then open the new database/context.
+- **UIX8C-R237** — Cleanup MUST be transactional or carry a safe compensating
+  recovery.
+
+### Process & session restoration
+- **UIX8C-R238** — Process death MUST NOT cause a duplicate sale, duplicate sync,
+  duplicate receipt, double payment, wrong tenant/cashier context, an unsafe
+  reopening of a half-finished payment, an endless startup spinner, or a crash
+  loop.
+- **UIX8C-R239** — Only safe, re-validated state MAY be restored (device
+  activation, tenant/outlet binding, valid cashier session, pending transaction
+  queue, last safe navigation destination, settings context); raw credential
+  input, activation token, half-submitted payment mutation, stale printer success,
+  and stale connected status MUST NOT be restored.
+- **UIX8C-R240** — Operations repeatable after process death MUST be idempotent
+  via the stable UIX-8C-06 `clientReference`/receipt identity; no parallel
+  transaction or receipt identity is created.
+- **UIX8C-R241** — Restoration MUST derive truth from Room and canonical
+  repositories, not from stale in-memory UI events.
+
+### Truthful status
+- **UIX8C-R242** — Connection, sync, printer, activation, and session status MUST
+  derive from the actual source of truth; a status MUST NOT read as green merely
+  because a configuration is saved.
+- **UIX8C-R243** — Status MUST distinguish Configured, Checking, Connected,
+  Disconnected, PermissionRequired, Unavailable, Degraded, SyncPending, Syncing,
+  SyncFailed, SessionExpired, and DeviceRevoked.
+- **UIX8C-R244** — Status MUST NOT rely on colour alone; a text label always
+  accompanies colour-coded state.
+
+### Premium settings surface
+- **UIX8C-R245** — Settings MUST present premium operational settings with
+  Account/Context, Device, Application, Connection, Sync, Printer, and
+  Security/Session sections; values are truthful and render "Tidak tersedia" when
+  unknown.
+- **UIX8C-R246** — Settings MUST NOT render the auth token, secrets, the raw
+  activation code, or a raw encryption identifier; device/installation identifiers
+  are shortened.
+- **UIX8C-R247** — Settings MUST reuse canonical repositories/status and the
+  existing printer subsystem; it is not a second engine and introduces no parallel
+  printer/sync/session engine.
+
+### Accessibility, evidence & closure discipline
+- **UIX8C-R248** — All authentication, activation, startup, settings, dialog,
+  error, and recovery surfaces MUST remain usable at 100%, 115%, and 130% system
+  font scale (no clipped CTA, no critical-text truncation, scroll where space is
+  short), with ≥48dp touch targets, meaningful TalkBack labels, logical focus
+  order, announced errors, and never colour-alone status.
+- **UIX8C-R249** — Emulator and automated evidence MUST stay labelled as such;
+  operator-observed accessibility and runtime PASS requires genuine human
+  observation and is never fabricated; a sprint-scoped GO tag never asserts UIX-7
+  or UIX-8 runtime closure.
+- **UIX8C-R250** — Authentication, device, session, settings, tenant-isolation,
+  unsynced-protection, or process-restoration regression is a sprint release
+  blocker. UIX-7 stays `NO-GO — GO DEFERRED` and UIX-8 stays `IMPLEMENTATION
+  COMPLETE — GO DEFERRED` until genuinely closed against the UIX-7/UIX-8 GO
+  discipline, regardless of any `uix-8c-NN-*-go` sprint tag.
+
 ## Scope guard for UIX-8C-01
 - UIX-8C-01 does not fix R11 (offline CASH durability), does not perform a broad
   runtime visual rebuild, does not modify runtime evidence/manifest state, does
@@ -689,6 +850,38 @@ second transaction path.
   physical-device revalidation of the receipt/history/printer/large-font/TalkBack
   scenarios remains mandatory after final code freeze (UIX8C-R209).
 
+## Scope guard for UIX-8C-07
+- UIX-8C-07 builds the premium startup/authentication experience, the
+  device-activation flow, the operational Settings surface, and safe session /
+  process recovery (UIX8C-R211..R250): a single deterministic startup/auth state
+  machine (`BootState`/`StartupCoordinator`), a device-trust foundation (two
+  distinct gates + server-authoritative device status), Keystore-backed secure
+  storage for the token and installation id, one runtime-context source of truth,
+  tenant-isolation fail-closed with an automated isolation test, unsynced-
+  transaction protection on logout/switch/reset, cross-tenant cache hygiene,
+  safe process/session restoration, truthful connection/sync/printer/session
+  status, and accessibility/font-130% hardening. It REUSES the UIX-8C-04/05/06
+  stable `clientReference`, `OfflineSaleRepository` durable persistence,
+  `OfflineSyncStatus`, `PaymentUiState`, receipt/history projections, the backend
+  Sanctum auth and the Sprint-34 device-activation/revocation domain — it
+  introduces NO second checkout, offline persistence, sync pipeline, pricing,
+  payment, or backend-sale engine. Backend change is limited to an additive,
+  reversible device-status poll endpoint (`GET /api/v1/android/device/status`),
+  additive activation columns (`app_version`, `installation_id`,
+  `revocation_reason`), a single-use activation-code provisioning CLI (wiring the
+  existing `DeviceActivationService::prepare()`), and activate rate-limit + audit;
+  it does NOT change `SaleService`/financial behaviour, does NOT alter Room
+  offline-transaction/`OFFLINE_PENDING` semantics, does NOT enable QRIS offline,
+  does NOT run a physical campaign, does NOT flip the historical R11/R18 evidence
+  to PASS, and does NOT create a UIX-7 or UIX-8 GO tag. It MAY create the
+  sprint-scoped tag
+  `uix-8c-07-premium-authentication-device-activation-settings-session-recovery-go`
+  under UIX8C-R002; that tag confirms source remediation + automated verification
+  (+ labelled emulator runtime evidence) only and never asserts UIX-7/UIX-8
+  runtime closure (UIX8C-R249/R250). A fresh physical-device revalidation of the
+  auth/activation/session/settings/large-font/TalkBack scenarios remains mandatory
+  after final code freeze.
+
 ## ADR requirement
 A material change to the delivery-train architecture, navigation graph, screen
 state architecture, component architecture, adaptive layout, receipt/payment
@@ -704,11 +897,30 @@ reconnect recovery strategy are recorded by
 `docs/adr/0007-uix-8c-05-payment-sync-state-machine.md`. The UIX-8C-06 receipt
 projection / current-transaction binding, the local↔server history reconciliation
 model, and the typed printer failure-state architecture are recorded by
-`docs/adr/0008-uix-8c-06-receipt-history-printer-states.md`.
+`docs/adr/0008-uix-8c-06-receipt-history-printer-states.md`. The UIX-8C-07
+deterministic startup/auth state machine, the runtime-context source of truth &
+device-trust model, the Keystore-backed secure-storage decision, and the
+cross-tenant cleanup / session-recovery strategy are recorded by
+`docs/adr/0009-uix-8c-07-auth-device-settings-session-recovery.md`.
 
 ## Enforcement
 - `scripts/verify_application_foundation_rules.sh` checks this rule file exists
-  and that `UIX8C-R001..R210` are persisted.
+  and that `UIX8C-R001..R250` are persisted.
+- `scripts/uix8c_auth_device_session_gate.sh` (fail-closed) enforces the
+  UIX-8C-07 premium authentication / device-activation / settings / session-
+  recovery baseline (UIX8C-R211..R250): rule persistence, the required docs and
+  ADR 0009, the pure state machine (`BootState`/`StartupCoordinator`) and its
+  transition tests, the Keystore-backed `SecureTokenStore` (no plaintext token,
+  no jetpack-security dependency), the runtime-context source of truth, the
+  server-authoritative device-status poll + revoked fail-closed (no bypass), the
+  unsynced-logout guard counting all non-acked transactions, the classified
+  `LocalDataCleaner` + automated tenant-isolation test, the process-restoration
+  idempotency reuse of the UIX-8C-06 `clientReference`, the truthful status
+  enums (status-not-colour-alone), the Settings no-secret-render invariant, the
+  130%-font/accessibility tests, the backend device-status/provisioning tests,
+  the immutable failed physical run, UIX-7/UIX-8 deferred status, and no premature
+  UIX-7/UIX-8 GO tag. Its self-tests are
+  `scripts/tests/uix8c_auth_device_session_gate_test.sh`.
 - `scripts/uix8c_receipt_history_printer_gate.sh` (fail-closed) enforces the
   UIX-8C-06 premium receipt / transaction-history / printer failure-state baseline
   (UIX8C-R171..R210): rule persistence, the required docs, the pure presentation
