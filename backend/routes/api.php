@@ -165,6 +165,16 @@ Route::prefix('v1')->group(function () {
     // Public auth
     Route::post('/auth/login', [AuthController::class, 'login']);
 
+    // UIX-8C-08 — device-first, code-authenticated device activation. A genuinely
+    // fresh device has no cashier session yet (the app's StartupCoordinator gates
+    // ActivationRequired before LoginRequired, UIX8C-R217), so activation MUST be
+    // reachable without a Sanctum token. The single-use, short-lived code resolves
+    // the tenant server-side (never a client-supplied id, UIX8C-R063); an unknown
+    // code fails closed with no auto-provision. Rate-limited (replay/brute-force
+    // guard, UIX8C-R221). Post-activation runtime stays behind auth + device.registered.
+    Route::post('/android/device/activate', [AndroidDeviceActivationController::class, 'activate'])
+        ->middleware('throttle:20,1');
+
     // Authenticated (Sanctum) endpoints
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/auth/me', [AuthController::class, 'me']);
@@ -198,12 +208,11 @@ Route::prefix('v1')->group(function () {
             // its policy). Activation is idempotent + entitlement-gated inside
             // DeviceActivationService and never returns the raw token (ADR-R002/R003).
             Route::prefix('android')->group(function () {
-                // UIX-8C-07 — activate is rate-limited (replay/brute-force guard,
-                // UIX8C-R221). The device-status poll is deliberately NOT behind
+                // UIX-8C-08 — /device/activate moved OUT of this authenticated group
+                // to the public, code-authenticated route above (a fresh device has
+                // no session yet). The device-status poll is deliberately NOT behind
                 // device.registered so a REVOKED device can still learn it is
                 // revoked and why (UIX8C-R220/R221) instead of a reasonless 403.
-                Route::post('/device/activate', [AndroidDeviceActivationController::class, 'activate'])
-                    ->middleware('throttle:20,1');
                 Route::get('/device/status', [AndroidDeviceStatusController::class, 'show']);
                 Route::get('/runtime/policy', [AndroidRuntimePolicyController::class, 'show']);
 

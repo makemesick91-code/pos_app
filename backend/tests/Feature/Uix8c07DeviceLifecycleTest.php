@@ -38,10 +38,11 @@ class Uix8c07DeviceLifecycleTest extends TestCase
     public function test_activation_captures_app_version_and_hashes_installation_id(): void
     {
         $rawInstallationId = 'installation-uuid-raw-value';
+        $code = app(DeviceActivationService::class)->prepare($this->tenant)['token'];
 
         $this->actingAs($this->user, 'sanctum')
             ->postJson('/api/v1/android/device/activate', [
-                'activation_token' => 'life-token-1234',
+                'activation_token' => $code,
                 'device_fingerprint' => 'life-fingerprint-1',
                 'device_uuid' => 'life-device-1',
                 'device_label' => 'Kasir',
@@ -68,9 +69,10 @@ class Uix8c07DeviceLifecycleTest extends TestCase
 
     public function test_revocation_records_a_human_safe_reason(): void
     {
+        $code = app(DeviceActivationService::class)->prepare($this->tenant)['token'];
         $this->actingAs($this->user, 'sanctum')
             ->postJson('/api/v1/android/device/activate', [
-                'activation_token' => 'life-token-revoke',
+                'activation_token' => $code,
                 'device_fingerprint' => 'life-fingerprint-revoke',
                 'device_uuid' => 'life-device-revoke',
             ])->assertOk();
