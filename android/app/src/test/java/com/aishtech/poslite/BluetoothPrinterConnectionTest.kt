@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothAdapter
 import android.os.Build
 import com.aishtech.poslite.feature.printer.BluetoothPrinterConnection
 import com.aishtech.poslite.feature.printer.PrintResult
+import com.aishtech.poslite.feature.printer.PrinterFailure
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -50,7 +51,10 @@ class BluetoothPrinterConnectionTest {
 
         val result = conn.print("00:11:22:33:44:55", byteArrayOf(0x1B))
 
-        assertEquals(PrintResult.Failure("Izin Bluetooth belum diberikan."), result)
+        assertEquals(
+            PrintResult.Failure(PrinterFailure.PERMISSION_REQUIRED, "Izin Bluetooth belum diberikan."),
+            result,
+        )
         assertTrue("BLUETOOTH_CONNECT must be checked at runtime on API 31+", permissionChecked)
         assertFalse("A protected Bluetooth API must not be reached when permission is denied", adapterProbed)
     }
@@ -67,7 +71,10 @@ class BluetoothPrinterConnectionTest {
         val result = conn.print("00:11:22:33:44:55", byteArrayOf(0x1B))
 
         // Adapter resolves to null on a device without Bluetooth -> truthful failure.
-        assertEquals(PrintResult.Failure("Perangkat tidak mendukung Bluetooth."), result)
+        assertEquals(
+            PrintResult.Failure(PrinterFailure.UNSUPPORTED, "Perangkat tidak mendukung Bluetooth."),
+            result,
+        )
         assertTrue("A granted permission must let the flow reach the adapter", adapterProbed)
     }
 
@@ -83,7 +90,10 @@ class BluetoothPrinterConnectionTest {
 
         val result = conn.print("00:11:22:33:44:55", byteArrayOf(0x1B))
 
-        assertEquals(PrintResult.Failure("Perangkat tidak mendukung Bluetooth."), result)
+        assertEquals(
+            PrintResult.Failure(PrinterFailure.UNSUPPORTED, "Perangkat tidak mendukung Bluetooth."),
+            result,
+        )
         assertFalse("Legacy (<=API 30) must not consult the API 31+ runtime permission", permissionChecked)
         assertTrue(adapterProbed)
     }
@@ -99,7 +109,10 @@ class BluetoothPrinterConnectionTest {
 
         val result = conn.print("00:11:22:33:44:55", byteArrayOf(0x1B))
 
-        assertEquals(PrintResult.Failure("Perangkat tidak mendukung Bluetooth."), result)
+        assertEquals(
+            PrintResult.Failure(PrinterFailure.UNSUPPORTED, "Perangkat tidak mendukung Bluetooth."),
+            result,
+        )
         assertFalse(permissionChecked)
     }
 
@@ -113,7 +126,10 @@ class BluetoothPrinterConnectionTest {
 
         val result = conn.print("00:11:22:33:44:55", byteArrayOf(0x1B))
 
-        assertEquals(PrintResult.Failure("Izin Bluetooth ditolak."), result)
+        assertEquals(
+            PrintResult.Failure(PrinterFailure.PERMISSION_DENIED, "Izin Bluetooth ditolak."),
+            result,
+        )
     }
 
     @Test
@@ -126,6 +142,9 @@ class BluetoothPrinterConnectionTest {
 
         val result = conn.print("not-a-mac", byteArrayOf(0x1B))
 
-        assertEquals(PrintResult.Failure("Alamat printer tidak valid."), result)
+        assertEquals(
+            PrintResult.Failure(PrinterFailure.DEVICE_UNAVAILABLE, "Alamat printer tidak valid."),
+            result,
+        )
     }
 }
