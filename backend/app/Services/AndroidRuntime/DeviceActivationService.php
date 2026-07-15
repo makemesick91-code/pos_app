@@ -75,6 +75,8 @@ class DeviceActivationService
         ?string $deviceUuid = null,
         ?string $label = null,
         ?User $actor = null,
+        ?string $appVersion = null,
+        ?string $installationId = null,
     ): TenantDeviceActivation {
         $rawToken = trim($rawToken);
         $fingerprint = trim($fingerprint);
@@ -156,7 +158,7 @@ class DeviceActivationService
             throw new AndroidRuntimeException($decision->message, $decision->reasonCode, $decision->httpStatus);
         }
 
-        return DB::transaction(function () use ($tenant, $activation, $fingerprintHash, $deviceUuid, $label, $actor) {
+        return DB::transaction(function () use ($tenant, $activation, $fingerprintHash, $deviceUuid, $label, $actor, $appVersion, $installationId) {
             $uuid = $deviceUuid !== null && trim($deviceUuid) !== ''
                 ? trim($deviceUuid)
                 : 'act-'.substr($fingerprintHash, 0, 40);
@@ -180,6 +182,13 @@ class DeviceActivationService
                 'device_fingerprint_hash' => $fingerprintHash,
                 'device_id' => $device->id,
                 'device_label' => $label,
+                // UIX-8C-07 — capture support/triage metadata. The installation id
+                // is an app-generated id (never a hardware id) stored ONLY as a
+                // hash; the raw value is never persisted (UIX8C-R218/R219).
+                'app_version' => $appVersion !== null && trim($appVersion) !== '' ? trim($appVersion) : $activation->app_version,
+                'installation_id_hash' => $installationId !== null && trim($installationId) !== ''
+                    ? $this->hashFingerprint(trim($installationId))
+                    : $activation->installation_id_hash,
                 'activated_by_user_id' => $actor?->id,
                 'activated_at' => Carbon::now(),
                 'last_seen_at' => Carbon::now(),

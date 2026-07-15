@@ -25,6 +25,11 @@ class ActivateDeviceRequest extends FormRequest
             'device_fingerprint' => ['required', 'string', 'min:8', 'max:191'],
             'device_uuid' => ['nullable', 'string', 'max:191'],
             'device_label' => ['nullable', 'string', 'max:120'],
+            // UIX-8C-07 — optional support/triage metadata. app_version is the
+            // client build; installation_id is the app-generated installation id
+            // (never a hardware id) and is stored ONLY as a hash server-side.
+            'app_version' => ['nullable', 'string', 'max:40'],
+            'installation_id' => ['nullable', 'string', 'max:191'],
             'store_id' => ['nullable', 'integer'],
             'register_id' => ['nullable', 'integer'],
         ];

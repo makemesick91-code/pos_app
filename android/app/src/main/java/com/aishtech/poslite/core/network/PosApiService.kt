@@ -5,6 +5,7 @@ import com.aishtech.poslite.data.remote.dto.AndroidRuntimePolicyResponseDto
 import com.aishtech.poslite.data.remote.dto.CategorySyncResponse
 import com.aishtech.poslite.data.remote.dto.CreateDailyClosingRequestDto
 import com.aishtech.poslite.data.remote.dto.DeviceActivationResponseDto
+import com.aishtech.poslite.data.remote.dto.DeviceStatusResponseDto
 import com.aishtech.poslite.data.remote.dto.SyncBatchRequestDto
 import com.aishtech.poslite.data.remote.dto.SyncBatchResponseDto
 import com.aishtech.poslite.data.remote.dto.CreateQrisPaymentRequestDto
@@ -165,6 +166,12 @@ interface PosApiService {
 
     @POST("api/v1/android/device/heartbeat")
     suspend fun androidDeviceHeartbeat(): Response<DeviceActivationResponseDto>
+
+    // UIX-8C-07 — server-authoritative device status. Reachable by a revoked
+    // device so the startup state machine can learn active/revoked + reason
+    // (UIX8C-R221) instead of a reasonless 403.
+    @GET("api/v1/android/device/status")
+    suspend fun deviceStatus(): Response<DeviceStatusResponseDto>
 
     @GET("api/v1/android/runtime/policy")
     suspend fun getAndroidRuntimePolicy(): Response<AndroidRuntimePolicyResponseDto>

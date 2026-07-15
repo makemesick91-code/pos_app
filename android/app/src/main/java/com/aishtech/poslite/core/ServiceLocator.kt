@@ -7,9 +7,25 @@ import com.aishtech.poslite.core.network.AndroidNetworkMonitor
 import com.aishtech.poslite.core.network.ApiClient
 import com.aishtech.poslite.core.network.NetworkMonitor
 import com.aishtech.poslite.core.network.PosApiService
+import com.aishtech.poslite.core.runtime.ActivationStateStore
+import com.aishtech.poslite.core.runtime.RuntimeContextStore
+import com.aishtech.poslite.core.runtime.SharedPrefsActivationStateStore
+import com.aishtech.poslite.core.session.LocalDataCleaner
+import com.aishtech.poslite.core.session.LogoutGuard
+import com.aishtech.poslite.core.session.ScopedStore
+import com.aishtech.poslite.core.session.DataScope
+import com.aishtech.poslite.core.session.SecureTokenStore
+import com.aishtech.poslite.core.session.SessionEventBus
 import com.aishtech.poslite.core.session.SessionManager
+import com.aishtech.poslite.core.session.SharedPrefsSecureKeyValueStore
 import com.aishtech.poslite.core.session.SharedPrefsTokenStore
+import com.aishtech.poslite.core.session.UnsyncedCounter
 import com.aishtech.poslite.data.repository.AuthRepository
+import com.aishtech.poslite.data.repository.DeviceActivationRepository
+import com.aishtech.poslite.feature.settings.AppBuildInfo
+import com.aishtech.poslite.feature.settings.SettingsViewModel
+import com.aishtech.poslite.feature.startup.StartupViewModel
+import com.aishtech.poslite.feature.activation.DeviceActivationViewModel
 import com.aishtech.poslite.data.repository.CatalogRepository
 import com.aishtech.poslite.data.repository.ClosingRepository
 import com.aishtech.poslite.data.repository.DeviceRepository
@@ -38,8 +54,34 @@ object ServiceLocator {
     @Volatile
     private var deviceIdentity: DeviceIdentityStore? = null
 
+    @Volatile
+    private var secureTokenStore: SecureTokenStore? = null
+
+    @Volatile
+    private var sessionEventBus: SessionEventBus? = null
+
+    // UIX-8C-07 — the Keystore-backed token store is a process singleton so the
+    // session facade and the OkHttp AuthInterceptor read/write the same secured
+    // token (UIX8C-R219).
+    fun tokenStore(context: Context): SecureTokenStore =
+        secureTokenStore ?: synchronized(this) {
+            secureTokenStore ?: SecureTokenStore.create(context.applicationContext)
+                .also { secureTokenStore = it }
+        }
+
+    fun sessionEventBus(): SessionEventBus =
+        sessionEventBus ?: synchronized(this) {
+            sessionEventBus ?: SessionEventBus().also { sessionEventBus = it }
+        }
+
     fun session(context: Context): SessionManager =
-        SessionManager(SharedPrefsTokenStore(context))
+        SessionManager(tokenStore(context))
+
+    fun activationStateStore(context: Context): ActivationStateStore =
+        SharedPrefsActivationStateStore(context.applicationContext)
+
+    fun runtimeContextStore(context: Context): RuntimeContextStore =
+        RuntimeContextStore(SharedPrefsSecureKeyValueStore(context.applicationContext, "aish_pos_runtime"))
 
     // Sprint 10 — single locally generated device identity for the install.
     fun deviceIdentityStore(context: Context): DeviceIdentityStore =
@@ -51,8 +93,9 @@ object ServiceLocator {
     fun api(context: Context): PosApiService =
         api ?: synchronized(this) {
             api ?: ApiClient.create(
-                tokenStore = SharedPrefsTokenStore(context),
+                tokenStore = tokenStore(context),
                 deviceUuidProvider = deviceIdentityStore(context),
+                sessionEventBus = sessionEventBus(),
             ).also { api = it }
         }
 
@@ -126,4 +169,89 @@ object ServiceLocator {
             settingDao = db.appSettingDao(),
         )
     }
+
+    // ---- UIX-8C-07: premium auth / device / settings / session recovery ----
+
+    fun deviceActivationRepository(context: Context): DeviceActivationRepository {
+        val identity = deviceIdentityStore(context)
+        val secure = tokenStore(context)
+        return DeviceActivationRepository(
+            api = api(context),
+            deviceUuidProvider = { identity.getOrCreateDeviceUuid() },
+            installationIdProvider = { secure.getOrCreateInstallationId() },
+            deviceLabelProvider = { android.os.Build.MODEL ?: "Perangkat Kasir" },
+            appVersionName = com.aishtech.poslite.BuildConfig.VERSION_NAME,
+        )
+    }
+
+    /** Adapts the durable offline queue to the unsynced-count contract used by the
+     *  logout guard (UIX8C-R231). */
+    fun unsyncedCounter(context: Context): UnsyncedCounter {
+        val offline = offlineSaleRepository(context)
+        return object : UnsyncedCounter {
+            override suspend fun pendingCount(): Int = offline.pendingCount()
+            override suspend fun failedCount(): Int = offline.failedCount()
+        }
+    }
+
+    fun logoutGuard(context: Context): LogoutGuard = LogoutGuard(unsyncedCounter(context))
+
+    /** The production cross-tenant cleanup registry. Device/global stores are never
+     *  registered here so they survive logout/switch (UIX8C-R236). */
+    fun localDataCleaner(context: Context): LocalDataCleaner {
+        val app = context.applicationContext
+        return LocalDataCleaner(
+            listOf(
+                ScopedStore("cashier_prefs", DataScope.CASHIER) {
+                    app.getSharedPreferences("aish_pos_cashier", Context.MODE_PRIVATE)
+                        .edit().clear().apply()
+                },
+                ScopedStore("catalog_cursor", DataScope.OUTLET) {
+                    app.getSharedPreferences("aish_pos_catalog_cursor", Context.MODE_PRIVATE)
+                        .edit().clear().apply()
+                },
+            ),
+        )
+    }
+
+    private fun appBuildInfo(context: Context): AppBuildInfo {
+        val installShort = tokenStore(context).getOrCreateInstallationId()
+            .replace("-", "").take(8)
+        return AppBuildInfo(
+            versionName = com.aishtech.poslite.BuildConfig.VERSION_NAME,
+            versionCode = com.aishtech.poslite.BuildConfig.VERSION_CODE.toLong(),
+            buildType = com.aishtech.poslite.BuildConfig.BUILD_TYPE,
+            packageName = context.packageName,
+            androidRelease = "Android ${android.os.Build.VERSION.RELEASE}",
+            deviceModel = "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}",
+            installationIdShort = installShort,
+        )
+    }
+
+    fun buildStartupViewModel(context: Context): StartupViewModel = StartupViewModel(
+        session = session(context),
+        authRepo = authRepository(context),
+        deviceRepo = deviceActivationRepository(context),
+        unsyncedCounter = unsyncedCounter(context),
+        contextStore = runtimeContextStore(context),
+        activationState = activationStateStore(context),
+        networkMonitor = networkMonitor(context),
+    )
+
+    fun buildDeviceActivationViewModel(context: Context): DeviceActivationViewModel =
+        DeviceActivationViewModel(
+            repository = deviceActivationRepository(context),
+            activationState = activationStateStore(context),
+        )
+
+    fun buildSettingsViewModel(context: Context): SettingsViewModel = SettingsViewModel(
+        authRepo = authRepository(context),
+        deviceRepo = deviceActivationRepository(context),
+        logoutGuard = logoutGuard(context),
+        cleaner = localDataCleaner(context),
+        session = session(context),
+        unsyncedCounter = unsyncedCounter(context),
+        networkMonitor = networkMonitor(context),
+        appBuildInfo = appBuildInfo(context),
+    )
 }

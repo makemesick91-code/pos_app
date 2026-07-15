@@ -248,4 +248,60 @@
     <string name="receipt_new_transaction">Transaksi baru</string>
     <string name="receipt_print_sent">Struk terkirim ke printer.</string>
     <string name="receipt_print_busy">Sedang mencetak…</string>
+
+    <!-- UIX-8C-07 — startup / activation / session / device-revoked / settings -->
+    <string name="startup_title">Aish POS</string>
+    <string name="startup_bootstrapping">Menyiapkan aplikasi</string>
+    <string name="startup_retry">Coba lagi</string>
+    <string name="cd_startup_progress">Status memulai aplikasi</string>
+
+    <string name="activation_title">Aktivasi Perangkat</string>
+    <string name="activation_helper">Masukkan kode aktivasi yang diberikan admin toko Anda untuk mengaktifkan perangkat ini.</string>
+    <string name="activation_code_hint">Kode aktivasi</string>
+    <string name="activation_button">Aktifkan</string>
+    <string name="cd_activation_code">Masukan kode aktivasi</string>
+
+    <string name="session_expired_title">Sesi Anda telah berakhir</string>
+    <string name="session_expired_body">Masuk kembali untuk melanjutkan. Transaksi yang belum tersinkronisasi tetap tersimpan dengan aman.</string>
+    <string name="session_expired_button">Masuk kembali</string>
+
+    <string name="revoked_title">Perangkat ini sudah dinonaktifkan</string>
+    <string name="revoked_generic">Perangkat ini telah dinonaktifkan. Hubungi admin toko untuk mengaktifkan kembali perangkat.</string>
+    <string name="revoked_note">Data lokal tidak akan diberikan kepada akun lain.</string>
+    <string name="revoked_close">Tutup aplikasi</string>
+    <string name="revoked_device_label">Perangkat</string>
+    <string name="revoked_outlet_label">Outlet</string>
+
+    <string name="settings_title">Pengaturan</string>
+    <string name="settings_section_account">Akun &amp; Konteks</string>
+    <string name="settings_section_device">Perangkat</string>
+    <string name="settings_section_app">Aplikasi</string>
+    <string name="settings_section_connection">Koneksi</string>
+    <string name="settings_section_sync">Sinkronisasi</string>
+    <string name="settings_section_printer">Printer</string>
+    <string name="settings_section_security">Keamanan &amp; Sesi</string>
+    <string name="settings_label_tenant">Bisnis</string>
+    <string name="settings_label_outlet">Outlet</string>
+    <string name="settings_label_cashier">Kasir</string>
+    <string name="settings_label_role">Peran</string>
+    <string name="settings_label_device_name">Nama perangkat</string>
+    <string name="settings_label_activation">Status aktivasi</string>
+    <string name="settings_label_activated_at">Diaktifkan pada</string>
+    <string name="settings_label_last_seen">Terakhir terlihat</string>
+    <string name="settings_label_installation">ID instalasi</string>
+    <string name="settings_label_app_version">Versi aplikasi</string>
+    <string name="settings_label_version_code">Kode versi</string>
+    <string name="settings_label_build_type">Tipe build</string>
+    <string name="settings_label_package">Paket</string>
+    <string name="settings_label_android">Versi Android</string>
+    <string name="settings_label_device_model">Model perangkat</string>
+    <string name="settings_switch_account">Ganti akun kasir</string>
+    <string name="settings_logout">Keluar</string>
+    <string name="settings_check_connection">Periksa</string>
+    <string name="settings_sync_now">Sync sekarang</string>
+    <string name="settings_printer_unavailable">Pengaturan printer tersedia dari layar kasir.</string>
+    <string name="settings_printer_settings">Buka pengaturan printer</string>
+    <string name="cd_connection_status">Status koneksi</string>
+    <string name="cd_session_status">Status sesi</string>
+    <string name="cd_settings_sync_status">Status sinkronisasi</string>
 </resources>

@@ -39,6 +39,8 @@ class DeviceActivationController extends Controller
                 deviceUuid: $request->input('device_uuid'),
                 label: $request->input('device_label'),
                 actor: $this->context->user(),
+                appVersion: $request->input('app_version'),
+                installationId: $request->input('installation_id'),
             );
         } catch (AndroidRuntimeException $e) {
             return response()->json([

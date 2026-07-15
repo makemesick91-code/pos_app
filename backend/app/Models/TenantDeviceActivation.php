@@ -31,6 +31,8 @@ class TenantDeviceActivation extends Model
         'activation_token_hash',
         'device_fingerprint_hash',
         'device_label',
+        'app_version',
+        'installation_id_hash',
         'attempt_count',
         'activated_by_user_id',
         'activated_at',
@@ -38,6 +40,7 @@ class TenantDeviceActivation extends Model
         'expires_at',
         'last_seen_at',
         'failure_reason',
+        'revocation_reason',
         'metadata_json',
     ];
 
@@ -114,6 +117,8 @@ class TenantDeviceActivation extends Model
             'device_id' => $this->device_id,
             'status' => $this->activation_status,
             'device_label' => $this->device_label,
+            'app_version' => $this->app_version,
+            'revocation_reason' => $this->revocation_reason,
             'activated_at' => optional($this->activated_at)->toIso8601String(),
             'revoked_at' => optional($this->revoked_at)->toIso8601String(),
             'expires_at' => optional($this->expires_at)->toIso8601String(),
