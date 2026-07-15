@@ -15,6 +15,8 @@ data class DeviceActivationInput(
     val deviceFingerprint: String,
     val deviceUuid: String,
     val deviceLabel: String? = null,
+    val appVersion: String? = null,
+    val installationId: String? = null,
 ) {
     /** A log-safe representation — the token and fingerprint are always redacted. */
     fun redactedForLog(): String =
@@ -32,5 +34,7 @@ object DeviceActivationRequestFactory {
             deviceFingerprint = input.deviceFingerprint,
             deviceUuid = input.deviceUuid,
             deviceLabel = input.deviceLabel,
+            appVersion = input.appVersion,
+            installationId = input.installationId,
         )
 }

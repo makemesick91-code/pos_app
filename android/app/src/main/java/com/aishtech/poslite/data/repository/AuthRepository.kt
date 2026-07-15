@@ -55,6 +55,26 @@ class AuthRepository(
         }
     }
 
+    /**
+     * UIX-8C-07 — verify the stored session against the server, distinguishing an
+     * EXPIRED session (401) from an UNREACHABLE server (transport failure). The
+     * startup state machine uses this to choose SessionExpired vs OfflineReady;
+     * it never treats "unreachable" as "expired" (UIX8C-R214/R233).
+     */
+    suspend fun verifySession(): SessionCheck {
+        return try {
+            val response = api.me()
+            val body = response.body()
+            when {
+                response.isSuccessful && body != null -> SessionCheck.Valid(body)
+                response.code() == 401 -> SessionCheck.Expired
+                else -> SessionCheck.Unreachable
+            }
+        } catch (e: Exception) {
+            SessionCheck.Unreachable
+        }
+    }
+
     suspend fun logout() {
         try {
             api.logout()
@@ -66,4 +86,11 @@ class AuthRepository(
     }
 
     fun isLoggedIn(): Boolean = session.isLoggedIn()
+}
+
+/** Outcome of a UIX-8C-07 server-side session verification. */
+sealed interface SessionCheck {
+    data class Valid(val me: MeResponse) : SessionCheck
+    data object Expired : SessionCheck
+    data object Unreachable : SessionCheck
 }

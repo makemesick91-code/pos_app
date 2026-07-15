@@ -65,6 +65,32 @@
             android:name=".feature.history.TransactionHistoryActivity"
             android:exported="false" />
 
+        <!-- UIX-8C-07 — premium auth / device / settings / session recovery. -->
+        <activity
+            android:name=".feature.startup.StartupActivity"
+            android:label="@string/app_name"
+            android:exported="false" />
+
+        <activity
+            android:name=".feature.activation.DeviceActivationActivity"
+            android:label="Aktivasi Perangkat"
+            android:exported="false" />
+
+        <activity
+            android:name=".feature.session.SessionExpiredActivity"
+            android:label="Sesi Berakhir"
+            android:exported="false" />
+
+        <activity
+            android:name=".feature.session.DeviceRevokedActivity"
+            android:label="Perangkat Dinonaktifkan"
+            android:exported="false" />
+
+        <activity
+            android:name=".feature.settings.SettingsActivity"
+            android:label="Pengaturan"
+            android:exported="false" />
+
     </application>
 
 </manifest>

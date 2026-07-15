@@ -9,6 +9,11 @@ data class ActivateDeviceRequestDto(
     @SerializedName("device_fingerprint") val deviceFingerprint: String,
     @SerializedName("device_uuid") val deviceUuid: String?,
     @SerializedName("device_label") val deviceLabel: String?,
+    // UIX-8C-07 — optional support/triage metadata. installation_id is the
+    // app-generated installation id (never a hardware id); the server stores only
+    // its hash. The raw values are never logged by the client.
+    @SerializedName("app_version") val appVersion: String? = null,
+    @SerializedName("installation_id") val installationId: String? = null,
 )
 
 /** Response of device activation — a safe activation record (no token/fingerprint). */

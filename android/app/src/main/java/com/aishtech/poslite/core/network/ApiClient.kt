@@ -3,6 +3,8 @@ package com.aishtech.poslite.core.network
 import com.aishtech.poslite.BuildConfig
 import com.aishtech.poslite.core.config.AppConfig
 import com.aishtech.poslite.core.device.DeviceUuidProvider
+import com.aishtech.poslite.core.session.AuthEventInterceptor
+import com.aishtech.poslite.core.session.SessionEventBus
 import com.aishtech.poslite.core.session.TokenStore
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -20,6 +22,7 @@ object ApiClient {
     fun create(
         tokenStore: TokenStore,
         deviceUuidProvider: DeviceUuidProvider? = null,
+        sessionEventBus: SessionEventBus? = null,
         baseUrl: String = AppConfig.DEFAULT_API_BASE_URL,
     ): PosApiService {
         val builder = OkHttpClient.Builder()
@@ -30,6 +33,14 @@ object ApiClient {
         // Sprint 10 — attach X-Device-UUID once a device identity exists.
         if (deviceUuidProvider != null) {
             builder.addInterceptor(DeviceHeaderInterceptor(deviceUuidProvider))
+        }
+
+        // UIX-8C-07 — surface a backend 401 as a single SessionExpired signal so
+        // the startup state machine can require re-auth WITHOUT discarding pending
+        // offline transactions (UIX8C-R233). It never mutates the request or logs
+        // the token.
+        if (sessionEventBus != null) {
+            builder.addInterceptor(AuthEventInterceptor(sessionEventBus))
         }
 
         // UIX-7 (UIX7-R026/R047) — HTTP logging is attached ONLY for the emulator
