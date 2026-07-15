@@ -10,7 +10,13 @@ interface PrinterConnection {
     suspend fun print(macAddress: String, payload: ByteArray): PrintResult
 }
 
+/**
+ * The typed result of a low-level print attempt (UIX8C-R197). A failure carries a
+ * distinct [PrinterFailure] reason plus a human-readable, secret-free message, so
+ * callers can react precisely (retry, request permission, guide to settings)
+ * instead of pattern-matching on a free-text string.
+ */
 sealed class PrintResult {
     data object Success : PrintResult()
-    data class Failure(val message: String) : PrintResult()
+    data class Failure(val reason: PrinterFailure, val message: String) : PrintResult()
 }
