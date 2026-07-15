@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\V1\Android\AndroidRuntimePolicyController;
 use App\Http\Controllers\Api\V1\Android\AndroidSyncController;
 use App\Http\Controllers\Api\V1\Android\CashierRuntimeSessionController;
 use App\Http\Controllers\Api\V1\Android\DeviceActivationController as AndroidDeviceActivationController;
+use App\Http\Controllers\Api\V1\Android\DeviceStatusController as AndroidDeviceStatusController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantLifecycleController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantLifecycleSuspensionSummaryController;
 use App\Http\Controllers\Api\V1\Admin\AdminTenantOnboardingController;
@@ -197,7 +198,13 @@ Route::prefix('v1')->group(function () {
             // its policy). Activation is idempotent + entitlement-gated inside
             // DeviceActivationService and never returns the raw token (ADR-R002/R003).
             Route::prefix('android')->group(function () {
-                Route::post('/device/activate', [AndroidDeviceActivationController::class, 'activate']);
+                // UIX-8C-07 — activate is rate-limited (replay/brute-force guard,
+                // UIX8C-R221). The device-status poll is deliberately NOT behind
+                // device.registered so a REVOKED device can still learn it is
+                // revoked and why (UIX8C-R220/R221) instead of a reasonless 403.
+                Route::post('/device/activate', [AndroidDeviceActivationController::class, 'activate'])
+                    ->middleware('throttle:20,1');
+                Route::get('/device/status', [AndroidDeviceStatusController::class, 'show']);
                 Route::get('/runtime/policy', [AndroidRuntimePolicyController::class, 'show']);
 
                 // Post-activation runtime. Requires an ACTIVE registered device

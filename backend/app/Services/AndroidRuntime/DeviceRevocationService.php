@@ -32,6 +32,11 @@ class DeviceRevocationService
                 'activation_status' => TenantDeviceActivation::STATUS_REVOKED,
                 'revoked_at' => Carbon::now(),
                 'failure_reason' => $reason !== null ? 'REVOKED: '.$reason : 'REVOKED',
+                // UIX-8C-07 — a human-safe reason surfaced by the device-status
+                // poll so a revoked device can explain itself (UIX8C-R221/R234).
+                'revocation_reason' => $reason !== null && trim($reason) !== ''
+                    ? trim($reason)
+                    : 'Perangkat ini telah dinonaktifkan oleh admin.',
             ])->save();
 
             if ($activation->device_id !== null) {
