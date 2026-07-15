@@ -263,11 +263,11 @@ done
 # 5i. Android full premium delivery & closure foundation (UIX8C-R001..R130, UIX-8C).
 [ -f .claude/rules/61-android-cashier-full-premium-delivery-foundation.md ] && pass "UIX-8C delivery rule present" || bad "missing .claude/rules/61-android-cashier-full-premium-delivery-foundation.md"
 missing_uix8c=""
-for i in $(seq 1 170); do
+for i in $(seq 1 210); do
   id="$(printf 'UIX8C-R%03d' "$i")"
   grep -q "$id" .claude/rules/61-android-cashier-full-premium-delivery-foundation.md || missing_uix8c="$missing_uix8c $id"
 done
-[ -z "$missing_uix8c" ] && pass "UIX8C-R001..R170 persisted" || bad "UIX-8C rule ids not fully persisted:$missing_uix8c"
+[ -z "$missing_uix8c" ] && pass "UIX8C-R001..R210 persisted" || bad "UIX-8C rule ids not fully persisted:$missing_uix8c"
 # UIX-8C-03 dedicated cashier/catalog/cart gate present.
 [ -x scripts/uix8c_cashier_catalog_cart_gate.sh ] && pass "UIX-8C-03 cashier/catalog/cart gate present" || bad "missing scripts/uix8c_cashier_catalog_cart_gate.sh"
 [ -x scripts/tests/uix8c_cashier_catalog_cart_gate_test.sh ] && pass "UIX-8C-03 cashier/catalog/cart gate tests present" || bad "missing scripts/tests/uix8c_cashier_catalog_cart_gate_test.sh"
@@ -282,7 +282,19 @@ done
 # UIX-8C-05 dedicated premium payment / offline-sync recovery UX gate present.
 [ -x scripts/uix8c_payment_offline_sync_ux_gate.sh ] && pass "UIX-8C-05 payment/offline-sync UX gate present" || bad "missing scripts/uix8c_payment_offline_sync_ux_gate.sh"
 [ -x scripts/tests/uix8c_payment_offline_sync_ux_gate_test.sh ] && pass "UIX-8C-05 payment/offline-sync UX gate tests present" || bad "missing scripts/tests/uix8c_payment_offline_sync_ux_gate_test.sh"
+# UIX-8C-06 dedicated premium receipt / transaction-history / printer failure-state gate present.
+[ -x scripts/uix8c_receipt_history_printer_gate.sh ] && pass "UIX-8C-06 receipt/history/printer gate present" || bad "missing scripts/uix8c_receipt_history_printer_gate.sh"
+[ -x scripts/tests/uix8c_receipt_history_printer_gate_test.sh ] && pass "UIX-8C-06 receipt/history/printer gate tests present" || bad "missing scripts/tests/uix8c_receipt_history_printer_gate_test.sh"
 for d in docs/foundation/uix-8c-full-premium-android-cashier.md \
+         docs/adr/0008-uix-8c-06-receipt-history-printer-states.md \
+         docs/uiux/uix-8c-06-receipt-history-printer-audit.md \
+         docs/uiux/uix-8c-06-premium-receipt.md \
+         docs/uiux/uix-8c-06-premium-transaction-history.md \
+         docs/architecture/uix-8c-06-receipt-binding-and-history-reconciliation.md \
+         docs/architecture/uix-8c-06-printer-failure-state-architecture.md \
+         docs/testing/uix-8c-06-receipt-history-printer-test-matrix.md \
+         docs/security/uix-8c-06-receipt-printer-threat-model.md \
+         docs/deployment/uix-8c-06-deployment-evidence.md \
          docs/architecture/uix-8c-android-screen-state-architecture.md \
          docs/testing/uix-8c-screen-state-accessibility-matrix.md \
          docs/deployment/uix-8c-delivery-plan.md \
