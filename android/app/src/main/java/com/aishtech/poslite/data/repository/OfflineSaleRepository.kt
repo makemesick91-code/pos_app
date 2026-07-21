@@ -130,6 +130,84 @@ class OfflineSaleRepository(
     }
 
     /**
+     * UIX-8C-08 (DEF-004) — record a sale the server has ALREADY acknowledged, so it
+     * appears in the device's transaction history/receipt surfaces.
+     *
+     * Transaction history is projected from this local table. A checkout that
+     * succeeded online never entered the offline queue, so it produced no local row
+     * and was therefore invisible in Riwayat even though the backend held it (found
+     * on physical hardware: the online Rp 15.000 sale was missing from history while
+     * the offline-origin sale showed correctly).
+     *
+     * The row is written directly as SYNCED with the canonical server identifiers —
+     * it is a projection of an already-committed server transaction, NOT a queued
+     * one, so it must never be replayed by the sync worker. Idempotent on
+     * [clientReference]. This is BEST EFFORT: the sale is already durable on the
+     * server, so a local write failure must never surface as a failed checkout.
+     */
+    suspend fun recordAcknowledgedSale(
+        items: List<com.aishtech.poslite.feature.cashier.CartItem>,
+        paidAmount: Long,
+        clientReference: String,
+        serverSaleId: Long?,
+        serverInvoiceNumber: String?,
+        storeId: Long? = null,
+    ): SaveResult {
+        if (items.isEmpty()) return SaveResult.Error("Keranjang kosong.")
+
+        val subtotal = RupiahMoney.subtotal(items.map { it.lineTotalRupiah })
+        val change = RupiahMoney.change(paidAmount, subtotal)
+
+        // Same logical transaction => at most one local row (UIX8C-R181/R109).
+        offlineSaleDao.findByClientReference(clientReference)?.let {
+            return SaveResult.Saved(it.localId, it.clientReference)
+        }
+
+        val ts = clock()
+        val sale = LocalOfflineSaleEntity(
+            clientReference = clientReference,
+            storeId = storeId,
+            saleDate = isoUtc(ts),
+            subtotal = subtotal.toDouble(),
+            discountTotal = 0.0,
+            taxTotal = 0.0,
+            grandTotal = subtotal.toDouble(),
+            paidAmount = paidAmount.toDouble(),
+            changeAmount = change.toDouble(),
+            // Already acknowledged by the server: SYNCED, never PENDING, so the
+            // worker cannot replay it and duplicate the sale (UIX8C-R116/R111).
+            syncStatus = OfflineSyncStatus.SYNCED,
+            syncAttemptCount = 0,
+            serverSaleId = serverSaleId,
+            serverInvoiceNumber = serverInvoiceNumber,
+            createdAt = ts,
+            updatedAt = ts,
+            syncedAt = ts,
+        )
+
+        val itemEntities = items.map {
+            LocalOfflineSaleItemEntity(
+                offlineSaleLocalId = 0,
+                productId = it.productId,
+                productName = it.name,
+                qty = it.quantity,
+                unitPrice = it.unitPrice,
+                discount = 0.0,
+                subtotal = it.lineTotal,
+            )
+        }
+
+        return try {
+            SaveResult.Saved(offlineSaleDao.insertOfflineSaleWithItems(sale, itemEntities), clientReference)
+        } catch (e: Exception) {
+            offlineSaleDao.findByClientReference(clientReference)?.let {
+                return SaveResult.Saved(it.localId, it.clientReference)
+            }
+            SaveResult.Error(e.message ?: "Gagal mencatat transaksi tersinkron.")
+        }
+    }
+
+    /**
      * Replay up to [limit] eligible offline sales to the backend. FAILED rows
      * that have exhausted [MAX_SYNC_ATTEMPTS] are no longer auto-retried (they
      * remain FAILED and visible) so a poison row cannot starve the queue.

@@ -25,6 +25,7 @@ import com.aishtech.poslite.databinding.ActivityCashierBinding
 import com.aishtech.poslite.feature.history.TransactionHistoryActivity
 import com.aishtech.poslite.feature.receipt.ReceiptActivity
 import com.aishtech.poslite.feature.reports.ReportsActivity
+import com.aishtech.poslite.feature.settings.SettingsActivity
 import com.aishtech.poslite.feature.sync.OfflineSalesSyncScheduler
 import kotlinx.coroutines.launch
 
@@ -81,6 +82,12 @@ class CashierActivity : AppCompatActivity(), PaymentSheetFragment.Host {
         binding.buttonSync.setOnClickListener { viewModel.sync() }
         binding.buttonReports.setOnClickListener {
             startActivity(Intent(this, ReportsActivity::class.java))
+        }
+        // UIX-8C-08 (DEF-005): Settings had no reachable entry point, so the guarded
+        // logout / cashier-switch flow (LogoutGuard, UIX8C-R229..R232) and the whole
+        // operational Settings surface (UIX8C-R245..R247) were dead UI.
+        binding.buttonSettings.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
         }
         binding.buttonHistory.setOnClickListener {
             startActivity(Intent(this, TransactionHistoryActivity::class.java))

@@ -31,9 +31,16 @@ class DeviceActivationViewModelTest {
 
     private class FakeActivationState : ActivationStateStore {
         var activated = false
+        var revoked = false
+        var revokedReason: String? = null
         override fun isActivated(): Boolean = activated
-        override fun markActivated() { activated = true }
-        override fun clear() { activated = false }
+        override fun markActivated() { activated = true; revoked = false; revokedReason = null }
+        override fun clear() { activated = false; revoked = false; revokedReason = null }
+        // UIX-8C-08 (DEF-006) — cached server revocation verdict.
+        override fun markRevoked(reason: String?) { revoked = true; revokedReason = reason }
+        override fun clearRevoked() { revoked = false; revokedReason = null }
+        override fun isRevokedKnown(): Boolean = revoked
+        override fun revokedReason(): String? = revokedReason
     }
 
     private class CountingApi(private val ok: Boolean, private val code: Int = 200) : NoopPosApiService() {

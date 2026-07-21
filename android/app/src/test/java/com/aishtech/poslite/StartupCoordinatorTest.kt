@@ -4,6 +4,7 @@ import com.aishtech.poslite.core.startup.BootState
 import com.aishtech.poslite.core.startup.StartupCoordinator
 import com.aishtech.poslite.core.startup.StartupInputs
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -104,6 +105,51 @@ class StartupCoordinatorTest {
     fun `stored session with unreachable server yields OfflineReady`() {
         val r = coordinator.evaluate(
             ready().copy(deviceStatusReached = false, sessionValid = false, sessionExpired = false),
+        )
+        assertEquals(BootState.OfflineReady, r)
+    }
+
+    // ---- UIX-8C-08 (DEF-006): a confirmed revocation survives going offline ----
+    // Found on physical hardware: a revoked device regained the full cashier surface
+    // by enabling airplane mode and restarting, because revocation was only enforced
+    // when the status poll answered. UIX8C-R220 forbids bypass via offline mode.
+
+    @Test
+    fun `known revoked device stays fail-closed when the status poll is unreachable`() {
+        val r = coordinator.evaluate(
+            ready().copy(
+                deviceStatusReached = false,
+                deviceRevoked = false,
+                sessionValid = false,
+                sessionExpired = false,
+                deviceRevokedKnownLocally = true,
+                knownRevocationReason = "Perangkat dicabut",
+            ),
+        )
+        assertEquals(BootState.DeviceRevoked("Perangkat dicabut"), r)
+    }
+
+    @Test
+    fun `known revoked device is never downgraded to OfflineReady`() {
+        val r = coordinator.evaluate(
+            ready().copy(deviceStatusReached = false, sessionValid = false, deviceRevokedKnownLocally = true),
+        )
+        assertNotEquals(BootState.OfflineReady, r)
+        assertTrue(r is BootState.DeviceRevoked)
+    }
+
+    @Test
+    fun `known revoked device outranks a still-valid stored session`() {
+        val r = coordinator.evaluate(
+            ready().copy(deviceStatusReached = false, sessionValid = true, deviceRevokedKnownLocally = true),
+        )
+        assertTrue(r is BootState.DeviceRevoked)
+    }
+
+    @Test
+    fun `without a cached revocation the offline path is unchanged`() {
+        val r = coordinator.evaluate(
+            ready().copy(deviceStatusReached = false, sessionValid = false, deviceRevokedKnownLocally = false),
         )
         assertEquals(BootState.OfflineReady, r)
     }
