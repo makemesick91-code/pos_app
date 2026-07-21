@@ -333,6 +333,21 @@ class CashierViewModel(
         viewModelScope.launch {
             when (val outcome = sales.submitCash(items, paidAmount, reference)) {
                 is SalesRepository.CheckoutOutcome.Success -> {
+                    // UIX-8C-08 (DEF-004) — project the acknowledged sale into the
+                    // local store so it appears in Riwayat/receipts. An online-only
+                    // checkout never entered the offline queue, so without this it
+                    // left no local row and was invisible in transaction history.
+                    // BEST EFFORT: the server already committed this sale, so a local
+                    // write failure must never turn a successful checkout into an error.
+                    runCatching {
+                        offline.recordAcknowledgedSale(
+                            items = items,
+                            paidAmount = paidAmount,
+                            clientReference = reference,
+                            serverSaleId = outcome.sale.id,
+                            serverInvoiceNumber = outcome.sale.invoiceNumber,
+                        )
+                    }
                     cart.clear()
                     emitCart()
                     // Sale confirmed by the server → this key is spent; the next

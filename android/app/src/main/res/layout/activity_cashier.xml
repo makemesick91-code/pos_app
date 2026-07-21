@@ -71,6 +71,18 @@
             android:minHeight="@dimen/touch_target_min"
             android:text="@string/cashier_history" />
 
+        <!-- UIX-8C-08 (DEF-005): the Settings surface (and its guarded logout /
+             cashier switch) previously had NO entry point anywhere in the app, so
+             LogoutGuard (UIX8C-R229..R232) could never trigger. -->
+        <Button
+            android:id="@+id/buttonSettings"
+            style="@style/Widget.Aish.Button.Secondary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_sm"
+            android:minHeight="@dimen/touch_target_min"
+            android:text="@string/settings_title" />
+
     </LinearLayout>
 
     <LinearLayout

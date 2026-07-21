@@ -31,6 +31,14 @@ data class StartupInputs(
     val cashierAuthorized: Boolean,
     /** Count of durable, not-yet-acknowledged transactions (never lost, UIX8C-R231). */
     val pendingUnsynced: Int,
+    /**
+     * UIX-8C-08 (DEF-006) — the server previously CONFIRMED this device revoked and
+     * that verdict is cached locally. It must fail closed even when the status poll
+     * cannot be reached, or offline mode becomes a revocation bypass (UIX8C-R220).
+     */
+    val deviceRevokedKnownLocally: Boolean = false,
+    /** Human-safe reason cached alongside [deviceRevokedKnownLocally]. */
+    val knownRevocationReason: String? = null,
     /** A fatal, unrecoverable condition was detected. */
     val fatal: Boolean = false,
     val fatalMessage: String = "",
@@ -56,6 +64,14 @@ class StartupCoordinator {
         if (!i.dbReady) return BootState.DatabaseMigration
 
         if (!i.activationPresent) return BootState.ActivationRequired
+
+        // UIX-8C-08 (DEF-006) — a revocation the server ALREADY confirmed is enforced
+        // unconditionally, including while the status poll is unreachable. Only the
+        // server may declare a revocation, but losing connectivity must never lift one
+        // (UIX8C-R220 forbids bypass "via ... process restart, or offline mode").
+        if (i.deviceRevokedKnownLocally) {
+            return BootState.DeviceRevoked(i.revocationReason ?: i.knownRevocationReason)
+        }
 
         // Device trust is server-authoritative; only act on a poll that answered.
         if (i.deviceStatusReached) {

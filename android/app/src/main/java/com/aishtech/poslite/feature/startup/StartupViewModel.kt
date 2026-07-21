@@ -69,6 +69,15 @@ class StartupViewModel(
         val status: DeviceStatus = if (online) deviceRepo.status() else DeviceStatus.unknown()
         val statusReached = status.trust != DeviceTrust.UNKNOWN
 
+        // UIX-8C-08 (DEF-006) — persist the server verdict so a confirmed revocation
+        // keeps failing closed while offline; clear it only on a server-confirmed
+        // active status (reactivation). Never cleared by mere unreachability.
+        if (statusReached) {
+            if (status.revoked) activationState.markRevoked(status.revocationReason)
+            else if (status.active) activationState.clearRevoked()
+        }
+        val revokedKnown = activationState.isRevokedKnown()
+
         // Session verification (distinguishes expired vs unreachable).
         var sessionValid = false
         var sessionExpired = false
@@ -102,6 +111,8 @@ class StartupViewModel(
             tenantConsistent = tenantConsistent,
             cashierAuthorized = cashierAuthorized,
             pendingUnsynced = pending,
+            deviceRevokedKnownLocally = revokedKnown,
+            knownRevocationReason = activationState.revokedReason(),
         )
         return coordinator.evaluate(inputs)
     }
