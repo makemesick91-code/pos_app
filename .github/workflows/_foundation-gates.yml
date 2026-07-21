@@ -51,6 +51,9 @@ jobs:
       - name: UIX-8C-07 auth / device / settings / session-recovery gate
         run: bash scripts/uix8c_auth_device_session_gate.sh
 
+      - name: UIX-8C-08 font-scale reachability gate (static)
+        run: bash scripts/uix8c08_font_reachability_gate.sh static
+
       - name: CICD-CTRL-2 CI architecture gate
         run: bash scripts/ci/cicd_ctrl_2_gate.sh
 
@@ -80,3 +83,6 @@ jobs:
 
       - name: UIX-8C-07 auth / device / session gate self-tests
         run: bash scripts/tests/uix8c_auth_device_session_gate_test.sh
+
+      - name: UIX-8C-08 font-scale reachability gate self-tests
+        run: bash scripts/tests/uix8c08_font_reachability_gate_test.sh
