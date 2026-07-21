@@ -43,15 +43,10 @@
             android:minHeight="@dimen/touch_target_min"
             android:text="@string/cashier_sync" />
 
-        <TextView
-            android:id="@+id/textSyncStatus"
+        <Space
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="@dimen/space_md"
-            android:contentDescription="@string/cd_sync_status"
-            android:text="@string/cashier_sync_idle"
-            android:textAppearance="@style/TextAppearance.Aish.BodySmall" />
+            android:layout_height="1dp"
+            android:layout_weight="1" />
 
         <Button
             android:id="@+id/buttonReports"
@@ -71,18 +66,6 @@
             android:minHeight="@dimen/touch_target_min"
             android:text="@string/cashier_history" />
 
-        <!-- UIX-8C-08 (DEF-005): the Settings surface (and its guarded logout /
-             cashier switch) previously had NO entry point anywhere in the app, so
-             LogoutGuard (UIX8C-R229..R232) could never trigger. -->
-        <Button
-            android:id="@+id/buttonSettings"
-            style="@style/Widget.Aish.Button.Secondary"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/space_sm"
-            android:minHeight="@dimen/touch_target_min"
-            android:text="@string/settings_title" />
-
     </LinearLayout>
 
     <LinearLayout
@@ -100,12 +83,55 @@
             android:minHeight="@dimen/touch_target_min"
             android:text="@string/cashier_sync_now" />
 
+        <!-- UIX-8C-08 (DEF-005): the Settings surface (and its guarded logout /
+             cashier switch) previously had NO entry point anywhere in the app, so
+             LogoutGuard (UIX8C-R229..R232) could never trigger. Placed on this row
+             because the row above already holds three buttons plus a weighted
+             status label and a fourth one clipped off-screen (UIX8C-R023/R049). -->
+        <Button
+            android:id="@+id/buttonSettings"
+            style="@style/Widget.Aish.Button.Secondary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_sm"
+            android:minHeight="@dimen/touch_target_min"
+            android:text="@string/settings_title" />
+
+    </LinearLayout>
+
+    <!-- UIX-8C-08 (DEF-007): the sync status/count labels live on their OWN full-width
+         row. Previously they were weighted children INSIDE the button rows, so at large
+         font the buttons squeezed them to ~1 character wide and they wrapped one
+         character PER LINE, growing tall enough to push the weighted product/cart
+         regions — and the Bayar Tunai CTA — off a root that does not scroll (the R18
+         failure). On their own row they stay readable at 130% instead of ellipsizing to
+         "M …", and maxLines keeps their height bounded either way. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_xs"
+        android:orientation="horizontal"
+        android:baselineAligned="false">
+
+        <TextView
+            android:id="@+id/textSyncStatus"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:contentDescription="@string/cd_sync_status"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:text="@string/cashier_sync_idle"
+            android:textAppearance="@style/TextAppearance.Aish.BodySmall" />
+
         <TextView
             android:id="@+id/textSyncCounts"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="@dimen/space_md"
+            android:ellipsize="end"
+            android:maxLines="2"
             android:text="@string/cashier_sync_summary"
             android:textAppearance="@style/TextAppearance.Aish.BodySmall" />
 
