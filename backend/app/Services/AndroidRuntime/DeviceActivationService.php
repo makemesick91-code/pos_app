@@ -193,6 +193,13 @@ class DeviceActivationService
                 'activated_at' => Carbon::now(),
                 'last_seen_at' => Carbon::now(),
                 'failure_reason' => null,
+                // UIX-8C-08 (DEF-002) — expires_at belongs to the single-use
+                // activation CODE, not to the activated DEVICE. The code is
+                // consumed here, so its TTL MUST be cleared; otherwise
+                // isExpired() would flip an ACTIVE device to 'expired' once the
+                // code TTL elapsed (default 24h) and every cashier device would
+                // fail closed. Device validity is governed by revocation only.
+                'expires_at' => null,
             ])->save();
 
             if ($actor !== null) {
