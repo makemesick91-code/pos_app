@@ -6,6 +6,7 @@ use App\Models\RegisteredDevice;
 use App\Models\Store;
 use App\Models\Tenant;
 use App\Models\TenantDeviceActivation;
+use App\Models\User;
 use App\Services\AndroidRuntime\DeviceActivationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -139,5 +140,52 @@ class Uix8c08PublicDeviceActivationTest extends TestCase
         // Exactly one device for one logical activation (scope by our uuid; the
         // Tenant::factory auto-provisions an unrelated device).
         $this->assertSame(1, RegisteredDevice::query()->where('device_uuid', 'uix8c08-idem-1')->count());
+    }
+
+    /**
+     * UIX-8C-08 DEF-002 regression (found on physical hardware).
+     *
+     * expires_at belongs to the single-use activation CODE, not to the activated
+     * DEVICE. Before the fix, an ACTIVATED device kept the code's TTL, so once it
+     * elapsed (default 24h) device/status reported 'expired' / active=false and
+     * every cashier device failed closed — with no revocation involved.
+     */
+    public function test_activated_device_stays_active_after_the_activation_code_ttl_elapses(): void
+    {
+        $tenant = Tenant::factory()->create(['code' => 'UIX8C08-TTL']);
+        $store = Store::factory()->create(['tenant_id' => $tenant->id]);
+        $user = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'store_id' => $store->id,
+            'role' => User::ROLE_CASHIER,
+        ]);
+
+        // Issue a code with a deliberately tiny TTL, then activate with it.
+        $code = app(DeviceActivationService::class)->prepare($tenant, $store->id, null, null, 1)['token'];
+
+        $this->postJson('/api/v1/android/device/activate', [
+            'activation_token' => $code,
+            'device_fingerprint' => 'uix8c08-ttl-fp',
+            'device_uuid' => 'uix8c08-ttl-device',
+        ])->assertOk();
+
+        $activation = TenantDeviceActivation::query()->where('tenant_id', $tenant->id)->firstOrFail();
+        // The consumed code's TTL must not survive as the device's expiry.
+        $this->assertNull($activation->expires_at);
+
+        // Travel well past the original code TTL: the device must stay usable.
+        $this->travel(10)->minutes();
+        $activation->refresh();
+        $this->assertFalse($activation->isExpired());
+        $this->assertTrue($activation->isUsable());
+
+        // And the server-authoritative poll must still report it ACTIVE.
+        $this->actingAs($user, 'sanctum')
+            ->withHeader('X-Device-UUID', 'uix8c08-ttl-device')
+            ->getJson('/api/v1/android/device/status')
+            ->assertOk()
+            ->assertJsonPath('data.status', 'active')
+            ->assertJsonPath('data.active', true)
+            ->assertJsonPath('data.revoked', false);
     }
 }
