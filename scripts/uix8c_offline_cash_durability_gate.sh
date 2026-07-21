@@ -146,6 +146,22 @@ need_grep "$OFFLINE" "MAX_SYNC_ATTEMPTS" "sync retry is bounded by a cap (UIX8C-
 # 11. Orphan-SYNCING recovery (UIX8C-R117).
 need_grep "$DAO" "'SYNCING'" "orphan SYNCING rows are re-selected for recovery (UIX8C-R117)"
 
+# 11b. UIX-8C-08 (DEF-008) — an acknowledged sale is TERMINAL. markSyncing,
+# markFailed and markConflict were unconditional updates keyed only on localId, so
+# a losing sync race (worker vs. manual "Sync sekarang") could overwrite a row that
+# had already reached SYNCED with a recorded serverSaleId. Observed on physical
+# hardware: a sale genuinely present on the backend (serverSaleId=9) flipped to
+# FAILED offline and stayed FAILED across a process kill. No duplicate was created
+# (the submit is idempotent on clientReference), but showing FAILED for a
+# succeeded sale invites a re-ring (UIX8C-R110/R111/R124).
+# Count only real SQL predicates (a doc comment mentioning the guard must not satisfy it).
+guarded="$(grep -c "WHERE localId = :localId AND syncStatus <> 'SYNCED'" "$DAO" 2>/dev/null || echo 0)"
+if [ "$guarded" -ge 3 ]; then
+  pass "acknowledged sales are terminal: markSyncing/markFailed/markConflict are SYNCED-guarded (DEF-008)"
+else
+  bad "non-success sync transitions must be guarded with \"syncStatus <> 'SYNCED'\" so a losing race cannot downgrade an acknowledged sale (DEF-008); found $guarded/3"
+fi
+
 # 12. Android regression tests present (UIX8C-R109/R112/R116).
 for t in \
   "$TEST/TransportFailureClassifierTest.kt" \
