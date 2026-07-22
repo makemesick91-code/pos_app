@@ -80,9 +80,28 @@ abstract class OfflineSaleDao {
     @Query("SELECT * FROM offline_sales WHERE clientReference = :clientReference LIMIT 1")
     abstract suspend fun findByClientReference(clientReference: String): LocalOfflineSaleEntity?
 
+    /**
+     * UIX-8C-08 (DEF-008) — every non-success transition is guarded by
+     * `syncStatus <> 'SYNCED'`.
+     *
+     * These were unconditional updates keyed only on localId. When two attempts
+     * raced the same row (the WorkManager worker and a manual "Sync sekarang"),
+     * the losing attempt could overwrite a row that had ALREADY reached SYNCED
+     * with a recorded serverSaleId. Observed on physical hardware: a sale that was
+     * SYNCED with serverSaleId=9 (and genuinely present on the backend) flipped to
+     * FAILED while offline and stayed FAILED across a process kill.
+     *
+     * No duplicate was ever created — the submit is idempotent on clientReference
+     * and the backend dedupes — so this was never a financial-integrity problem.
+     * It is a TRUTHFULNESS problem: a cashier shown FAILED for a transaction that
+     * actually succeeded may re-ring it (UIX8C-R110/R111/R124).
+     *
+     * Once a canonical server acknowledgement is recorded the row is terminal;
+     * only [markSynced] may write that state, and nothing may downgrade it.
+     */
     @Query(
         "UPDATE offline_sales SET syncStatus = 'SYNCING', lastAttemptedAt = :attemptedAt, " +
-            "updatedAt = :attemptedAt WHERE localId = :localId"
+            "updatedAt = :attemptedAt WHERE localId = :localId AND syncStatus <> 'SYNCED'"
     )
     abstract suspend fun markSyncing(localId: Long, attemptedAt: Long)
 
@@ -93,15 +112,19 @@ abstract class OfflineSaleDao {
     )
     abstract suspend fun markSynced(localId: Long, serverSaleId: Long, invoiceNumber: String?, syncedAt: Long)
 
+    /** Guarded so a losing race cannot downgrade an acknowledged sale (DEF-008). */
     @Query(
         "UPDATE offline_sales SET syncStatus = 'FAILED', syncAttemptCount = syncAttemptCount + 1, " +
-            "lastSyncError = :error, lastAttemptedAt = :attemptedAt, updatedAt = :attemptedAt WHERE localId = :localId"
+            "lastSyncError = :error, lastAttemptedAt = :attemptedAt, updatedAt = :attemptedAt " +
+            "WHERE localId = :localId AND syncStatus <> 'SYNCED'"
     )
     abstract suspend fun markFailed(localId: Long, error: String?, attemptedAt: Long)
 
+    /** Guarded so a losing race cannot downgrade an acknowledged sale (DEF-008). */
     @Query(
         "UPDATE offline_sales SET syncStatus = 'CONFLICT', syncAttemptCount = syncAttemptCount + 1, " +
-            "lastSyncError = :error, lastAttemptedAt = :attemptedAt, updatedAt = :attemptedAt WHERE localId = :localId"
+            "lastSyncError = :error, lastAttemptedAt = :attemptedAt, updatedAt = :attemptedAt " +
+            "WHERE localId = :localId AND syncStatus <> 'SYNCED'"
     )
     abstract suspend fun markConflict(localId: Long, error: String?, attemptedAt: Long)
 
